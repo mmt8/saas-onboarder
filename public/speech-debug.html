@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech API Debugger</title>
+    <style>
+        body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 600px; margin: 0 auto; background: #111; color: #eee; }
+        button { padding: 10px 20px; font-size: 1.2rem; cursor: pointer; background: #0070f3; color: white; border: none; border-radius: 5px; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        #log { margin-top: 20px; padding: 10px; background: #222; border-radius: 5px; font-family: monospace; white-space: pre-wrap; height: 300px; overflow-y: auto; border: 1px solid #333; }
+        .error { color: #ff4444; }
+        .success { color: #00cc66; }
+        .info { color: #888; }
+    </style>
+</head>
+<body>
+    <h1>Speech API Debugger</h1>
+    <p>Test if your browser can connect to the Google Speech service.</p>
+    
+    <button id="btn">Start Listening</button>
+    <div id="log"></div>
+
+    <script>
+        const btn = document.getElementById('btn');
+        const log = document.getElementById('log');
+        let recognition;
+
+        function addLog(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            div.className = type;
+            log.prepend(div);
+        }
+
+        if (!('webkitSpeechRecognition' in window)) {
+            addLog("❌ webkitSpeechRecognition NOT found in this browser.", "error");
+            btn.disabled = true;
+            btn.textContent = "Not Supported";
+        } else {
+            addLog("✅ webkitSpeechRecognition is available.", "success");
+        }
+
+        btn.onclick = () => {
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+                btn.textContent = "Start Listening";
+                return;
+            }
+
+            try {
+                recognition = new window.webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    addLog("🎤 onstart: Recognition started. Speak now.", "success");
+                    btn.textContent = "Stop";
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = Array.from(event.results)
+                        .map(result => result[0].transcript)
+                        .join('');
+                    addLog(`📝 onresult: "${transcript}"`, "success");
+                };
+
+                recognition.onerror = (event) => {
+                    addLog(`❌ onerror: ${event.error}`, "error");
+                    if (event.error === 'network') {
+                        addLog("⚠️ Network error: The browser cannot reach the speech service.", "error");
+                    }
+                };
+
+                recognition.onend = () => {
+                    addLog("⏹️ onend: Recognition stopped.", "info");
+                    recognition = null;
+                    btn.textContent = "Start Listening";
+                };
+
+                addLog("🚀 Calling recognition.start()...");
+                recognition.start();
+
+            } catch (e) {
+                addLog(`❌ Exception: ${e.message}`, "error");
+            }
+        };
+    </script>
+</body>
+</html>
