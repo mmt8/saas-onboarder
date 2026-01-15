@@ -1,38 +1,80 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
 
-// Use same defaults as src/lib/supabase.ts to avoid crashes
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://naiuhnzdampxdewizhin.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_I7TFMHsf_lNAQzm4JNdpLA_JZpCQ5ce';
+export async function middleware(request: NextRequest) {
+    let response = NextResponse.next({
+        request: {
+            headers: request.headers,
+        },
+    });
 
-export async function middleware(req: NextRequest) {
-    try {
-        const res = NextResponse.next();
-
-        // Create a Supabase client specifically for the middleware
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-        // Check for the Supabase session cookie manually if geSession doesn't work well 
-        // in this specific Next.js version's edge runtime
-        const { data: { session } } = await supabase.auth.getSession();
-
-        const { pathname } = req.nextUrl;
-
-        // Only protect the dashboard. Use client-side for redirecting away from login/signup.
-        if (pathname.startsWith('/dashboard') && !session) {
-            const redirectUrl = req.nextUrl.clone();
-            redirectUrl.pathname = '/login';
-            return NextResponse.redirect(redirectUrl);
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) {
+                    return request.cookies.get(name)?.value;
+                },
+                set(name: string, value: string, options: CookieOptions) {
+                    request.cookies.set({
+                        name,
+                        value,
+                        ...options,
+                    });
+                    response = NextResponse.next({
+                        request: {
+                            headers: request.headers,
+                        },
+                    });
+                    response.cookies.set({
+                        name,
+                        value,
+                        ...options,
+                    });
+                },
+                remove(name: string, options: CookieOptions) {
+                    request.cookies.set({
+                        name,
+                        value: '',
+                        ...options,
+                    });
+                    response = NextResponse.next({
+                        request: {
+                            headers: request.headers,
+                        },
+                    });
+                    response.cookies.set({
+                        name,
+                        value: '',
+                        ...options,
+                    });
+                },
+            },
         }
+    );
 
-        return res;
-    } catch (error) {
-        console.error('Middleware Error:', error);
-        // On error, let the request proceed to avoid 500ing the whole site.
-        // The client-side protection in the pages can handle the fallback.
-        return NextResponse.next();
+    // Refresh session if expired - required for Server Components
+    // https://supabase.com/docs/guides/auth/auth-helpers/nextjs#middleware
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const { pathname } = request.nextUrl;
+
+    // 1. Dashboard Protection
+    if (pathname.startsWith('/dashboard') && !user) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/login';
+        return NextResponse.redirect(url);
     }
+
+    // 2. Redirect away from Login/Signup if already authenticated
+    if ((pathname === '/login' || pathname === '/signup') && user) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/dashboard';
+        return NextResponse.redirect(url);
+    }
+
+    return response;
 }
 
 export const config = {
