@@ -465,7 +465,6 @@ export const useTourStore = create<TourState>()(
                 recordedSteps: state.recordedSteps,
                 creationMode: state.creationMode,
                 editingTourId: state.editingTourId,
-                user: state.user // Persist user session info
             }),
         }
     )

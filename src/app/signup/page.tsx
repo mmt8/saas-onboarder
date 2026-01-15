@@ -14,14 +14,14 @@ export default function SignupPage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [localLoading, setLocalLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
-    const { signUp, signInWithGoogle, user } = useTourStore();
+    const { signUp, signInWithGoogle, user, isAuthLoading } = useTourStore();
     const router = useRouter();
 
     useEffect(() => {
-        if (user) {
+        if (!isAuthLoading && user) {
             router.push("/dashboard");
         }
-    }, [user, router]);
+    }, [user, router, isAuthLoading]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -57,6 +57,14 @@ export default function SignupPage() {
             setGoogleLoading(false);
         }
     };
+
+    if (isAuthLoading) {
+        return (
+            <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 bg-secondary/20">
+                <Loader2 className="w-12 h-12 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 bg-secondary/20">
