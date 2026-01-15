@@ -43,6 +43,13 @@ export default function DashboardPage() {
         }
     }, [recordedSteps, isRecording]);
 
+    // Client-side auth guard
+    useEffect(() => {
+        if (!isAuthLoading && !user) {
+            router.push("/login");
+        }
+    }, [user, isAuthLoading, router]);
+
     const [activeTab, setActiveTab] = useState<'tours' | 'installation' | 'settings'>('tours');
     const [launcherText, setLauncherText] = useState("");
     const [showLauncher, setShowLauncher] = useState(true);
