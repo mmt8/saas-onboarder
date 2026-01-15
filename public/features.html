@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Features - GuideMark Widget Test Page</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 50px;
+            line-height: 1.6;
+        }
+
+        .hero {
+            background: #fff0f4;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            background: #495BFD;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .features {
+            display: grid;
+            grid-template-cols: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .feature-card {
+            border: 1px solid #eee;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        #logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #495BFD;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div id="logo" onClick="window.location.href='test.html'" style="cursor:pointer">MyAwesomeApp</div>
+        <nav>
+            <a href="test.html" id="home-link">Home</a>
+            <a href="#" id="pricing-link">Pricing</a>
+        </nav>
+    </header>
+
+    <div class="hero">
+        <h1 id="features-title">Our Powerful Features</h1>
+        <p>This is the features page for testing multi-page tours.</p>
+        <button class="btn" id="feature-cta">Learn More</button>
+    </div>
+
+    <div class="features">
+        <div class="feature-card" id="advanced-analytics">
+            <h3>Advanced Analytics</h3>
+            <p>See exactly how users interact with your tours.</p>
+        </div>
+        <div class="feature-card" id="voice-recording">
+            <h3>Voice Recording</h3>
+            <p>Record tours using your voice for ultimate speed.</p>
+        </div>
+    </div>
+
+    <!-- GuideMark Embed (local for testing) -->
+    <script id="guidemark-embed" src="./embed.js?v=7" data-project-id="88ce9f20-d287-40c6-b73d-4d1c2472eb25"
+        async></script>
+</body>
+
+</html>

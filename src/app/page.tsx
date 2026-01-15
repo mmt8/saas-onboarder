@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, Zap, BarChart3, MousePointerClick, Mic } from "lucide-react";
+import { ArrowRight, BarChart3, MousePointerClick, Mic } from "lucide-react";
 
 export default function Home() {
   return (

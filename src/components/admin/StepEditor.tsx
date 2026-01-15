@@ -4,29 +4,86 @@ import { useState } from "react";
 
 import { useTourStore } from "@/store/tour-store";
 import { Button } from "@/components/ui/button";
-import { X, GripVertical, Trash2 } from "lucide-react";
-import { motion, Reorder, AnimatePresence } from "framer-motion";
+import { X, GripVertical, Trash2, Loader2, Play } from "lucide-react";
+import { Reorder, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export function StepEditor() {
-    const { recordedSteps, updateStep, deleteStep, reorderSteps, isRecording, saveTour } = useTourStore();
+    const { recordedSteps, updateStep, deleteStep, reorderSteps, isRecording, saveTour, stopRecording, isLoading, editingTourId, deleteTour, setTour, setStatus, tours } = useTourStore();
     const [tourTitle, setTourTitle] = useState("New Tour");
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-    if (!isRecording && recordedSteps.length === 0) return null;
+    if (!isRecording) return null;
+
+    const isEditingExistingTour = !!editingTourId;
+    const currentTour = tours.find(t => t.id === editingTourId);
+
+    const handlePlayback = () => {
+        if (currentTour) {
+            setTour(currentTour);
+            setStatus('playing');
+        }
+    };
+
+    const handleDelete = async () => {
+        if (editingTourId) {
+            await deleteTour(editingTourId);
+            stopRecording();
+        }
+    };
 
     return (
         <div className="fixed top-20 right-6 w-80 max-h-[calc(100vh-8rem)] flex flex-col glass rounded-2xl shadow-2xl overflow-hidden admin-toolbar-ignore z-40">
             <div className="p-4 border-b border-border/50 bg-white/50 space-y-4">
                 <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-foreground">Recorded Steps</h3>
-                    <Button
-                        size="sm"
-                        onClick={() => saveTour(tourTitle, window.location.pathname)}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground h-7 text-xs rounded-full shadow-sm"
-                    >
-                        Save
-                    </Button>
+                    <h3 className="font-bold text-foreground">
+                        {isEditingExistingTour ? 'Edit Tour' : 'Recorded Steps'}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                        {isLoading && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={stopRecording}
+                            disabled={isLoading}
+                            className="h-7 w-7 p-0 rounded-full hover:bg-red-50 hover:text-red-500"
+                        >
+                            <X className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={() => saveTour(tourTitle, window.location.pathname)}
+                            disabled={isLoading}
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground h-7 text-xs rounded-full shadow-sm"
+                        >
+                            {isLoading ? "Saving..." : "Save"}
+                        </Button>
+                    </div>
                 </div>
+
+                {isEditingExistingTour && (
+                    <div className="flex gap-2">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handlePlayback}
+                            className="flex-1 h-8 text-xs gap-1"
+                        >
+                            <Play className="w-3 h-3" />
+                            Playback
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowDeleteConfirm(true)}
+                            className="flex-1 h-8 text-xs gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                            <Trash2 className="w-3 h-3" />
+                            Delete
+                        </Button>
+                    </div>
+                )}
+
                 <div className="space-y-1">
                     <label className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Tour Title</label>
                     <input
@@ -42,6 +99,35 @@ export function StepEditor() {
                 </div>
             </div>
 
+            {/* Delete Confirmation Dialog */}
+            {showDeleteConfirm && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50 rounded-2xl">
+                    <div className="bg-white rounded-xl p-6 m-4 max-w-sm shadow-2xl">
+                        <h4 className="font-bold text-lg mb-2">Delete Tour?</h4>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            This action cannot be undone. The tour will be permanently deleted.
+                        </p>
+                        <div className="flex gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                size="sm"
+                                onClick={handleDelete}
+                                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                            >
+                                Delete
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white/30">
                 <Reorder.Group axis="y" values={recordedSteps} onReorder={reorderSteps} className="space-y-3">
                     <AnimatePresence initial={false}>
@@ -52,7 +138,7 @@ export function StepEditor() {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                className="group relative bg-white border border-border rounded-xl p-3 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing"
+                                className="group relative bg-white border border-border rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
                             >
                                 <div className="flex items-start gap-3">
                                     <div className="mt-1 text-muted-foreground/50 cursor-grab active:cursor-grabbing hover:text-primary transition-colors">

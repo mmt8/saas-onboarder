@@ -13,32 +13,34 @@ export function RecordingOverlay() {
     useEffect(() => {
         if (!isRecording) return;
 
-        const getInteractiveElement = (target: HTMLElement): HTMLElement | null => {
-            // 1. Check if it's an ignored element
-            if (target.closest('.admin-toolbar-ignore')) return null;
 
-            // 2. Traverse up to find an interactive element
+        const getInteractiveElement = (target: HTMLElement): HTMLElement | null => {
+            if (target.closest('.admin-toolbar-ignore')) return null;
+            if (target.id === 'guidemark-host') return null; // Ignore Widget UI
+
+
             let current: HTMLElement | null = target;
             while (current && current !== document.body) {
-                // Check for interactive tags
                 const tagName = current.tagName.toLowerCase();
                 if (['button', 'a', 'input', 'select', 'textarea', 'details', 'summary'].includes(tagName)) {
                     return current;
                 }
 
-                // Check for interactive roles
                 const role = current.getAttribute('role');
                 if (['button', 'link', 'menuitem', 'tab', 'checkbox', 'radio', 'switch'].includes(role || '')) {
                     return current;
                 }
 
-                // Check for cursor: pointer
                 const style = window.getComputedStyle(current);
                 if (style.cursor === 'pointer') {
                     return current;
                 }
 
                 current = current.parentElement;
+            }
+
+            if (target && target !== document.body) {
+                return target;
             }
 
             return null;
@@ -51,21 +53,22 @@ export function RecordingOverlay() {
         };
 
         const handleClick = (e: MouseEvent) => {
-            if (!hoveredElement) return;
+            const target = e.target as HTMLElement;
+            const interactive = getInteractiveElement(target);
+
+            if (!interactive) return;
+
             e.preventDefault();
             e.stopPropagation();
 
-            const selector = getUniqueSelector(hoveredElement);
+            const selector = getUniqueSelector(interactive);
 
-            // Use voice transcript if available and in voice mode
             let content = "";
             if (creationMode === 'voice' && (voiceTranscript || interimVoiceTranscript)) {
                 content = (voiceTranscript + " " + interimVoiceTranscript).trim();
-                // Clear transcript after using it
                 clearVoiceTranscript();
             }
 
-            // Show pulse effect
             setClickPosition({ x: e.clientX, y: e.clientY });
             setTimeout(() => setClickPosition(null), 1000);
 
@@ -83,7 +86,7 @@ export function RecordingOverlay() {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('click', handleClick, { capture: true });
         };
-    }, [isRecording, addStep, hoveredElement, creationMode, voiceTranscript, interimVoiceTranscript, clearVoiceTranscript]);
+    }, [isRecording, addStep, creationMode, voiceTranscript, interimVoiceTranscript, clearVoiceTranscript]);
 
     if (!isRecording) return null;
 

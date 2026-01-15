@@ -30,16 +30,7 @@ export function AdminToolbar() {
     }, [creationMode, isPaused, startListening, stopListening]);
 
     if (!isRecording && recordedSteps.length === 0) {
-        return (
-            <div className="fixed bottom-6 left-6 z-50 admin-toolbar-ignore">
-                <Button
-                    onClick={() => startRecording('manual')}
-                    className="rounded-full h-14 w-14 shadow-2xl bg-gradient-to-r from-primary to-accent hover:scale-105 transition-transform"
-                >
-                    <Mic className="w-6 h-6 text-white" />
-                </Button>
-            </div>
-        );
+        return null;
     }
 
     // For manual mode, we don't show the bottom toolbar anymore as controls are in the side panel

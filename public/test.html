@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuideMark Widget Test Page</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 50px;
+            line-height: 1.6;
+        }
+
+        .hero {
+            background: #f0f4ff;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            background: #495BFD;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .features {
+            display: grid;
+            grid-template-cols: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .feature-card {
+            border: 1px solid #eee;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        #logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #495BFD;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div id="logo">MyAwesomeApp</div>
+        <nav>
+            <a href="features.html" id="features-link">Features</a>
+            <a href="#" id="pricing-link">Pricing</a>
+        </nav>
+    </header>
+
+    <div class="hero">
+        <h1 id="hero-title">Welcome to our platform</h1>
+        <p>This is a test page for the GuideMark embeddable widget.</p>
+        <button class="btn" id="cta-button">Get Started</button>
+    </div>
+
+    <div class="features">
+        <div class="feature-card" id="f1">
+            <h3>Feature One</h3>
+            <p>Some interesting details about this feature.</p>
+        </div>
+        <div class="feature-card" id="f2">
+            <h3>Feature Two</h3>
+            <p>Another great feature of our application.</p>
+        </div>
+    </div>
+
+    <!-- GuideMark Embed (local for testing) -->
+    <script id="guidemark-embed" src="./embed.js?v=7" data-project-id="88ce9f20-d287-40c6-b73d-4d1c2472eb25"
+        async></script>
+</body>
+
+</html>

@@ -5,8 +5,8 @@ import { AdminToolbar } from "@/components/admin/AdminToolbar";
 import { RecordingOverlay } from "@/components/admin/RecordingOverlay";
 import { StepEditor } from "@/components/admin/StepEditor";
 import { TourPlayer } from "@/components/player/TourPlayer";
-import { InteractiveAssistant } from "@/components/InteractiveAssistant";
 import { Suspense } from "react";
+import { AuthProvider } from "@/components/AuthProvider";
 
 export const metadata: Metadata = {
   title: "SaaS Onboarder",
@@ -20,18 +20,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased">
-        <Navbar />
-        <AdminToolbar />
-        <RecordingOverlay />
-        <StepEditor />
-        <Suspense fallback={null}>
-          <TourPlayer />
-        </Suspense>
-        <InteractiveAssistant />
-        <main className="min-h-screen pt-20">
-          {children}
-        </main>
+      <body className="font-sans antialiased" suppressHydrationWarning>
+        <AuthProvider>
+          <Navbar />
+          <AdminToolbar />
+          <RecordingOverlay />
+          <StepEditor />
+          <Suspense fallback={null}>
+            <TourPlayer />
+          </Suspense>
+          <main className="min-h-screen pt-20">
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );
