@@ -7,6 +7,7 @@ import { WidgetTourPlayer } from './WidgetTourPlayer';
 import { Button } from '@/components/ui/button';
 import { Play, Plus, X, HelpCircle } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
+import { CreateTourDialog } from '@/components/admin/CreateTourDialog';
 
 interface WidgetProps {
     projectId: string;
@@ -31,6 +32,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
     } = useTourStore();
 
     const [isAdminListOpen, setAdminListOpen] = useState(false);
+    const [isCreateTourDialogOpen, setIsCreateTourDialogOpen] = useState(false);
     const [currentPath, setCurrentPath] = useState(window.location.pathname);
     const prevLoadingRef = useRef(isLoading);
     const prevStatusRef = useRef(status);
@@ -228,8 +230,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                                     className="w-full gap-2 bg-[#495BFD] hover:bg-[#3b4fd9]"
                                     onClick={() => {
                                         setAdminListOpen(false);
-                                        console.log('Widget: Starting recording');
-                                        startRecording('manual');
+                                        setIsCreateTourDialogOpen(true);
                                     }}
                                 >
                                     <Plus className="w-4 h-4" />
@@ -268,6 +269,11 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
             {status === 'playing' && (
                 <WidgetTourPlayer />
             )}
+
+            <CreateTourDialog
+                isOpen={isCreateTourDialogOpen}
+                onClose={() => setIsCreateTourDialogOpen(false)}
+            />
         </div>
     );
 }
