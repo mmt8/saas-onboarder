@@ -8,9 +8,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publish
 export async function middleware(request: NextRequest) {
     try {
         let response = NextResponse.next({
-            request: {
-                headers: request.headers,
-            },
+            request,
         });
 
         const supabase = createServerClient(
@@ -24,9 +22,7 @@ export async function middleware(request: NextRequest) {
                     setAll(cookiesToSet) {
                         cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value));
                         response = NextResponse.next({
-                            request: {
-                                headers: request.headers,
-                            },
+                            request,
                         });
                         cookiesToSet.forEach(({ name, value, options }) =>
                             response.cookies.set(name, value, options)
@@ -36,7 +32,7 @@ export async function middleware(request: NextRequest) {
             }
         );
 
-        // This WILL refresh the session if it's expired
+        // This will refresh the session if it's expired
         const { data: { user } } = await supabase.auth.getUser();
 
         const { pathname } = request.nextUrl;

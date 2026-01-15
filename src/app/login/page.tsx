@@ -32,7 +32,9 @@ export default function LoginPage() {
             } else {
                 toast.success("Welcome back!");
                 router.refresh();
-                router.replace("/dashboard");
+                setTimeout(() => {
+                    router.replace("/dashboard");
+                }, 100);
             }
         } catch (err: any) {
             toast.error("An unexpected error occurred");
