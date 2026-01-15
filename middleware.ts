@@ -19,19 +19,10 @@ export async function middleware(req: NextRequest) {
 
         const { pathname } = req.nextUrl;
 
-        // If trying to access dashboard and no session exists, redirect to login
+        // Only protect the dashboard. Use client-side for redirecting away from login/signup.
         if (pathname.startsWith('/dashboard') && !session) {
-            console.log('Middleware: No session, redirecting to login');
             const redirectUrl = req.nextUrl.clone();
             redirectUrl.pathname = '/login';
-            return NextResponse.redirect(redirectUrl);
-        }
-
-        // If already logged in and trying to access login/signup, redirect to dashboard
-        if ((pathname.startsWith('/login') || pathname.startsWith('/signup')) && session) {
-            console.log('Middleware: Session found, redirecting to dashboard');
-            const redirectUrl = req.nextUrl.clone();
-            redirectUrl.pathname = '/dashboard';
             return NextResponse.redirect(redirectUrl);
         }
 
