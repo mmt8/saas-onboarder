@@ -81,7 +81,12 @@ export async function middleware(request: NextRequest) {
         return response;
     } catch (error) {
         console.error('Middleware Error:', error);
-        // On error, let the request proceed to avoid 500ing the whole site.
+        const { pathname } = request.nextUrl;
+        if (pathname.startsWith('/dashboard')) {
+            const url = request.nextUrl.clone();
+            url.pathname = '/login';
+            return NextResponse.redirect(url);
+        }
         return NextResponse.next();
     }
 }

@@ -23,9 +23,11 @@ export function Navbar() {
                 <Link href="/#how-it-works" className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors">
                     How it Works
                 </Link>
-                <Link href="/dashboard" className="text-base font-medium text-primary hover:text-primary/80 transition-colors">
-                    Dashboard
-                </Link>
+                {user && (
+                    <Link href="/dashboard" className="text-base font-medium text-primary hover:text-primary/80 transition-colors">
+                        Dashboard
+                    </Link>
+                )}
             </div>
 
             <div className="flex items-center gap-4">
