@@ -30,7 +30,7 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
               <Button size="lg" className="rounded-full px-8 h-14 text-lg shadow-xl shadow-primary/20 hover:scale-105 transition-transform" asChild>
-                <Link href="/dashboard">
+                <Link href="/signup">
                   Start Building for Free
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
@@ -78,12 +78,12 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center text-white text-xs font-bold">
-              S
+              G
             </div>
-            <span className="font-bold text-lg">SaaS Onboarder</span>
+            <span className="font-bold text-lg">GuideMark</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2024 SaaS Onboarder. All rights reserved.
+            © 2024 GuideMark. All rights reserved.
           </p>
         </div>
       </footer>

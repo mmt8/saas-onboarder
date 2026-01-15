@@ -11,9 +11,9 @@ export function Navbar() {
         <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 border-b border-border/40 bg-background/80 backdrop-blur-md">
             <Link href="/" className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center text-primary-foreground font-bold text-lg shadow-lg shadow-primary/20">
-                    S
+                    G
                 </div>
-                <span className="font-bold text-xl tracking-tight text-foreground">SaaS Onboarder</span>
+                <span className="font-bold text-xl tracking-tight text-foreground">GuideMark</span>
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
@@ -51,7 +51,7 @@ export function Navbar() {
                             Sign In
                         </Link>
                         <Button asChild className="rounded-full px-6 shadow-lg shadow-primary/20">
-                            <Link href="/register">Get Started</Link>
+                            <Link href="/signup">Get Started</Link>
                         </Button>
                     </>
                 )}

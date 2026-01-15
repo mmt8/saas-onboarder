@@ -9,7 +9,7 @@ import { Suspense } from "react";
 import { AuthProvider } from "@/components/AuthProvider";
 
 export const metadata: Metadata = {
-  title: "SaaS Onboarder",
+  title: "GuideMark",
   description: "Create interactive product tours in minutes.",
 };
 
