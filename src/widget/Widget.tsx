@@ -180,15 +180,31 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
             setCurrentProject(projectId);
             console.log('Widget: Initializing with project', projectId);
 
-            // Only ping if NOT in admin mode (prevent dashboard pings)
-            if (!showAdminPanel && localStorage.getItem('producttour-admin-mode') !== 'true') {
+            // Only ping if NOT in the dashboard (prevent heartbeats from the admin app itself)
+            // We allow pings from localhost/test pages so developers see "Online" status.
+            const isDashboard = window.location.pathname.startsWith('/dashboard');
+
+            if (!isDashboard) {
+                console.log('Widget: Sending heartbeat for project', projectId);
                 pingProject(projectId);
             }
 
             fetchProjects();
             fetchTours();
         }
-    }, [projectId, setCurrentProject, fetchProjects, fetchTours, showAdminPanel, pingProject]);
+    }, [projectId, setCurrentProject, fetchProjects, fetchTours, pingProject]);
+
+    // Listen for forced ping requests from Dashboard (same domain only)
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'producttour-force-ping' && e.newValue && projectId) {
+                console.log('Widget: Forced heartbeat requested from Dashboard');
+                pingProject(projectId);
+            }
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, [projectId, pingProject]);
 
     // Track URL changes for SPA support
     useEffect(() => {

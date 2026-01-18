@@ -58,51 +58,55 @@ export function AdminToolbar() {
             </AnimatePresence>
 
             {/* Main Toolbar */}
-            <div className="glass rounded-full p-2 flex items-center gap-2 shadow-2xl pointer-events-auto transition-all hover:scale-[1.02] bg-white/80">
-                {/* Recording Indicator */}
-                <div className="flex items-center gap-3 px-4 border-r border-border/50">
-                    <div className={cn(
-                        "w-3 h-3 rounded-full transition-colors duration-300",
-                        isRecording ? "bg-red-500 animate-pulse" : "bg-slate-300"
-                    )} />
-                    <span className="text-sm font-semibold text-foreground">
-                        {isRecording ? "Recording..." : "Ready"}
-                    </span>
-                </div>
-
-                {/* Controls */}
-                <div className="flex items-center gap-2 px-2">
-                    {creationMode === 'voice' && (
-                        <>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setIsPaused(!isPaused)}
-                                className={cn("rounded-full hover:bg-slate-100 text-foreground", isPaused && "text-yellow-500")}
-                            >
-                                {isPaused ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                            </Button>
-
-                            <Button
-                                onClick={stopRecording}
-                                variant="destructive"
-                                size="icon"
-                                className="rounded-full shadow-lg shadow-red-500/20"
-                            >
-                                <Square className="w-4 h-4 fill-current" />
-                            </Button>
-
-                            <Button
-                                onClick={() => saveTour("New Tour " + new Date().toLocaleTimeString(), window.location.pathname)}
-                                className="rounded-full px-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 ml-2"
-                            >
-                                <Save className="w-4 h-4 mr-2" />
-                                Finish
-                            </Button>
-                        </>
+            {(isRecording || creationMode === 'voice') && (
+                <div className="glass rounded-full p-2 flex items-center gap-2 shadow-2xl pointer-events-auto transition-all hover:scale-[1.02] bg-white/80">
+                    {/* Recording Indicator */}
+                    {isRecording && (
+                        <div className="flex items-center gap-3 px-4 border-r border-border/50">
+                            <div className={cn(
+                                "w-3 h-3 rounded-full transition-colors duration-300",
+                                "bg-red-500 animate-pulse"
+                            )} />
+                            <span className="text-sm font-semibold text-foreground">
+                                Recording...
+                            </span>
+                        </div>
                     )}
+
+                    {/* Controls */}
+                    <div className="flex items-center gap-2 px-2">
+                        {creationMode === 'voice' && (
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setIsPaused(!isPaused)}
+                                    className={cn("rounded-full hover:bg-slate-100 text-foreground", isPaused && "text-yellow-500")}
+                                >
+                                    {isPaused ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                                </Button>
+
+                                <Button
+                                    onClick={stopRecording}
+                                    variant="destructive"
+                                    size="icon"
+                                    className="rounded-full shadow-lg shadow-red-500/20"
+                                >
+                                    <Square className="w-4 h-4 fill-current" />
+                                </Button>
+
+                                <Button
+                                    onClick={() => saveTour("New Tour " + new Date().toLocaleTimeString(), window.location.pathname)}
+                                    className="rounded-full px-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 ml-2"
+                                >
+                                    <Save className="w-4 h-4 mr-2" />
+                                    Finish
+                                </Button>
+                            </>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Error Toast */}
             {error && (

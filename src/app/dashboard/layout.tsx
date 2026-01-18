@@ -22,8 +22,8 @@ function ConnectionStatus({ lastSeenAt, onCheck, isChecking }: { lastSeenAt?: Da
         const diff = now.getTime() - lastSeenAt.getTime();
         const minutes = Math.floor(diff / 60000);
 
-        // If last seen within 60 minutes, mark as Synced (Green)
-        if (minutes < 60) return { label: 'Synced', color: 'bg-emerald-500', text: 'text-emerald-500' };
+        // If last seen within 24 hours, mark as Synced (Green)
+        if (minutes < 1440) return { label: 'Synced', color: 'bg-emerald-500', text: 'text-emerald-500' };
 
         // If seen before but not recently, mark as Offline (Amber)
         return { label: 'Offline', color: 'bg-amber-500', text: 'text-amber-500' };
@@ -37,6 +37,11 @@ function ConnectionStatus({ lastSeenAt, onCheck, isChecking }: { lastSeenAt?: Da
             <p className={cn("text-[10px] font-black uppercase tracking-[0.15em] leading-none", status.text)}>
                 {status.label}
             </p>
+            {lastSeenAt && (
+                <p className="text-[9px] text-muted-foreground ml-1 hidden lg:block italic">
+                    Seen {new Date(lastSeenAt).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </p>
+            )}
             <button
                 onClick={(e) => { e.preventDefault(); onCheck(); }}
                 disabled={isChecking}
@@ -72,10 +77,18 @@ export default function DashboardLayout({
 
     const handleRefreshConnection = async () => {
         setIsCheckingConnection(true);
+
+        // Signal any open widget tabs on this domain to ping immediately
+        localStorage.setItem('producttour-force-ping', Date.now().toString());
+
+        // Short delay to give the widget time to ping and DB to update
+        await new Promise(r => setTimeout(r, 1000));
+
         const freshProjects = await fetchProjects();
 
         const freshProject = freshProjects.find(p => p.id === currentProjectId);
-        const isSynced = freshProject?.lastSeenAt && (new Date().getTime() - freshProject.lastSeenAt.getTime() < 3600000); // 1 hour
+        // 24 hours in milliseconds: 24 * 60 * 60 * 1000 = 86400000
+        const isSynced = freshProject?.lastSeenAt && (new Date().getTime() - freshProject.lastSeenAt.getTime() < 86400000);
 
         if (!isSynced) {
             setIsInstallationModalOpen(true);
