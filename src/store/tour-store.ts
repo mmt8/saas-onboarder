@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export type Step = {
     id: string;
@@ -18,6 +19,7 @@ export type Tour = {
     description?: string;
     steps: Step[];
     pageUrl: string;
+    isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
 };
@@ -28,6 +30,15 @@ export type Project = {
     domain?: string;
     showLauncher: boolean;
     launcherText: string;
+    themeSettings: {
+        fontFamily: string;
+        darkMode: boolean;
+        primaryColor: string;
+        borderRadius: string;
+        paddingV: string;
+        paddingH: string;
+    };
+    lastSeenAt?: Date;
     createdAt: Date;
 };
 
@@ -53,10 +64,16 @@ interface TourState {
     isAuthLoading: boolean;
 
     // Actions
-    fetchProjects: () => Promise<void>;
+    fetchProjects: () => Promise<Project[]>;
     setCurrentProject: (id: string) => void;
     createProject: (name: string, domain?: string) => Promise<{ data: any, error: any }>;
-    updateProjectSettings: (id: string, updates: { showLauncher?: boolean, launcherText?: string }) => Promise<void>;
+    updateProjectSettings: (id: string, updates: {
+        name?: string,
+        showLauncher?: boolean,
+        launcherText?: string,
+        themeSettings?: Project['themeSettings']
+    }) => Promise<void>;
+    pingProject: (id: string | null) => Promise<void>;
     fetchTours: () => Promise<void>;
     setLanguage: (lang: string) => void;
     setInterimVoiceTranscript: (transcript: string) => void;
@@ -74,6 +91,7 @@ interface TourState {
     saveTour: (title: string, pageUrl?: string) => Promise<void>;
     setTour: (tour: Tour) => void;
     setStatus: (status: TourStatus) => void;
+    toggleTourActivation: (tourId: string) => Promise<void>;
 
     // Auth Actions
     signUp: (email: string, password: string) => Promise<{ error: any }>;
@@ -120,6 +138,15 @@ export const useTourStore = create<TourState>()(
                         domain: p.domain,
                         showLauncher: p.show_launcher ?? true,
                         launcherText: p.launcher_text ?? 'Product Tours',
+                        themeSettings: p.theme_settings ?? {
+                            fontFamily: 'Inter',
+                            darkMode: false,
+                            primaryColor: '#495BFD',
+                            borderRadius: '12',
+                            paddingV: p.theme_settings?.paddingV ?? '10',
+                            paddingH: p.theme_settings?.paddingH ?? '20'
+                        },
+                        lastSeenAt: p.last_seen_at ? new Date(p.last_seen_at) : undefined,
                         createdAt: new Date(p.created_at)
                     }));
 
@@ -129,8 +156,10 @@ export const useTourStore = create<TourState>()(
                     if (formattedProjects.length > 0 && !get().currentProjectId) {
                         set({ currentProjectId: formattedProjects[0].id });
                     }
+                    return formattedProjects;
                 } catch (error) {
                     console.error('Error fetching projects:', error);
+                    return get().projects;
                 } finally {
                     set({ isLoading: false });
                 }
@@ -167,8 +196,10 @@ export const useTourStore = create<TourState>()(
                     const { error } = await supabase
                         .from('projects')
                         .update({
+                            name: updates.name,
                             show_launcher: updates.showLauncher,
-                            launcher_text: updates.launcherText
+                            launcher_text: updates.launcherText,
+                            theme_settings: updates.themeSettings
                         })
                         .eq('id', id);
 
@@ -180,6 +211,26 @@ export const useTourStore = create<TourState>()(
                     console.error('Error updating project settings:', error);
                 } finally {
                     set({ isLoading: false });
+                }
+            },
+
+            pingProject: async (id) => {
+                if (!id) return;
+                try {
+                    // Use RPC to bypass RLS restrictions for anonymous pings
+                    const { error } = await supabase.rpc('ping_project', {
+                        project_id: id
+                    });
+
+                    if (error) {
+                        if (error.code === 'PGRST202') {
+                            console.warn('Product Tour: Database function "ping_project" not found. Please run the provided SQL migration.');
+                        } else {
+                            console.error('Ping error details:', error);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Ping exception:', error);
                 }
             },
 
@@ -208,6 +259,7 @@ export const useTourStore = create<TourState>()(
                         title: t.title,
                         description: t.description,
                         pageUrl: t.page_url,
+                        isActive: t.is_active || false,
                         createdAt: new Date(t.created_at),
                         updatedAt: new Date(t.updated_at),
                         steps: (t.steps || [])
@@ -333,6 +385,9 @@ export const useTourStore = create<TourState>()(
                     return;
                 }
 
+                // Normalize pageUrl (strip trailing slash except for root)
+                const normalizedPageUrl = pageUrl === '/' ? '/' : pageUrl.replace(/\/$/, '') || '/';
+
                 set({ isLoading: true });
 
                 try {
@@ -344,7 +399,7 @@ export const useTourStore = create<TourState>()(
                             .from('tours')
                             .update({
                                 title,
-                                page_url: pageUrl,
+                                page_url: normalizedPageUrl,
                                 updated_at: new Date().toISOString()
                             })
                             .eq('id', editingTourId);
@@ -365,7 +420,7 @@ export const useTourStore = create<TourState>()(
                             .insert({
                                 project_id: currentProjectId,
                                 title,
-                                page_url: pageUrl
+                                page_url: normalizedPageUrl
                             })
                             .select()
                             .single();
@@ -454,6 +509,63 @@ export const useTourStore = create<TourState>()(
             updatePassword: async (password: string) => {
                 const { error } = await supabase.auth.updateUser({ password });
                 return { error };
+            },
+
+            toggleTourActivation: async (tourId: string) => {
+                const { tours } = get();
+                const tour = tours.find(t => t.id === tourId);
+                if (!tour) return;
+
+                const newState = !tour.isActive;
+                const normalizedPath = (tour.pageUrl || '/').replace(/\/$/, '') || '/';
+
+                // Optimistic update
+                const updatedTours = tours.map(t => {
+                    if (t.id === tourId) return { ...t, isActive: newState };
+                    // If we are activating this one, deactivate others on the same page
+                    if (newState) {
+                        const tPath = (t.pageUrl || '/').replace(/\/$/, '') || '/';
+                        if (tPath === normalizedPath) return { ...t, isActive: false };
+                    }
+                    return t;
+                });
+                set({ tours: updatedTours });
+
+                try {
+                    console.log('Store: Toggling tour', tourId, 'to', newState, 'path:', normalizedPath);
+                    if (newState) {
+                        // If activating, deactivate others on the same page
+                        let query = supabase
+                            .from('tours')
+                            .update({ is_active: false })
+                            .eq('project_id', tour.project_id);
+
+                        if (normalizedPath === '/') {
+                            // If root, deactivate those with '/', null, or ''
+                            query = query.or('page_url.eq."/",page_url.is.null,page_url.eq.""');
+                        } else {
+                            // Otherwise, just deactivate matches for this specific path
+                            query = query.eq('page_url', tour.pageUrl);
+                        }
+
+                        // CRITICAL: Exclusion to avoid deactivating the one we are about to activate
+                        const { error: deactivateError } = await query.neq('id', tourId);
+                        if (deactivateError) throw deactivateError;
+                    }
+
+                    const { error: updateError } = await supabase
+                        .from('tours')
+                        .update({ is_active: newState })
+                        .eq('id', tourId);
+
+                    if (updateError) throw updateError;
+
+                    // Feedback handled via callback in Widget UI
+                } catch (error) {
+                    console.error('Error toggling tour activation:', error);
+                    // Rollback on error
+                    set({ tours });
+                }
             },
         }),
         {

@@ -9,8 +9,8 @@ import { Suspense } from "react";
 import { AuthProvider } from "@/components/AuthProvider";
 
 export const metadata: Metadata = {
-  title: "GuideMark",
-  description: "Create interactive product tours in minutes.",
+  title: "Product Tour",
+  description: "The easiest way to create interactive product tours.",
 };
 
 export default function RootLayout({

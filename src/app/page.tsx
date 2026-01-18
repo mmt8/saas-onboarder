@@ -75,16 +75,28 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-border/40 py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center text-white text-xs font-bold">
-              G
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="flex flex-col items-start gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 flex items-center justify-center">
+                <img src="/logo.svg" alt="Product Tour Logo" className="w-full h-full" />
+              </div>
+              <span className="font-bold text-lg">Product Tour</span>
             </div>
-            <span className="font-bold text-lg">GuideMark</span>
+            <p className="text-muted-foreground mt-4 text-sm max-w-xs">
+              The #1 platform for interactive product guides and user onboarding.
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            © 2024 GuideMark. All rights reserved.
-          </p>
+          <div>
+            <h4 className="font-bold mb-4">Product</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><a href="#" className="hover:text-primary">Features</a></li>
+              <li><a href="#" className="hover:text-primary">Pricing</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="mt-12 pt-8 border-t border-border/50 text-center text-sm text-muted-foreground">
+          © 2024 Product Tour. All rights reserved.
         </div>
       </footer>
     </div>

@@ -5,18 +5,18 @@ import { Widget } from './Widget';
 import styles from '@/app/globals.css?inline';
 
 (function () {
-    console.log('GuideMark Widget Loading...');
+    console.log('Product Tour Widget Loading...');
     const script = document.currentScript || document.querySelector('script[data-project-id]');
     const projectId = script?.getAttribute('data-project-id');
     const autoStart = script?.getAttribute('data-auto-start') !== 'false'; // defaults to true
     const showAdminPanel = script?.getAttribute('data-admin-panel') !== 'false'; // defaults to true
 
     if (!projectId) {
-        console.error('GuideMark: No project ID found');
+        console.error('Product Tour: No project ID found');
         return;
     }
 
-    const hostId = 'guidemark-host';
+    const hostId = 'producttour-host';
     if (document.getElementById(hostId)) return;
 
     const host = document.createElement('div');
@@ -36,7 +36,7 @@ import styles from '@/app/globals.css?inline';
 
     // Mount Point
     const container = document.createElement('div');
-    container.id = 'guidemark-root';
+    container.id = 'producttour-root';
     container.style.width = '100%';
     container.style.height = '100%';
     container.style.pointerEvents = 'none';

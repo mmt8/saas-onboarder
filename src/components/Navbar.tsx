@@ -10,10 +10,10 @@ export function Navbar() {
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 border-b border-border/40 bg-background/80 backdrop-blur-md">
             <Link href="/" className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center text-primary-foreground font-bold text-lg shadow-lg shadow-primary/20">
-                    G
+                <div className="w-8 h-8 flex items-center justify-center">
+                    <img src="/logo.svg" alt="Product Tour Logo" className="w-full h-full" />
                 </div>
-                <span className="font-bold text-xl tracking-tight text-foreground">GuideMark</span>
+                <span className="font-bold text-xl tracking-tight text-foreground">Product Tour</span>
             </Link>
 
             <div className="hidden md:flex items-center gap-8">

@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS projects (
   user_id UUID DEFAULT auth.uid(), -- Link to auth.users
   show_launcher BOOLEAN DEFAULT true,
   launcher_text TEXT DEFAULT 'Product Tours',
+  theme_settings JSONB,
+  last_seen_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );

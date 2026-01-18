@@ -4,16 +4,28 @@ import { useState } from "react";
 
 import { useTourStore } from "@/store/tour-store";
 import { Button } from "@/components/ui/button";
-import { X, GripVertical, Trash2, Loader2, Play } from "lucide-react";
-import { Reorder, AnimatePresence } from "framer-motion";
+import { X, GripVertical, Trash2, Loader2, Play, ArrowLeft, Code } from "lucide-react";
+import { Reorder, AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
-export function StepEditor() {
+interface StepEditorProps {
+    isFloating?: boolean;
+    onBack?: () => void;
+    onSuccess?: (message: string) => void;
+}
+
+export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorProps) {
     const { recordedSteps, updateStep, deleteStep, reorderSteps, isRecording, saveTour, stopRecording, isLoading, editingTourId, deleteTour, setTour, setStatus, tours } = useTourStore();
     const [tourTitle, setTourTitle] = useState("New Tour");
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [visibleSelectors, setVisibleSelectors] = useState<Record<string, boolean>>({});
 
     if (!isRecording) return null;
+
+    const toggleSelector = (id: string) => {
+        setVisibleSelectors(prev => ({ ...prev, [id]: !prev[id] }));
+    };
 
     const isEditingExistingTour = !!editingTourId;
     const currentTour = tours.find(t => t.id === editingTourId);
@@ -28,35 +40,56 @@ export function StepEditor() {
     const handleDelete = async () => {
         if (editingTourId) {
             await deleteTour(editingTourId);
-            stopRecording();
+            const msg = "Tour deleted successfully";
+            toast.success(msg, { duration: 3000 });
+            if (onSuccess) onSuccess(msg);
+            if (onBack) {
+                onBack();
+            } else {
+                stopRecording();
+            }
         }
     };
 
-    return (
-        <div className="fixed top-20 right-6 w-80 max-h-[calc(100vh-8rem)] flex flex-col glass rounded-2xl shadow-2xl overflow-hidden admin-toolbar-ignore z-40">
-            <div className="p-4 border-b border-border/50 bg-white/50 space-y-4">
+    const content = (
+        <div className={cn(
+            "flex flex-col overflow-hidden",
+            isFloating ? "fixed top-24 right-6 w-80 max-h-[calc(100vh-10rem)] bg-white rounded-[2.5rem] shadow-2xl border border-slate-200/60 admin-toolbar-ignore z-40" : "h-full w-full"
+        )}>
+            <div className="p-6 pb-2 space-y-5">
                 <div className="flex items-center justify-between">
                     <h3 className="font-bold text-foreground">
                         {isEditingExistingTour ? 'Edit Tour' : 'Recorded Steps'}
                     </h3>
                     <div className="flex items-center gap-2">
                         {isLoading && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                        {onBack && (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={onBack}
+                                disabled={isLoading}
+                                className="h-8 w-8 p-0 rounded-full hover:bg-slate-200 hover:text-slate-700 transition-colors"
+                            >
+                                <ArrowLeft className="w-5 h-5" />
+                            </Button>
+                        )}
                         <Button
                             size="sm"
                             variant="ghost"
                             onClick={stopRecording}
                             disabled={isLoading}
-                            className="h-7 w-7 p-0 rounded-full hover:bg-red-50 hover:text-red-500"
+                            className="h-8 w-8 p-0 rounded-full hover:bg-slate-200 hover:text-slate-700 transition-colors"
                         >
-                            <X className="w-4 h-4" />
+                            <X className="w-5 h-5" />
                         </Button>
                         <Button
                             size="sm"
                             onClick={() => saveTour(tourTitle, window.location.pathname)}
                             disabled={isLoading}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground h-7 text-xs rounded-full shadow-sm"
+                            className="bg-[#495BFD] hover:bg-[#3b4fd9] text-white h-8 px-4 text-xs rounded-full shadow-lg shadow-blue-500/20 transition-all active:scale-95"
                         >
-                            {isLoading ? "Saving..." : "Save"}
+                            {isLoading ? "Saving..." : "Save Tour"}
                         </Button>
                     </div>
                 </div>
@@ -65,20 +98,20 @@ export function StepEditor() {
                     <div className="flex gap-2">
                         <Button
                             size="sm"
-                            variant="outline"
+                            variant="secondary"
                             onClick={handlePlayback}
-                            className="flex-1 h-8 text-xs gap-1"
+                            className="flex-1 h-9 text-xs gap-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 border-none"
                         >
-                            <Play className="w-3 h-3" />
+                            <Play className="w-3.5 h-3.5 fill-current" />
                             Playback
                         </Button>
                         <Button
                             size="sm"
-                            variant="outline"
+                            variant="secondary"
                             onClick={() => setShowDeleteConfirm(true)}
-                            className="flex-1 h-8 text-xs gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="flex-1 h-9 text-xs gap-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 border-none"
                         >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-3.5 h-3.5" />
                             Delete
                         </Button>
                     </div>
@@ -90,7 +123,7 @@ export function StepEditor() {
                         type="text"
                         value={tourTitle}
                         onChange={(e) => setTourTitle(e.target.value)}
-                        className="w-full bg-white/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                        className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#495BFD] focus:ring-4 focus:ring-blue-500/5 transition-all"
                         placeholder="Enter tour title..."
                     />
                 </div>
@@ -128,7 +161,7 @@ export function StepEditor() {
                 </div>
             )}
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white/30">
+            <div className="flex-1 overflow-y-auto p-4 pt-2 space-y-3">
                 <Reorder.Group axis="y" values={recordedSteps} onReorder={reorderSteps} className="space-y-3">
                     <AnimatePresence initial={false}>
                         {recordedSteps.map((step, index) => (
@@ -138,40 +171,85 @@ export function StepEditor() {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                className="group relative bg-white border border-border rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
+                                className="group relative bg-white rounded-xl p-2.5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-lg hover:scale-[1.01] hover:z-10 transition-all cursor-grab active:cursor-grabbing"
+                                style={{
+                                    border: '1px solid #CBD5E1'
+                                }}
                             >
-                                <div className="flex items-start gap-3">
-                                    <div className="mt-1 text-muted-foreground/50 cursor-grab active:cursor-grabbing hover:text-primary transition-colors">
-                                        <GripVertical className="w-4 h-4" />
-                                    </div>
-
-                                    <div className="flex-1 space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full uppercase tracking-wider">
-                                                Step {index + 1}
+                                <div className="space-y-2">
+                                    {/* Top Row: Meta & Actions */}
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                            <div className="text-slate-400 hover:text-[#495BFD] transition-colors cursor-grab active:cursor-grabbing">
+                                                <GripVertical className="w-4 h-4" />
+                                            </div>
+                                            <span className="shrink-0 text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                {index + 1}
                                             </span>
+                                            <span className="text-sm font-semibold text-slate-700 truncate">
+                                                {step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ') || 'Element'}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-6 w-6 text-muted-foreground hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all rounded-full"
-                                                onClick={() => deleteStep(step.id)}
+                                                className={cn(
+                                                    "h-7 w-7 rounded-full transition-colors",
+                                                    visibleSelectors[step.id] ? "bg-blue-50 text-blue-600" : "text-muted-foreground hover:bg-slate-100"
+                                                )}
+                                                onClick={(e) => { e.stopPropagation(); toggleSelector(step.id); }}
                                             >
-                                                <Trash2 className="w-3 h-3" />
+                                                <Code className="w-3.5 h-3.5" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-full"
+                                                onClick={(e) => { e.stopPropagation(); deleteStep(step.id); }}
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
                                             </Button>
                                         </div>
-
-                                        <textarea
-                                            value={step.content}
-                                            onChange={(e) => updateStep(step.id, { content: e.target.value })}
-                                            className="w-full bg-transparent text-sm text-foreground focus:outline-none resize-none placeholder:text-muted-foreground/50"
-                                            rows={2}
-                                            placeholder="Click on this element to proceed."
-                                        />
-
-                                        <div className="text-[10px] text-muted-foreground font-mono truncate max-w-[200px] bg-slate-100 px-1.5 py-0.5 rounded">
-                                            {step.target}
-                                        </div>
                                     </div>
+
+                                    {/* Bottom Row: Input */}
+                                    <textarea
+                                        value={step.content}
+                                        onChange={(e) => updateStep(step.id, { content: e.target.value })}
+                                        onPointerDown={(e) => e.stopPropagation()}
+                                        onPointerDownCapture={(e) => e.stopPropagation()}
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        onMouseDownCapture={(e) => e.stopPropagation()}
+                                        className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#495BFD] focus:ring-4 focus:ring-blue-500/5 transition-all resize-none placeholder:text-muted-foreground/50"
+                                        rows={2}
+                                        placeholder="What should the user do?"
+                                    />
+
+                                    {/* Expandable Selector View */}
+                                    <AnimatePresence>
+                                        {visibleSelectors[step.id] && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                                animate={{ height: 'auto', opacity: 1, marginTop: 4 }}
+                                                exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                                transition={{ duration: 0.2, ease: "easeInOut" }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="space-y-1 font-mono text-[10px] bg-slate-900 text-slate-300 p-2 rounded-lg border border-slate-800 shadow-inner">
+                                                    <div className="flex gap-2">
+                                                        <span className="text-slate-500 shrink-0">Label:</span>
+                                                        <span className="text-blue-400 truncate">{step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ') || 'Element'}</span>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <span className="text-slate-500 shrink-0">Selector:</span>
+                                                        <span className="text-emerald-400 break-all">{step.target}</span>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
                             </Reorder.Item>
                         ))}
@@ -187,6 +265,12 @@ export function StepEditor() {
                     </div>
                 )}
             </div>
+        </div>
+    );
+
+    return isFloating ? content : (
+        <div className="h-full w-full flex flex-col overflow-hidden">
+            {content}
         </div>
     );
 }

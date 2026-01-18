@@ -16,7 +16,7 @@ export function RecordingOverlay() {
 
         const getInteractiveElement = (target: HTMLElement): HTMLElement | null => {
             if (target.closest('.admin-toolbar-ignore')) return null;
-            if (target.id === 'guidemark-host') return null; // Ignore Widget UI
+            if (target.id === 'producttour-host') return null; // Ignore Widget UI
 
 
             let current: HTMLElement | null = target;

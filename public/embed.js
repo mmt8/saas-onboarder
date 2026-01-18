@@ -46758,20 +46758,34 @@ ${suffix}`;
           try {
             const { data, error } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
             if (error) throw error;
-            const formattedProjects = data.map((p) => ({
-              id: p.id,
-              name: p.name,
-              domain: p.domain,
-              showLauncher: p.show_launcher ?? true,
-              launcherText: p.launcher_text ?? "Product Tours",
-              createdAt: new Date(p.created_at)
-            }));
+            const formattedProjects = data.map((p) => {
+              var _a, _b;
+              return {
+                id: p.id,
+                name: p.name,
+                domain: p.domain,
+                showLauncher: p.show_launcher ?? true,
+                launcherText: p.launcher_text ?? "Product Tours",
+                themeSettings: p.theme_settings ?? {
+                  fontFamily: "Inter",
+                  darkMode: false,
+                  primaryColor: "#495BFD",
+                  borderRadius: "12",
+                  paddingV: ((_a = p.theme_settings) == null ? void 0 : _a.paddingV) ?? "10",
+                  paddingH: ((_b = p.theme_settings) == null ? void 0 : _b.paddingH) ?? "20"
+                },
+                lastSeenAt: p.last_seen_at ? new Date(p.last_seen_at) : void 0,
+                createdAt: new Date(p.created_at)
+              };
+            });
             set({ projects: formattedProjects });
             if (formattedProjects.length > 0 && !get2().currentProjectId) {
               set({ currentProjectId: formattedProjects[0].id });
             }
+            return formattedProjects;
           } catch (error) {
             console.error("Error fetching projects:", error);
+            return get2().projects;
           } finally {
             set({ isLoading: false });
           }
@@ -46796,8 +46810,10 @@ ${suffix}`;
           set({ isLoading: true });
           try {
             const { error } = await supabase.from("projects").update({
+              name: updates.name,
               show_launcher: updates.showLauncher,
-              launcher_text: updates.launcherText
+              launcher_text: updates.launcherText,
+              theme_settings: updates.themeSettings
             }).eq("id", id2);
             if (error) throw error;
             await get2().fetchProjects();
@@ -46805,6 +46821,23 @@ ${suffix}`;
             console.error("Error updating project settings:", error);
           } finally {
             set({ isLoading: false });
+          }
+        },
+        pingProject: async (id2) => {
+          if (!id2) return;
+          try {
+            const { error } = await supabase.rpc("ping_project", {
+              project_id: id2
+            });
+            if (error) {
+              if (error.code === "PGRST202") {
+                console.warn('Product Tour: Database function "ping_project" not found. Please run the provided SQL migration.');
+              } else {
+                console.error("Ping error details:", error);
+              }
+            }
+          } catch (error) {
+            console.error("Ping exception:", error);
           }
         },
         fetchTours: async () => {
@@ -46824,6 +46857,7 @@ ${suffix}`;
               title: t.title,
               description: t.description,
               pageUrl: t.page_url,
+              isActive: t.is_active || false,
               createdAt: new Date(t.created_at),
               updatedAt: new Date(t.updated_at),
               steps: (t.steps || []).sort((a, b) => a.order - b.order).map((s) => ({
@@ -46920,13 +46954,14 @@ ${suffix}`;
             console.error("Cannot save tour: No project selected");
             return;
           }
+          const normalizedPageUrl = pageUrl === "/" ? "/" : pageUrl.replace(/\/$/, "") || "/";
           set({ isLoading: true });
           try {
             let tourId = editingTourId;
             if (editingTourId) {
               const { error: tourError } = await supabase.from("tours").update({
                 title,
-                page_url: pageUrl,
+                page_url: normalizedPageUrl,
                 updated_at: (/* @__PURE__ */ new Date()).toISOString()
               }).eq("id", editingTourId);
               if (tourError) throw tourError;
@@ -46936,7 +46971,7 @@ ${suffix}`;
               const { data: newTourData, error: tourError } = await supabase.from("tours").insert({
                 project_id: currentProjectId,
                 title,
-                page_url: pageUrl
+                page_url: normalizedPageUrl
               }).select().single();
               if (tourError) throw tourError;
               tourId = newTourData.id;
@@ -47004,6 +47039,40 @@ ${suffix}`;
         updatePassword: async (password) => {
           const { error } = await supabase.auth.updateUser({ password });
           return { error };
+        },
+        toggleTourActivation: async (tourId) => {
+          const { tours } = get2();
+          const tour = tours.find((t) => t.id === tourId);
+          if (!tour) return;
+          const newState = !tour.isActive;
+          const normalizedPath = (tour.pageUrl || "/").replace(/\/$/, "") || "/";
+          const updatedTours = tours.map((t) => {
+            if (t.id === tourId) return { ...t, isActive: newState };
+            if (newState) {
+              const tPath = (t.pageUrl || "/").replace(/\/$/, "") || "/";
+              if (tPath === normalizedPath) return { ...t, isActive: false };
+            }
+            return t;
+          });
+          set({ tours: updatedTours });
+          try {
+            console.log("Store: Toggling tour", tourId, "to", newState, "path:", normalizedPath);
+            if (newState) {
+              let query = supabase.from("tours").update({ is_active: false }).eq("project_id", tour.project_id);
+              if (normalizedPath === "/") {
+                query = query.or('page_url.eq."/",page_url.is.null,page_url.eq.""');
+              } else {
+                query = query.eq("page_url", tour.pageUrl);
+              }
+              const { error: deactivateError } = await query.neq("id", tourId);
+              if (deactivateError) throw deactivateError;
+            }
+            const { error: updateError } = await supabase.from("tours").update({ is_active: newState }).eq("id", tourId);
+            if (updateError) throw updateError;
+          } catch (error) {
+            console.error("Error toggling tour activation:", error);
+            set({ tours });
+          }
         }
       }),
       {
@@ -50355,8 +50424,31 @@ ${suffix}`;
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
    */
-  const __iconNode$9 = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-  const ChevronRight = createLucideIcon("chevron-right", __iconNode$9);
+  const __iconNode$b = [
+    ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
+    ["path", { d: "M19 12H5", key: "x3x0zl" }]
+  ];
+  const ArrowLeft = createLucideIcon("arrow-left", __iconNode$b);
+  /**
+   * @license lucide-react v0.554.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   */
+  const __iconNode$a = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+  const ChevronRight = createLucideIcon("chevron-right", __iconNode$a);
+  /**
+   * @license lucide-react v0.554.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   */
+  const __iconNode$9 = [
+    ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+    ["path", { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3", key: "1u773s" }],
+    ["path", { d: "M12 17h.01", key: "p32p05" }]
+  ];
+  const CircleQuestionMark = createLucideIcon("circle-question-mark", __iconNode$9);
   /**
    * @license lucide-react v0.554.0 - ISC
    *
@@ -50364,11 +50456,10 @@ ${suffix}`;
    * See the LICENSE file in the root directory of this source tree.
    */
   const __iconNode$8 = [
-    ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-    ["path", { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3", key: "1u773s" }],
-    ["path", { d: "M12 17h.01", key: "p32p05" }]
+    ["path", { d: "m16 18 6-6-6-6", key: "eg8j8" }],
+    ["path", { d: "m8 6-6 6 6 6", key: "ppft3o" }]
   ];
-  const CircleQuestionMark = createLucideIcon("circle-question-mark", __iconNode$8);
+  const Code = createLucideIcon("code", __iconNode$8);
   /**
    * @license lucide-react v0.554.0 - ISC
    *
@@ -58094,445 +58185,6 @@ ${suffix}`;
     }, onLayoutMeasure: (measured) => registerItem(value, measured), ref: externalRef, ignoreStrict: true, children });
   }
   const ReorderItem = /* @__PURE__ */ reactExports.forwardRef(ReorderItemComponent);
-  function StepEditor() {
-    const { recordedSteps, updateStep, deleteStep, reorderSteps, isRecording, saveTour, stopRecording, isLoading, editingTourId, deleteTour, setTour, setStatus, tours } = useTourStore();
-    const [tourTitle, setTourTitle] = reactExports.useState("New Tour");
-    const [showDeleteConfirm, setShowDeleteConfirm] = reactExports.useState(false);
-    if (!isRecording) return null;
-    const isEditingExistingTour = !!editingTourId;
-    const currentTour = tours.find((t) => t.id === editingTourId);
-    const handlePlayback = () => {
-      if (currentTour) {
-        setTour(currentTour);
-        setStatus("playing");
-      }
-    };
-    const handleDelete = async () => {
-      if (editingTourId) {
-        await deleteTour(editingTourId);
-        stopRecording();
-      }
-    };
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "fixed top-20 right-6 w-80 max-h-[calc(100vh-8rem)] flex flex-col glass rounded-2xl shadow-2xl overflow-hidden admin-toolbar-ignore z-40", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4 border-b border-border/50 bg-white/50 space-y-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-bold text-foreground", children: isEditingExistingTour ? "Edit Tour" : "Recorded Steps" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-            isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 animate-spin text-primary" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Button,
-              {
-                size: "sm",
-                variant: "ghost",
-                onClick: stopRecording,
-                disabled: isLoading,
-                className: "h-7 w-7 p-0 rounded-full hover:bg-red-50 hover:text-red-500",
-                children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Button,
-              {
-                size: "sm",
-                onClick: () => saveTour(tourTitle, window.location.pathname),
-                disabled: isLoading,
-                className: "bg-primary hover:bg-primary/90 text-primary-foreground h-7 text-xs rounded-full shadow-sm",
-                children: isLoading ? "Saving..." : "Save"
-              }
-            )
-          ] })
-        ] }),
-        isEditingExistingTour && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            Button,
-            {
-              size: "sm",
-              variant: "outline",
-              onClick: handlePlayback,
-              className: "flex-1 h-8 text-xs gap-1",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(Play, { className: "w-3 h-3" }),
-                "Playback"
-              ]
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            Button,
-            {
-              size: "sm",
-              variant: "outline",
-              onClick: () => setShowDeleteConfirm(true),
-              className: "flex-1 h-8 text-xs gap-1 text-red-600 hover:text-red-700 hover:bg-red-50",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3 h-3" }),
-                "Delete"
-              ]
-            }
-          )
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "text-xs text-muted-foreground font-medium uppercase tracking-wide", children: "Tour Title" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "input",
-            {
-              type: "text",
-              value: tourTitle,
-              onChange: (e) => setTourTitle(e.target.value),
-              className: "w-full bg-white/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all",
-              placeholder: "Enter tour title..."
-            }
-          )
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-muted-foreground flex justify-between", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
-          "Steps: ",
-          recordedSteps.length
-        ] }) })
-      ] }),
-      showDeleteConfirm && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute inset-0 bg-black/50 flex items-center justify-center z-50 rounded-2xl", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-white rounded-xl p-6 m-4 max-w-sm shadow-2xl", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h4", { className: "font-bold text-lg mb-2", children: "Delete Tour?" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground mb-4", children: "This action cannot be undone. The tour will be permanently deleted." }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Button,
-            {
-              size: "sm",
-              variant: "outline",
-              onClick: () => setShowDeleteConfirm(false),
-              className: "flex-1",
-              children: "Cancel"
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Button,
-            {
-              size: "sm",
-              onClick: handleDelete,
-              className: "flex-1 bg-red-600 hover:bg-red-700 text-white",
-              children: "Delete"
-            }
-          )
-        ] })
-      ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 overflow-y-auto p-4 space-y-3 bg-white/30", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(ReorderGroup, { axis: "y", values: recordedSteps, onReorder: reorderSteps, className: "space-y-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatePresence, { initial: false, children: recordedSteps.map((step, index) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-          ReorderItem,
-          {
-            value: step,
-            initial: { opacity: 0, x: 20 },
-            animate: { opacity: 1, x: 0 },
-            exit: { opacity: 0, x: -20 },
-            className: "group relative bg-white border border-border rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing",
-            children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-1 text-muted-foreground/50 cursor-grab active:cursor-grabbing hover:text-primary transition-colors", children: /* @__PURE__ */ jsxRuntimeExports.jsx(GripVertical, { className: "w-4 h-4" }) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 space-y-2", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full uppercase tracking-wider", children: [
-                    "Step ",
-                    index + 1
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    Button,
-                    {
-                      variant: "ghost",
-                      size: "icon",
-                      className: "h-6 w-6 text-muted-foreground hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all rounded-full",
-                      onClick: () => deleteStep(step.id),
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3 h-3" })
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "textarea",
-                  {
-                    value: step.content,
-                    onChange: (e) => updateStep(step.id, { content: e.target.value }),
-                    className: "w-full bg-transparent text-sm text-foreground focus:outline-none resize-none placeholder:text-muted-foreground/50",
-                    rows: 2,
-                    placeholder: "Click on this element to proceed."
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-muted-foreground font-mono truncate max-w-[200px] bg-slate-100 px-1.5 py-0.5 rounded", children: step.target })
-              ] })
-            ] })
-          },
-          step.id
-        )) }) }),
-        recordedSteps.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center py-12 text-muted-foreground text-sm flex flex-col items-center gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(GripVertical, { className: "w-6 h-6 text-slate-300" }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Click elements on the page to record steps." })
-        ] })
-      ] })
-    ] });
-  }
-  function getUniqueSelector(element) {
-    if (element.id) {
-      return `#${element.id}`;
-    }
-    const path = [];
-    let current = element;
-    while (current && current.tagName !== "BODY") {
-      let selector = current.tagName.toLowerCase();
-      if (current.className && typeof current.className === "string") {
-        const classes = current.className.split(" ").filter((c) => !c.startsWith("hover:") && !c.startsWith("focus:"));
-        if (classes.length > 0) {
-          selector += `.${classes[0]}`;
-        }
-      }
-      const parent = current.parentElement;
-      if (parent) {
-        const siblings = Array.from(parent.children).filter((c) => c.tagName === current.tagName);
-        if (siblings.length > 1) {
-          const index = Array.from(parent.children).indexOf(current) + 1;
-          selector += `:nth-child(${index})`;
-        }
-      }
-      path.unshift(selector);
-      current = current.parentElement;
-    }
-    return path.join(" > ");
-  }
-  function RecordingOverlay() {
-    const { isRecording, addStep, creationMode, voiceTranscript, interimVoiceTranscript, clearVoiceTranscript } = useTourStore();
-    const [hoveredElement, setHoveredElement] = reactExports.useState(null);
-    const [clickPosition, setClickPosition] = reactExports.useState(null);
-    reactExports.useEffect(() => {
-      if (!isRecording) return;
-      const getInteractiveElement = (target) => {
-        if (target.closest(".admin-toolbar-ignore")) return null;
-        if (target.id === "guidemark-host") return null;
-        let current = target;
-        while (current && current !== document.body) {
-          const tagName = current.tagName.toLowerCase();
-          if (["button", "a", "input", "select", "textarea", "details", "summary"].includes(tagName)) {
-            return current;
-          }
-          const role = current.getAttribute("role");
-          if (["button", "link", "menuitem", "tab", "checkbox", "radio", "switch"].includes(role || "")) {
-            return current;
-          }
-          const style = window.getComputedStyle(current);
-          if (style.cursor === "pointer") {
-            return current;
-          }
-          current = current.parentElement;
-        }
-        if (target && target !== document.body) {
-          return target;
-        }
-        return null;
-      };
-      const handleMouseMove = (e) => {
-        const target = e.target;
-        const interactive = getInteractiveElement(target);
-        setHoveredElement(interactive);
-      };
-      const handleClick = (e) => {
-        const target = e.target;
-        const interactive = getInteractiveElement(target);
-        if (!interactive) return;
-        e.preventDefault();
-        e.stopPropagation();
-        const selector = getUniqueSelector(interactive);
-        let content = "";
-        if (creationMode === "voice" && (voiceTranscript || interimVoiceTranscript)) {
-          content = (voiceTranscript + " " + interimVoiceTranscript).trim();
-          clearVoiceTranscript();
-        }
-        setClickPosition({ x: e.clientX, y: e.clientY });
-        setTimeout(() => setClickPosition(null), 1e3);
-        addStep({
-          target: selector,
-          content,
-          action: "click"
-        });
-      };
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("click", handleClick, { capture: true });
-      return () => {
-        window.removeEventListener("mousemove", handleMouseMove);
-        window.removeEventListener("click", handleClick, { capture: true });
-      };
-    }, [isRecording, addStep, creationMode, voiceTranscript, interimVoiceTranscript, clearVoiceTranscript]);
-    if (!isRecording) return null;
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "fixed inset-0 pointer-events-none z-[100]", children: [
-      hoveredElement && /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "div",
-        {
-          className: "absolute border-2 border-primary bg-primary/10 pointer-events-none transition-all",
-          style: {
-            left: hoveredElement.getBoundingClientRect().left,
-            top: hoveredElement.getBoundingClientRect().top,
-            width: hoveredElement.getBoundingClientRect().width,
-            height: hoveredElement.getBoundingClientRect().height
-          }
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatePresence, { children: clickPosition && /* @__PURE__ */ jsxRuntimeExports.jsx(
-        motion.div,
-        {
-          initial: { scale: 0, opacity: 1 },
-          animate: { scale: 2, opacity: 0 },
-          exit: { opacity: 0 },
-          className: "absolute w-8 h-8 rounded-full border-2 border-red-500 bg-red-500/20",
-          style: {
-            left: clickPosition.x - 16,
-            top: clickPosition.y - 16
-          }
-        }
-      ) })
-    ] });
-  }
-  function Cursor({ x, y }) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      motion.div,
-      {
-        className: "fixed pointer-events-none z-[100] drop-shadow-2xl",
-        animate: { x, y },
-        transition: {
-          type: "spring",
-          damping: 30,
-          stiffness: 200,
-          mass: 0.8
-        },
-        initial: false,
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(MousePointer2, { className: "w-8 h-8 text-primary fill-primary/20 -rotate-12" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute top-full left-full mt-2 ml-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-3 h-3 bg-primary rounded-full animate-ping opacity-75" }) })
-        ]
-      }
-    );
-  }
-  function WidgetTourPlayer() {
-    const { currentTour, status, setStatus, tours, setTour } = useTourStore();
-    const [currentStepIndex, setCurrentStepIndex] = reactExports.useState(0);
-    const [targetRect, setTargetRect] = reactExports.useState(null);
-    reactExports.useEffect(() => {
-      const params = new URLSearchParams(window.location.search);
-      const playTourId = params.get("playTour");
-      console.log("TourPlayer: Effect triggered", {
-        playTourId,
-        status,
-        toursCount: tours.length,
-        tours: tours.map((t) => t.id)
-      });
-      if (playTourId && status === "idle") {
-        const tour = tours.find((t) => t.id === playTourId);
-        console.log("TourPlayer: Searching for tour...", { found: !!tour });
-        if (tour) {
-          const currentPath = window.location.pathname.replace(/\/$/, "") || "/";
-          const tourPath = (tour.pageUrl || "/").replace(/\/$/, "") || "/";
-          if (currentPath !== tourPath) {
-            console.log(`TourPlayer: Wrong page (${currentPath}). Redirecting to ${tourPath}`);
-            window.location.href = `${tourPath}?playTour=${tour.id}`;
-            return;
-          }
-          console.log("TourPlayer: Starting tour", tour.title);
-          setTour(tour);
-          setStatus("playing");
-          window.history.replaceState(null, "", window.location.pathname);
-        } else {
-          console.warn("TourPlayer: Tour not found for ID:", playTourId);
-        }
-      }
-    }, [tours, status, setTour, setStatus]);
-    reactExports.useEffect(() => {
-      if (status !== "playing" || !currentTour) {
-        console.log("TourPlayer: Not playing or no currentTour", { status, currentTour: !!currentTour });
-        return;
-      }
-      const step = currentTour.steps[currentStepIndex];
-      if (!step) {
-        console.log("TourPlayer: No step found at index", currentStepIndex);
-        return;
-      }
-      console.log("TourPlayer: Looking for element", step.target);
-      const updateTarget = () => {
-        const element = document.querySelector(step.target);
-        if (element) {
-          console.log("TourPlayer: Found element", element);
-          const rect = element.getBoundingClientRect();
-          setTargetRect(rect);
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-          element.classList.add("ring-4", "ring-primary", "ring-offset-4", "transition-all", "duration-500");
-          return () => element.classList.remove("ring-4", "ring-primary", "ring-offset-4", "transition-all", "duration-500");
-        } else {
-          console.log("TourPlayer: Element NOT found for selector:", step.target);
-          setTargetRect(new DOMRect(window.innerWidth / 2 - 100, window.innerHeight / 2 - 50, 200, 100));
-        }
-      };
-      const cleanup = updateTarget();
-      window.addEventListener("resize", updateTarget);
-      window.addEventListener("scroll", updateTarget);
-      return () => {
-        cleanup == null ? void 0 : cleanup();
-        window.removeEventListener("resize", updateTarget);
-        window.removeEventListener("scroll", updateTarget);
-      };
-    }, [currentTour, currentStepIndex, status]);
-    if (status !== "playing" || !currentTour || !targetRect) {
-      console.log("TourPlayer: Early return", { status, currentTour: !!currentTour, targetRect: !!targetRect });
-      return null;
-    }
-    const currentStep = currentTour.steps[currentStepIndex];
-    const isLastStep = currentStepIndex === currentTour.steps.length - 1;
-    const handleNext = () => {
-      if (isLastStep) {
-        setStatus("idle");
-        setCurrentStepIndex(0);
-      } else {
-        setCurrentStepIndex((prev) => prev + 1);
-      }
-    };
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "contents pointer-events-auto", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "fixed inset-0 bg-black/50 z-[2147483640] pointer-events-none transition-opacity duration-500" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Cursor,
-        {
-          x: targetRect.left + targetRect.width / 2,
-          y: targetRect.top + targetRect.height / 2
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        motion.div,
-        {
-          initial: { opacity: 0, y: 20, scale: 0.9 },
-          animate: { opacity: 1, y: 0, scale: 1 },
-          className: "fixed z-[2147483649] bg-white text-slate-900 p-6 rounded-2xl shadow-2xl border border-white/10 max-w-sm",
-          style: {
-            left: Math.min(window.innerWidth - 340, Math.max(20, targetRect.left)),
-            top: targetRect.bottom + 20 > window.innerHeight - 200 ? targetRect.top - 200 : targetRect.bottom + 20
-          },
-          children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between mb-4", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "flex items-center justify-center w-6 h-6 rounded-full bg-[#495BFD] text-white text-xs font-bold", children: currentStepIndex + 1 }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-gray-400", children: [
-                  "of ",
-                  currentTour.steps.length
-                ] })
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                Button,
-                {
-                  variant: "ghost",
-                  size: "icon",
-                  className: "h-6 w-6 -mr-2 -mt-2 hover:bg-slate-100 rounded-full",
-                  onClick: () => setStatus("idle"),
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
-                }
-              )
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-700 mb-6 leading-relaxed", children: currentStep.content || "Click on this element to proceed." }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-end", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { onClick: handleNext, className: "group bg-[#495BFD] hover:bg-[#3b4fd9] text-white", children: [
-              isLastStep ? "Finish" : "Next",
-              /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" })
-            ] }) })
-          ]
-        },
-        currentStep.id
-      )
-    ] });
-  }
   var reactDomExports = requireReactDom();
   const ReactDOM = /* @__PURE__ */ getDefaultExportFromCjs(reactDomExports);
   function __insertCSS(code) {
@@ -59615,14 +59267,577 @@ ${suffix}`;
       }))
     );
   });
+  function StepEditor({ isFloating = true, onBack, onSuccess }) {
+    const { recordedSteps, updateStep, deleteStep, reorderSteps, isRecording, saveTour, stopRecording, isLoading, editingTourId, deleteTour, setTour, setStatus, tours } = useTourStore();
+    const [tourTitle, setTourTitle] = reactExports.useState("New Tour");
+    const [showDeleteConfirm, setShowDeleteConfirm] = reactExports.useState(false);
+    const [visibleSelectors, setVisibleSelectors] = reactExports.useState({});
+    if (!isRecording) return null;
+    const toggleSelector = (id2) => {
+      setVisibleSelectors((prev) => ({ ...prev, [id2]: !prev[id2] }));
+    };
+    const isEditingExistingTour = !!editingTourId;
+    const currentTour = tours.find((t) => t.id === editingTourId);
+    const handlePlayback = () => {
+      if (currentTour) {
+        setTour(currentTour);
+        setStatus("playing");
+      }
+    };
+    const handleDelete = async () => {
+      if (editingTourId) {
+        await deleteTour(editingTourId);
+        const msg = "Tour deleted successfully";
+        toast.success(msg, { duration: 3e3 });
+        if (onSuccess) onSuccess(msg);
+        if (onBack) {
+          onBack();
+        } else {
+          stopRecording();
+        }
+      }
+    };
+    const content = /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: cn$1(
+      "flex flex-col overflow-hidden",
+      isFloating ? "fixed top-24 right-6 w-80 max-h-[calc(100vh-10rem)] bg-white rounded-[2.5rem] shadow-2xl border border-slate-200/60 admin-toolbar-ignore z-40" : "h-full w-full"
+    ), children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-6 pb-2 space-y-5", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-bold text-foreground", children: isEditingExistingTour ? "Edit Tour" : "Recorded Steps" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 animate-spin text-primary" }),
+            onBack && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                size: "sm",
+                variant: "ghost",
+                onClick: onBack,
+                disabled: isLoading,
+                className: "h-8 w-8 p-0 rounded-full hover:bg-slate-200 hover:text-slate-700 transition-colors",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-5 h-5" })
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                size: "sm",
+                variant: "ghost",
+                onClick: stopRecording,
+                disabled: isLoading,
+                className: "h-8 w-8 p-0 rounded-full hover:bg-slate-200 hover:text-slate-700 transition-colors",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-5 h-5" })
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                size: "sm",
+                onClick: () => saveTour(tourTitle, window.location.pathname),
+                disabled: isLoading,
+                className: "bg-[#495BFD] hover:bg-[#3b4fd9] text-white h-8 px-4 text-xs rounded-full shadow-lg shadow-blue-500/20 transition-all active:scale-95",
+                children: isLoading ? "Saving..." : "Save Tour"
+              }
+            )
+          ] })
+        ] }),
+        isEditingExistingTour && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button,
+            {
+              size: "sm",
+              variant: "secondary",
+              onClick: handlePlayback,
+              className: "flex-1 h-9 text-xs gap-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 border-none",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Play, { className: "w-3.5 h-3.5 fill-current" }),
+                "Playback"
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button,
+            {
+              size: "sm",
+              variant: "secondary",
+              onClick: () => setShowDeleteConfirm(true),
+              className: "flex-1 h-9 text-xs gap-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 border-none",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3.5 h-3.5" }),
+                "Delete"
+              ]
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "text-xs text-muted-foreground font-medium uppercase tracking-wide", children: "Tour Title" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "input",
+            {
+              type: "text",
+              value: tourTitle,
+              onChange: (e) => setTourTitle(e.target.value),
+              className: "w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#495BFD] focus:ring-4 focus:ring-blue-500/5 transition-all",
+              placeholder: "Enter tour title..."
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-muted-foreground flex justify-between", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+          "Steps: ",
+          recordedSteps.length
+        ] }) })
+      ] }),
+      showDeleteConfirm && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute inset-0 bg-black/50 flex items-center justify-center z-50 rounded-2xl", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-white rounded-xl p-6 m-4 max-w-sm shadow-2xl", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h4", { className: "font-bold text-lg mb-2", children: "Delete Tour?" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground mb-4", children: "This action cannot be undone. The tour will be permanently deleted." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Button,
+            {
+              size: "sm",
+              variant: "outline",
+              onClick: () => setShowDeleteConfirm(false),
+              className: "flex-1",
+              children: "Cancel"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Button,
+            {
+              size: "sm",
+              onClick: handleDelete,
+              className: "flex-1 bg-red-600 hover:bg-red-700 text-white",
+              children: "Delete"
+            }
+          )
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 overflow-y-auto p-4 pt-2 space-y-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ReorderGroup, { axis: "y", values: recordedSteps, onReorder: reorderSteps, className: "space-y-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatePresence, { initial: false, children: recordedSteps.map((step, index) => {
+          var _a, _b;
+          return /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ReorderItem,
+            {
+              value: step,
+              initial: { opacity: 0, x: 20 },
+              animate: { opacity: 1, x: 0 },
+              exit: { opacity: 0, x: -20 },
+              className: "group relative bg-white rounded-xl p-2.5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-lg hover:scale-[1.01] hover:z-10 transition-all cursor-grab active:cursor-grabbing",
+              style: {
+                border: "1px solid #CBD5E1"
+              },
+              children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 flex-1 min-w-0", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-slate-400 hover:text-[#495BFD] transition-colors cursor-grab active:cursor-grabbing", children: /* @__PURE__ */ jsxRuntimeExports.jsx(GripVertical, { className: "w-4 h-4" }) }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shrink-0 text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider", children: index + 1 }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-semibold text-slate-700 truncate", children: ((_a = step.target.split(" ").pop()) == null ? void 0 : _a.replace(/[.#\[\]]/g, " ")) || "Element" })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      Button,
+                      {
+                        variant: "ghost",
+                        size: "icon",
+                        className: cn$1(
+                          "h-7 w-7 rounded-full transition-colors",
+                          visibleSelectors[step.id] ? "bg-blue-50 text-blue-600" : "text-muted-foreground hover:bg-slate-100"
+                        ),
+                        onClick: (e) => {
+                          e.stopPropagation();
+                          toggleSelector(step.id);
+                        },
+                        children: /* @__PURE__ */ jsxRuntimeExports.jsx(Code, { className: "w-3.5 h-3.5" })
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      Button,
+                      {
+                        variant: "ghost",
+                        size: "icon",
+                        className: "h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-full",
+                        onClick: (e) => {
+                          e.stopPropagation();
+                          deleteStep(step.id);
+                        },
+                        children: /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3.5 h-3.5" })
+                      }
+                    )
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "textarea",
+                  {
+                    value: step.content,
+                    onChange: (e) => updateStep(step.id, { content: e.target.value }),
+                    onPointerDown: (e) => e.stopPropagation(),
+                    onPointerDownCapture: (e) => e.stopPropagation(),
+                    onMouseDown: (e) => e.stopPropagation(),
+                    onMouseDownCapture: (e) => e.stopPropagation(),
+                    className: "w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#495BFD] focus:ring-4 focus:ring-blue-500/5 transition-all resize-none placeholder:text-muted-foreground/50",
+                    rows: 2,
+                    placeholder: "What should the user do?"
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatePresence, { children: visibleSelectors[step.id] && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  motion.div,
+                  {
+                    initial: { height: 0, opacity: 0, marginTop: 0 },
+                    animate: { height: "auto", opacity: 1, marginTop: 4 },
+                    exit: { height: 0, opacity: 0, marginTop: 0 },
+                    transition: { duration: 0.2, ease: "easeInOut" },
+                    className: "overflow-hidden",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1 font-mono text-[10px] bg-slate-900 text-slate-300 p-2 rounded-lg border border-slate-800 shadow-inner", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-slate-500 shrink-0", children: "Label:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-blue-400 truncate", children: ((_b = step.target.split(" ").pop()) == null ? void 0 : _b.replace(/[.#\[\]]/g, " ")) || "Element" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-slate-500 shrink-0", children: "Selector:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-emerald-400 break-all", children: step.target })
+                      ] })
+                    ] })
+                  }
+                ) })
+              ] })
+            },
+            step.id
+          );
+        }) }) }),
+        recordedSteps.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center py-12 text-muted-foreground text-sm flex flex-col items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(GripVertical, { className: "w-6 h-6 text-slate-300" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Click elements on the page to record steps." })
+        ] })
+      ] })
+    ] });
+    return isFloating ? content : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-full w-full flex flex-col overflow-hidden", children: content });
+  }
+  function getUniqueSelector(element) {
+    if (element.id) {
+      return `#${element.id}`;
+    }
+    const path = [];
+    let current = element;
+    while (current && current.tagName !== "BODY") {
+      let selector = current.tagName.toLowerCase();
+      if (current.className && typeof current.className === "string") {
+        const classes = current.className.split(" ").filter((c) => !c.startsWith("hover:") && !c.startsWith("focus:"));
+        if (classes.length > 0) {
+          selector += `.${classes[0]}`;
+        }
+      }
+      const parent = current.parentElement;
+      if (parent) {
+        const siblings = Array.from(parent.children).filter((c) => c.tagName === current.tagName);
+        if (siblings.length > 1) {
+          const index = Array.from(parent.children).indexOf(current) + 1;
+          selector += `:nth-child(${index})`;
+        }
+      }
+      path.unshift(selector);
+      current = current.parentElement;
+    }
+    return path.join(" > ");
+  }
+  function RecordingOverlay() {
+    const { isRecording, addStep, creationMode, voiceTranscript, interimVoiceTranscript, clearVoiceTranscript } = useTourStore();
+    const [hoveredElement, setHoveredElement] = reactExports.useState(null);
+    const [clickPosition, setClickPosition] = reactExports.useState(null);
+    reactExports.useEffect(() => {
+      if (!isRecording) return;
+      const getInteractiveElement = (target) => {
+        if (target.closest(".admin-toolbar-ignore")) return null;
+        if (target.id === "producttour-host") return null;
+        let current = target;
+        while (current && current !== document.body) {
+          const tagName = current.tagName.toLowerCase();
+          if (["button", "a", "input", "select", "textarea", "details", "summary"].includes(tagName)) {
+            return current;
+          }
+          const role = current.getAttribute("role");
+          if (["button", "link", "menuitem", "tab", "checkbox", "radio", "switch"].includes(role || "")) {
+            return current;
+          }
+          const style = window.getComputedStyle(current);
+          if (style.cursor === "pointer") {
+            return current;
+          }
+          current = current.parentElement;
+        }
+        if (target && target !== document.body) {
+          return target;
+        }
+        return null;
+      };
+      const handleMouseMove = (e) => {
+        const target = e.target;
+        const interactive = getInteractiveElement(target);
+        setHoveredElement(interactive);
+      };
+      const handleClick = (e) => {
+        const target = e.target;
+        const interactive = getInteractiveElement(target);
+        if (!interactive) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const selector = getUniqueSelector(interactive);
+        let content = "";
+        if (creationMode === "voice" && (voiceTranscript || interimVoiceTranscript)) {
+          content = (voiceTranscript + " " + interimVoiceTranscript).trim();
+          clearVoiceTranscript();
+        }
+        setClickPosition({ x: e.clientX, y: e.clientY });
+        setTimeout(() => setClickPosition(null), 1e3);
+        addStep({
+          target: selector,
+          content,
+          action: "click"
+        });
+      };
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("click", handleClick, { capture: true });
+      return () => {
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("click", handleClick, { capture: true });
+      };
+    }, [isRecording, addStep, creationMode, voiceTranscript, interimVoiceTranscript, clearVoiceTranscript]);
+    if (!isRecording) return null;
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "fixed inset-0 pointer-events-none z-[100]", children: [
+      hoveredElement && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "div",
+        {
+          className: "absolute border-2 border-primary bg-primary/10 pointer-events-none transition-all",
+          style: {
+            left: hoveredElement.getBoundingClientRect().left,
+            top: hoveredElement.getBoundingClientRect().top,
+            width: hoveredElement.getBoundingClientRect().width,
+            height: hoveredElement.getBoundingClientRect().height
+          }
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatePresence, { children: clickPosition && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        motion.div,
+        {
+          initial: { scale: 0, opacity: 1 },
+          animate: { scale: 2, opacity: 0 },
+          exit: { opacity: 0 },
+          className: "absolute w-8 h-8 rounded-full border-2 border-red-500 bg-red-500/20",
+          style: {
+            left: clickPosition.x - 16,
+            top: clickPosition.y - 16
+          }
+        }
+      ) })
+    ] });
+  }
+  function WidgetTourPlayer() {
+    const { currentTour, status, setStatus, tours, setTour, projects, currentProjectId, pingProject } = useTourStore();
+    const [currentStepIndex, setCurrentStepIndex] = reactExports.useState(0);
+    const [targetRect, setTargetRect] = reactExports.useState(null);
+    const projectIdForTheme = (currentTour == null ? void 0 : currentTour.project_id) || currentProjectId;
+    const currentProject = projects.find((p) => p.id === projectIdForTheme);
+    reactExports.useEffect(() => {
+      console.log("WidgetTourPlayer: Theme Lookup", {
+        tourProjectId: currentTour == null ? void 0 : currentTour.project_id,
+        storeProjectId: currentProjectId,
+        resolvedProjectId: projectIdForTheme,
+        projectFound: !!currentProject,
+        themeSettings: currentProject == null ? void 0 : currentProject.themeSettings
+      });
+    }, [currentTour, currentProjectId, projects, currentProject]);
+    const theme = (currentProject == null ? void 0 : currentProject.themeSettings) || {
+      fontFamily: "Inter, sans-serif",
+      darkMode: false,
+      primaryColor: "#495BFD",
+      borderRadius: "12",
+      paddingV: "10",
+      paddingH: "20"
+    };
+    reactExports.useEffect(() => {
+      const params = new URLSearchParams(window.location.search);
+      const playTourId = params.get("playTour");
+      if (playTourId && status === "idle") {
+        const tour = tours.find((t) => t.id === playTourId);
+        if (tour) {
+          const currentPath = window.location.pathname.replace(/\/$/, "") || "/";
+          const tourPath = (tour.pageUrl || "/").replace(/\/$/, "") || "/";
+          if (currentPath !== tourPath) {
+            window.location.href = `${tourPath}?playTour=${tour.id}`;
+            return;
+          }
+          setTour(tour);
+          setStatus("playing");
+          window.history.replaceState(null, "", window.location.pathname);
+        }
+      }
+    }, [tours, status, setTour, setStatus]);
+    reactExports.useEffect(() => {
+      if (status !== "playing" || !currentTour) return;
+      const step = currentTour.steps[currentStepIndex];
+      if (!step) return;
+      const updateTarget = () => {
+        const element = document.querySelector(step.target);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          setTargetRect(rect);
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        } else {
+          setTargetRect(new DOMRect(window.innerWidth / 2 - 100, window.innerHeight / 2 - 50, 200, 100));
+        }
+      };
+      updateTarget();
+      window.addEventListener("resize", updateTarget);
+      window.addEventListener("scroll", updateTarget);
+      return () => {
+        window.removeEventListener("resize", updateTarget);
+        window.removeEventListener("scroll", updateTarget);
+      };
+    }, [currentTour, currentStepIndex, status]);
+    if (status !== "playing" || !currentTour || !targetRect) {
+      return null;
+    }
+    const currentStep = currentTour.steps[currentStepIndex];
+    const isLastStep = currentStepIndex === currentTour.steps.length - 1;
+    const handleNext = () => {
+      if (isLastStep) {
+        setStatus("idle");
+        setCurrentStepIndex(0);
+      } else {
+        setCurrentStepIndex((prev) => prev + 1);
+      }
+    };
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "contents pointer-events-auto", style: { fontFamily: theme.fontFamily }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "svg",
+        {
+          className: "fixed inset-0 z-[2147483640] pointer-events-none",
+          style: { width: "100vw", height: "100vh" },
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("defs", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("mask", { id: "spotlight-mask", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "0", y: "0", width: "100%", height: "100%", fill: "white" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "rect",
+                {
+                  x: targetRect.left - 4,
+                  y: targetRect.top - 4,
+                  width: targetRect.width + 8,
+                  height: targetRect.height + 8,
+                  rx: "8",
+                  fill: "black"
+                }
+              )
+            ] }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "rect",
+              {
+                x: "0",
+                y: "0",
+                width: "100%",
+                height: "100%",
+                fill: "rgba(0,0,0,0.6)",
+                mask: "url(#spotlight-mask)",
+                className: "transition-all duration-500"
+              }
+            )
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        motion.div,
+        {
+          initial: { opacity: 0 },
+          animate: {
+            opacity: [0.4, 1, 0.4],
+            scale: [1, 1.02, 1]
+          },
+          transition: {
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut"
+          },
+          className: "fixed z-[2147483641] pointer-events-none border-2 rounded-lg",
+          style: {
+            left: targetRect.left - 6,
+            top: targetRect.top - 6,
+            width: targetRect.width + 12,
+            height: targetRect.height + 12,
+            borderColor: theme.primaryColor,
+            boxShadow: `0 0 15px ${theme.primaryColor}80`
+          }
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        motion.div,
+        {
+          initial: { opacity: 0, y: 20, scale: 0.9 },
+          animate: { opacity: 1, y: 0, scale: 1 },
+          className: cn$1(
+            "fixed z-[2147483649] p-6 rounded-2xl shadow-2xl border max-w-sm",
+            theme.darkMode ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-100 text-slate-900"
+          ),
+          style: {
+            left: Math.min(window.innerWidth - 360, Math.max(20, targetRect.left)),
+            top: targetRect.bottom + 40 > window.innerHeight - 200 ? targetRect.top - 220 : targetRect.bottom + 20
+          },
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between mb-4", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "span",
+                  {
+                    className: "flex items-center justify-center w-6 h-6 rounded-full text-white text-xs font-bold",
+                    style: { backgroundColor: theme.primaryColor },
+                    children: currentStepIndex + 1
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: cn$1("text-xs", theme.darkMode ? "text-slate-400" : "text-gray-400"), children: [
+                  "of ",
+                  currentTour.steps.length
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  className: cn$1(
+                    "h-6 w-6 -mr-2 -mt-2 rounded-full flex items-center justify-center transition-colors",
+                    theme.darkMode ? "hover:bg-slate-800" : "hover:bg-slate-100"
+                  ),
+                  onClick: () => setStatus("idle"),
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: cn$1("mb-6 leading-relaxed", theme.darkMode ? "text-slate-200" : "text-gray-700"), children: currentStep.content || "Click on this element to proceed." }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-end", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "button",
+              {
+                onClick: handleNext,
+                className: "group flex items-center justify-center font-bold text-white shadow-sm hover:brightness-110 active:scale-95 transition-all",
+                style: {
+                  backgroundColor: theme.primaryColor,
+                  borderRadius: `${theme.borderRadius}px`,
+                  padding: `${theme.paddingV}px ${theme.paddingH}px`
+                },
+                children: [
+                  isLastStep ? "Finish" : "Next",
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" })
+                ]
+              }
+            ) })
+          ]
+        },
+        currentStep.id
+      )
+    ] });
+  }
   function generateTourFromPage() {
     const elements = Array.from(document.querySelectorAll('button, a, input, select, textarea, [role="button"]'));
     const scoredElements = elements.filter((el) => {
       const rect = el.getBoundingClientRect();
       if (rect.width < 10 || rect.height < 10) return false;
-      if (window.getComputedStyle(el).display === "none") return false;
-      if (window.getComputedStyle(el).visibility === "hidden") return false;
+      const style = window.getComputedStyle(el);
+      if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") return false;
       if (el.closest(".admin-toolbar-ignore")) return false;
+      if (el.tagName === "A" && !el.innerText.trim() && !el.getAttribute("aria-label")) return false;
       return true;
     }).map((el) => ({
       element: el,
@@ -59632,40 +59847,86 @@ ${suffix}`;
     return topCandidates.map((candidate) => {
       const el = candidate.element;
       const selector = getUniqueSelector(el);
-      const label = getElementLabel(el);
+      const content = generateSmartContent(el);
       return {
         target: selector,
-        content: `This is the ${label}. Click here to ${guessAction(el)}.`,
-        action: "click"
-        // Default action
+        content
       };
     });
   }
   function scoreElement(el) {
     let score = 0;
-    if (el.innerText && el.innerText.trim().length > 0) score += 10;
+    const text = (el.innerText || "").toLowerCase();
+    const isVisible = el.offsetParent !== null;
+    if (!isVisible) return -100;
+    if (text && text.trim().length > 0) score += 10;
     if (el.tagName === "BUTTON") score += 5;
     if (el.tagName === "A") score += 3;
-    if (el.tagName === "INPUT") score += 2;
-    if (el.id) score += 5;
+    if (text.includes("sign up") || text.includes("get started") || text.includes("try free")) score += 15;
+    if (text.includes("login") || text.includes("sign in")) score += 5;
     if (el.closest("nav")) score += 10;
     if (el.closest("header")) score += 8;
-    if (el.closest("main")) score += 5;
+    if (el.closest("footer")) score -= 2;
     return score;
   }
-  function getElementLabel(el) {
-    if (el.innerText && el.innerText.trim().length > 0) {
-      return el.innerText.trim().slice(0, 20);
+  const COMMON_TERMS = {
+    "features": "Explore the powerful features designed to streamline your workflow and boost productivity.",
+    "pricing": "Find the perfect plan that fits your needs, from individual tiers to enterprise solutions.",
+    "login": "Already have an account? Log in to access your dashboard and saved projects.",
+    "sign in": "Log in to access your account settings and pick up where you left off.",
+    "signup": "Create your account today to unlock full access and get started immediately.",
+    "sign up": "Create your account today to unlock full access and get started immediately.",
+    "register": "Registration is quick and easy. Join our community in just a few clicks.",
+    "get started": "Begin setting up your workspace and configuring your preferences right now.",
+    "contact": "Have questions? Reach out to our support team for personalized assistance.",
+    "about": "Learn more about our mission, vision, and the team behind the platform.",
+    "dashboard": "View your analytics, manage recent projects, and track overall progress.",
+    "settings": "Customize your experience, manage notifications, and update your profile details.",
+    "profile": "Manage your personal information and account security settings.",
+    "docs": "Browse our comprehensive guides and API references to master the platform.",
+    "learn more": "Get detailed information about this feature and how it benefits you."
+  };
+  function generateSmartContent(el) {
+    const rawLabel = getElementLabel(el);
+    const lowerLabel = rawLabel.toLowerCase().trim();
+    for (const [key, value] of Object.entries(COMMON_TERMS)) {
+      if (lowerLabel.includes(key)) {
+        return value;
+      }
     }
-    if (el.getAttribute("aria-label")) return el.getAttribute("aria-label");
-    if (el.getAttribute("placeholder")) return el.getAttribute("placeholder");
-    if (el.id) return el.id;
-    return el.tagName.toLowerCase();
+    if (el.closest("nav")) {
+      return `Quickly access the ${rawLabel} section to manage your workflow.`;
+    }
+    if (el.tagName === "INPUT") {
+      const placeholder = el.getAttribute("placeholder");
+      if (placeholder) {
+        return `Provide your ${placeholder.toLowerCase()} here to proceed with your setup.`;
+      }
+      return `Enter the required information in this field to continue.`;
+    }
+    const actionVerb = getActionVerb(el);
+    return `${actionVerb} this element to access more options or details.`;
   }
-  function guessAction(el) {
-    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") return "enter text";
-    if (el.tagName === "SELECT") return "select an option";
-    return "proceed";
+  function getElementLabel(el) {
+    var _a;
+    const text = (_a = el.innerText) == null ? void 0 : _a.trim();
+    if (text && text.length < 30) return capitalize(text);
+    const aria = el.getAttribute("aria-label");
+    if (aria) return capitalize(aria);
+    const placeholder = el.getAttribute("placeholder");
+    if (placeholder) return capitalize(placeholder);
+    if (el.id) return capitalize(el.id.replace(/[-_]/g, " "));
+    return "Item";
+  }
+  function getActionVerb(el) {
+    if (el.tagName === "BUTTON") return "Click";
+    if (el.tagName === "A") return "Select";
+    if (el.tagName === "INPUT") return "Fill out";
+    return "Interact with";
+  }
+  function capitalize(str) {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
   function CreateTourDialog({ isOpen, onClose }) {
     const { startRecording, setSteps, setLanguage } = useTourStore();
@@ -59687,6 +59948,14 @@ ${suffix}`;
         onClose();
       }
     };
+    const [hoveredButton, setHoveredButton] = reactExports.useState(null);
+    const getButtonStyle = (buttonId) => ({
+      border: hoveredButton === buttonId ? "1px solid #495BFD" : "1px solid #E2E8F0",
+      // Primary color on hover
+      transform: hoveredButton === buttonId ? "translateY(-4px)" : "none",
+      boxShadow: hoveredButton === buttonId ? "0 12px 24px -8px rgba(0, 0, 0, 0.15)" : "none",
+      transition: "all 0.2s ease-out"
+    });
     return /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatePresence, { children: isOpen && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         motion.div,
@@ -59708,14 +59977,26 @@ ${suffix}`;
           children: [
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-6 border-b border-border flex items-center justify-between bg-secondary/30", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-xl font-bold text-foreground", children: "Create New Tour" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "ghost", size: "icon", onClick: onClose, className: "hover:bg-secondary", children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-5 h-5 text-muted-foreground" }) })
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button,
+                {
+                  size: "sm",
+                  variant: "ghost",
+                  onClick: onClose,
+                  className: "h-8 w-8 p-0 rounded-full hover:bg-slate-100 hover:text-slate-600 transition-colors",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-5 h-5" })
+                }
+              )
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-6 grid grid-cols-1 md:grid-cols-2 gap-4", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsxs(
                 "button",
                 {
                   onClick: () => handleModeSelect("manual"),
-                  className: "group relative p-6 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-md transition-all text-left flex flex-col gap-4",
+                  onMouseEnter: () => setHoveredButton("manual"),
+                  onMouseLeave: () => setHoveredButton(null),
+                  className: "group relative p-6 rounded-xl bg-card text-left flex flex-col gap-4 cursor-pointer",
+                  style: getButtonStyle("manual"),
                   children: [
                     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-3 rounded-lg bg-blue-500/10 w-fit group-hover:scale-110 transition-transform", children: /* @__PURE__ */ jsxRuntimeExports.jsx(MousePointer2, { className: "w-6 h-6 text-blue-600" }) }),
                     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
@@ -59729,7 +60010,10 @@ ${suffix}`;
                 "button",
                 {
                   onClick: () => handleModeSelect("auto"),
-                  className: "group relative p-6 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-md transition-all text-left flex flex-col gap-4",
+                  onMouseEnter: () => setHoveredButton("auto"),
+                  onMouseLeave: () => setHoveredButton(null),
+                  className: "group relative p-6 rounded-xl bg-card text-left flex flex-col gap-4 cursor-pointer",
+                  style: getButtonStyle("auto"),
                   children: [
                     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-3 rounded-lg bg-purple-500/10 w-fit group-hover:scale-110 transition-transform", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { className: "w-6 h-6 text-purple-600" }) }),
                     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
@@ -59740,12 +60024,100 @@ ${suffix}`;
                 }
               )
             ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "px-6 pb-6 text-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[10px] text-muted-foreground uppercase tracking-widest font-medium", children: "✨ Powered by GuideMark AI" }) })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "px-6 pb-6 text-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[10px] text-muted-foreground uppercase tracking-widest font-medium", children: "✨ Powered by Product Tour AI" }) })
           ]
         }
       )
     ] }) });
   }
+  const ProductTourLogo = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 800 794", className, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "#E65221", fillRule: "evenodd", d: "M 454.000 740.169 L 438.000 740.221 L 414.000 732.016 L 402.432 723.000 L 391.760 710.000 L 386.776 700.000 L 341.224 565.000 L 331.714 548.000 L 313.000 525.926 L 298.000 513.984 L 273.000 500.638 L 136.000 455.227 L 117.981 441.000 L 106.773 421.000 L 103.594 404.000 L 104.774 277.000 L 110.773 259.000 L 117.984 248.000 L 131.000 236.293 L 148.000 227.834 L 577.000 61.333 L 602.000 55.836 L 626.000 58.774 L 647.000 68.984 L 661.028 82.000 L 674.667 109.000 L 677.496 146.000 L 677.452 220.000 L 676.448 249.000 L 673.496 262.000 L 662.227 292.000 L 658.805 297.000 L 650.227 323.000 L 646.773 328.000 L 638.476 353.000 L 635.816 356.000 L 627.188 383.000 L 624.524 386.000 L 604.227 442.000 L 600.773 447.000 L 581.188 502.000 L 578.524 505.000 L 570.227 530.000 L 566.805 535.000 L 503.227 703.000 L 495.016 717.000 L 485.000 727.028 L 469.000 736.224 L 454.000 740.169 Z M 454.000 607.226 L 438.000 607.452 L 428.000 604.196 L 417.000 597.064 L 407.760 585.000 L 361.227 449.000 L 349.240 426.000 L 333.500 406.000 L 314.000 388.759 L 286.000 372.773 L 152.000 328.230 L 142.000 323.240 L 131.000 312.340 L 124.776 300.000 L 123.500 292.000 L 124.774 277.000 L 135.000 258.686 L 150.000 248.773 L 585.000 79.773 L 605.000 75.548 L 616.000 76.774 L 628.000 80.804 L 636.000 85.759 L 649.240 100.000 L 656.452 119.000 L 655.226 141.000 L 484.227 584.000 L 473.340 598.000 L 461.000 605.227 L 454.000 607.226 Z" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "#FFFFFF", d: "M 454.000 607.226 L 438.000 607.452 L 428.000 604.196 L 417.000 597.064 L 407.760 585.000 L 361.227 449.000 L 349.240 426.000 L 333.500 406.000 L 314.000 388.759 L 286.000 372.773 L 152.000 328.230 L 142.000 323.240 L 131.000 312.340 L 124.776 300.000 L 123.500 292.000 L 124.774 277.000 L 135.000 258.686 L 150.000 248.773 L 585.000 79.773 L 605.000 75.548 L 616.000 76.774 L 628.000 80.804 L 636.000 85.759 L 649.240 100.000 L 656.452 119.000 L 655.226 141.000 L 484.227 584.000 L 473.340 598.000 L 461.000 605.227 L 454.000 607.226 Z" })
+  ] });
+  const Switch = ({ checked, onChange, disabled }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "button",
+    {
+      onClick: (e) => {
+        e.stopPropagation();
+        if (!disabled) onChange(!checked);
+      },
+      disabled,
+      className: cn$1(
+        "relative w-7 h-4 rounded-full transition-colors duration-200 outline-none",
+        checked ? "bg-[#495BFD]" : "bg-slate-300",
+        disabled && "opacity-50 cursor-not-allowed"
+      ),
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        motion.div,
+        {
+          animate: { x: checked ? 12 : 2 },
+          initial: false,
+          className: "absolute top-0.5 w-3 h-3 bg-white rounded-full shadow-sm",
+          transition: { type: "spring", stiffness: 500, damping: 30 }
+        }
+      )
+    }
+  );
+  const TourCard = ({ tour, onEdit, onPlay, toggleTourActivation, isLoading, onActivationChange }) => {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        onClick: onEdit,
+        className: cn$1(
+          "group p-4 bg-white rounded-2xl shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-lg hover:scale-[1.02] hover:relative hover:z-10 cursor-pointer transition-all duration-200",
+          !tour.isActive && "opacity-85 grayscale-[0.1]"
+        ),
+        style: { border: "1px solid #CBD5E1" },
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-start", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0 mr-2 space-y-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: cn$1(
+                "w-1.5 h-1.5 rounded-full",
+                tour.isActive ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-slate-400"
+              ) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-semibold text-slate-800 truncate", children: tour.title })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-[#495BFD] font-mono truncate px-3.5", children: tour.pageUrl || "/" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[10px] text-slate-500 px-3.5 flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                tour.steps.length,
+                " steps"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "•" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: new Date(tour.createdAt).toLocaleDateString() })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Switch,
+              {
+                checked: tour.isActive,
+                onChange: async (newState) => {
+                  console.log("Widget: Toggling tour", tour.id, "to", newState);
+                  await toggleTourActivation(tour.id);
+                  onActivationChange == null ? void 0 : onActivationChange(newState ? "Tour activated" : "Tour deactivated");
+                },
+                disabled: isLoading
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                size: "icon",
+                variant: "ghost",
+                className: "opacity-0 group-hover:opacity-100 h-8 w-8 hover:bg-blue-50 transition-all",
+                onClick: (e) => {
+                  e.stopPropagation();
+                  onPlay();
+                },
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(Play, { className: "w-4 h-4 text-[#495BFD]" })
+              }
+            )
+          ] })
+        ] })
+      }
+    );
+  };
   function Widget({ projectId, autoStart = true, showAdminPanel = true }) {
     const {
       status,
@@ -59759,22 +60131,64 @@ ${suffix}`;
       editTour,
       setTour,
       setStatus,
-      isLoading
+      isLoading,
+      stopRecording,
+      toggleTourActivation,
+      pingProject
     } = useTourStore();
+    reactExports.useEffect(() => {
+      var _a;
+      const currentProject2 = projects.find((p) => p.id === projectId);
+      if ((_a = currentProject2 == null ? void 0 : currentProject2.themeSettings) == null ? void 0 : _a.fontFamily) {
+        const fontName = currentProject2.themeSettings.fontFamily.split(",")[0].trim().replace(/['"]/g, "");
+        if (fontName) {
+          const link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, "+")}:wght@400;500;600;700&display=swap`;
+          document.head.appendChild(link);
+        }
+      }
+    }, [projects, projectId]);
     const [isAdminListOpen, setAdminListOpen] = reactExports.useState(false);
     const [isCreateTourDialogOpen, setIsCreateTourDialogOpen] = reactExports.useState(false);
+    const [tourFilter, setTourFilter] = reactExports.useState("page");
     const [currentPath, setCurrentPath] = reactExports.useState(window.location.pathname);
+    const [feedback, setFeedback] = reactExports.useState(null);
     const prevLoadingRef = reactExports.useRef(isLoading);
     const prevStatusRef = reactExports.useRef(status);
     const hasAutoStartedOnPage = reactExports.useRef({});
     reactExports.useEffect(() => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("createTour") === "true") {
+        setIsCreateTourDialogOpen(true);
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("createTour");
+        newUrl.searchParams.set("projectId", projectId);
+        window.history.replaceState({}, "", newUrl.toString());
+      }
+    }, [projectId]);
+    reactExports.useEffect(() => {
+      if (showAdminPanel) {
+        localStorage.setItem("producttour-admin-mode", "true");
+      }
+    }, [showAdminPanel]);
+    reactExports.useEffect(() => {
+      if (feedback) {
+        const timer = setTimeout(() => setFeedback(null), 3e3);
+        return () => clearTimeout(timer);
+      }
+    }, [feedback]);
+    reactExports.useEffect(() => {
       if (projectId) {
         setCurrentProject(projectId);
         console.log("Widget: Initializing with project", projectId);
+        if (!showAdminPanel && localStorage.getItem("producttour-admin-mode") !== "true") {
+          pingProject(projectId);
+        }
         fetchProjects();
         fetchTours();
       }
-    }, [projectId, setCurrentProject, fetchProjects, fetchTours]);
+    }, [projectId, setCurrentProject, fetchProjects, fetchTours, showAdminPanel, pingProject]);
     reactExports.useEffect(() => {
       const handleLocationChange = () => {
         if (window.location.pathname !== currentPath) {
@@ -59792,12 +60206,15 @@ ${suffix}`;
     reactExports.useEffect(() => {
       if (!autoStart || hasAutoStartedOnPage.current[currentPath]) return;
       if (tours.length === 0 || status !== "idle") return;
+      const isAdmin = showAdminPanel || localStorage.getItem("producttour-admin-mode") === "true";
+      if (isAdminListOpen || isAdmin || isCreateTourDialogOpen) return;
       const matchingTour = tours.find((t) => {
-        const tourPath = t.pageUrl || "/";
-        return tourPath === currentPath || tourPath === "/" && currentPath === "" || tourPath === "" && currentPath === "/";
+        const tourPath = (t.pageUrl || "/").replace(/\/$/, "") || "/";
+        const activePath = currentPath.replace(/\/$/, "") || "/";
+        return tourPath === activePath && t.isActive;
       });
       if (matchingTour) {
-        const storageKey = `guidemark-seen-${matchingTour.id}`;
+        const storageKey = `producttour-seen-${matchingTour.id}`;
         const hasSeen = localStorage.getItem(storageKey);
         if (!hasSeen) {
           hasAutoStartedOnPage.current[currentPath] = true;
@@ -59807,14 +60224,15 @@ ${suffix}`;
           localStorage.setItem(storageKey, "true");
         }
       }
-    }, [tours, status, autoStart, projectId, setTour, setStatus, currentPath]);
+    }, [tours, status, autoStart, projectId, setTour, setStatus, currentPath, isAdminListOpen, isCreateTourDialogOpen]);
     reactExports.useEffect(() => {
       const wasLoading = prevLoadingRef.current;
       const wasRecording = prevStatusRef.current === "recording";
       if (wasLoading && !isLoading) {
         if (wasRecording && status === "idle") {
           toast.success("Tour saved successfully!", {
-            style: { background: "#10B981", color: "white", border: "none" }
+            style: { background: "#10B981", color: "white", border: "none" },
+            duration: 3e3
           });
         }
       }
@@ -59845,95 +60263,215 @@ ${suffix}`;
     };
     const handleUserStartTour = () => {
       console.log("Widget: handleUserStartTour triggered", { currentPath, toursCount: tours.length });
-      const matchingTours = tours.filter((t) => (t.pageUrl || "/") === currentPath);
-      console.log("Widget: Matching tours for path:", matchingTours);
-      if (matchingTours.length > 0) {
-        console.log("Widget: Starting matching tour", matchingTours[0].title);
-        setTour(matchingTours[0]);
-        setStatus("playing");
-      } else if (tours.length > 0) {
-        console.log("Widget: No matching tour, falling back to first", tours[0].title);
-        setTour(tours[0]);
+      const matchingActiveTour = tours.find((t) => {
+        const tourPath = (t.pageUrl || "/").replace(/\/$/, "") || "/";
+        const activePath = (currentPath || "/").replace(/\/$/, "") || "/";
+        return tourPath === activePath && t.isActive;
+      });
+      if (matchingActiveTour) {
+        console.log("Widget: Starting active tour for this page", matchingActiveTour.title);
+        setTour(matchingActiveTour);
         setStatus("playing");
       } else {
-        console.warn("Widget: No tours available to play");
+        const anyActiveTour = tours.find((t) => t.isActive);
+        if (anyActiveTour) {
+          console.log("Widget: No active tour for this page, falling back to active tour:", anyActiveTour.title);
+          setTour(anyActiveTour);
+          setStatus("playing");
+        } else if (tours.length > 0) {
+          console.log("Widget: No active tours found, falling back to first available");
+          setTour(tours[0]);
+          setStatus("playing");
+        } else {
+          console.warn("Widget: No tours available to play");
+        }
       }
     };
     const currentProject = projects.find((p) => p.id === projectId);
     const launcherText = (currentProject == null ? void 0 : currentProject.launcherText) || "Product Tours";
     const shouldShowAdmin = showAdminPanel && (currentProject == null ? void 0 : currentProject.showLauncher) !== false;
+    const theme = (currentProject == null ? void 0 : currentProject.themeSettings) || {
+      fontFamily: "Inter, sans-serif"
+    };
     console.log("Widget render:", { status, showAdminPanel, shouldShowAdmin, launcherText, toursCount: tours.length, currentPath });
     return /* @__PURE__ */ jsxRuntimeExports.jsxs(
       "div",
       {
         className: "w-full h-full pointer-events-none font-sans text-base antialiased",
-        style: { ...themeStyles, color: "#0f172a" },
+        style: { ...themeStyles, color: "#0f172a", fontFamily: theme.fontFamily },
         children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(Toaster, { position: "top-center" }),
-          shouldShowAdmin && status === "idle" && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "fixed right-0 top-1/2 -translate-y-1/2 z-[2147483647] pointer-events-auto", children: !isAdminListOpen ? /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "div",
+          shouldShowAdmin && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "fixed right-0 top-24 z-[2147483647] pointer-events-auto admin-toolbar-ignore", children: /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatePresence, { mode: "wait", children: !isAdminListOpen && status === "idle" ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+            motion.div,
             {
+              initial: { opacity: 0, x: 100 },
+              animate: { opacity: 1, x: 0 },
+              exit: { opacity: 0, x: 100 },
               onClick: () => setAdminListOpen(true),
-              className: "bg-[#495BFD] text-white py-3 px-2 rounded-l-lg cursor-pointer shadow-lg hover:pr-4 transition-all flex items-center gap-2",
-              style: { writingMode: "vertical-rl", textOrientation: "mixed" },
-              children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold tracking-wide text-sm", children: launcherText })
-            }
-          ) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-white rounded-l-xl shadow-2xl w-80 h-[500px] flex flex-col border border-gray-100 overflow-hidden", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4 border-b flex items-center justify-between bg-gray-50/50", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-bold text-lg", children: "Tours" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => setAdminListOpen(false), className: "text-gray-400 hover:text-gray-600", children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-5 h-5" }) })
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 overflow-y-auto p-2 space-y-2", children: tours == null ? void 0 : tours.map((tour) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "div",
-              {
-                onClick: () => {
-                  setAdminListOpen(false);
-                  editTour(tour);
-                },
-                className: "group p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 cursor-pointer transition-all",
-                children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-start", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0 mr-2", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-semibold text-slate-800 truncate", children: tour.title }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-[#495BFD] font-mono truncate", children: tour.pageUrl || "/" }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[10px] text-slate-500", children: [
-                      tour.steps.length,
-                      " steps"
-                    ] })
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    Button,
-                    {
-                      size: "icon",
-                      variant: "ghost",
-                      className: "opacity-0 group-hover:opacity-100 h-8 w-8 hover:bg-blue-50",
-                      onClick: (e) => {
-                        e.stopPropagation();
-                        setAdminListOpen(false);
-                        setTour(tour);
-                        setStatus("playing");
-                      },
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(Play, { className: "w-4 h-4 text-[#495BFD]" })
-                    }
-                  )
-                ] })
+              className: "bg-white p-2 pr-2.5 cursor-pointer flex items-center hover:pr-5 hover:pl-3 transition-all",
+              style: {
+                border: "1px solid #E2E8F0",
+                // slate-200
+                borderRight: "none",
+                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                // shadow-lg
+                borderTopLeftRadius: "0.75rem",
+                // rounded-l-xl
+                borderBottomLeftRadius: "0.75rem"
               },
-              tour.id
-            )) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-4 border-t bg-gray-50", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-              Button,
-              {
-                className: "w-full gap-2 bg-[#495BFD] hover:bg-[#3b4fd9]",
-                onClick: () => {
-                  setAdminListOpen(false);
-                  setIsCreateTourDialogOpen(true);
-                },
-                children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "w-4 h-4" }),
-                  "Create New Tour"
-                ]
-              }
-            ) })
-          ] }) }),
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx(ProductTourLogo, { className: "w-8 h-8" })
+            },
+            "launcher"
+          ) : isAdminListOpen && status === "idle" || status === "recording" ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+            motion.div,
+            {
+              layout: true,
+              initial: { opacity: 0, scale: 0.95, y: 10 },
+              animate: { opacity: 1, scale: 1, y: 0 },
+              exit: { opacity: 0, scale: 0.95, y: 10 },
+              className: "bg-white px-0 w-80 flex flex-col overflow-hidden mr-6",
+              style: {
+                borderRadius: "1.5rem",
+                boxShadow: "0 8px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05)",
+                fontFamily: theme.fontFamily
+              },
+              children: status === "idle" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col h-[600px]", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-6 pb-2 space-y-4", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-bold text-xl text-slate-900 font-sans tracking-tight", children: "Tours" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "button",
+                      {
+                        onClick: () => setAdminListOpen(false),
+                        className: "bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors group",
+                        children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-5 h-5 text-slate-400 group-hover:text-slate-600" })
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex p-1 bg-slate-200/50 rounded-xl", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "button",
+                      {
+                        onClick: () => setTourFilter("page"),
+                        className: cn$1(
+                          "flex-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-all",
+                          tourFilter === "page" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-800"
+                        ),
+                        children: "This Page"
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "button",
+                      {
+                        onClick: () => setTourFilter("all"),
+                        className: cn$1(
+                          "flex-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-all",
+                          tourFilter === "all" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-800"
+                        ),
+                        children: "All Tours"
+                      }
+                    )
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 overflow-y-auto p-4 pt-0.5 space-y-4", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatePresence, { children: feedback && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    motion.div,
+                    {
+                      initial: { opacity: 0, y: -10, height: 0 },
+                      animate: { opacity: 1, y: 0, height: "auto" },
+                      exit: { opacity: 0, y: -10, height: 0 },
+                      className: "overflow-hidden",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl text-xs font-medium border border-emerald-100 flex items-center justify-between mb-2", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: feedback }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => setFeedback(null), children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-3 h-3" }) })
+                      ] })
+                    }
+                  ) }),
+                  (() => {
+                    const filteredTours = tours.filter((t) => {
+                      if (tourFilter === "all") return true;
+                      const tourPath = (t.pageUrl || "/").replace(/\/$/, "") || "/";
+                      const activePath = (currentPath || "/").replace(/\/$/, "") || "/";
+                      return tourPath === activePath;
+                    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                    const activeTours = filteredTours.filter((t) => t.isActive);
+                    const inactiveTours = filteredTours.filter((t) => !t.isActive);
+                    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", children: activeTours.map((tour) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        TourCard,
+                        {
+                          tour,
+                          onEdit: () => {
+                            setAdminListOpen(false);
+                            editTour(tour);
+                          },
+                          onPlay: () => {
+                            setAdminListOpen(false);
+                            setTour(tour);
+                            setStatus("playing");
+                          },
+                          toggleTourActivation,
+                          isLoading,
+                          onActivationChange: setFeedback
+                        },
+                        tour.id
+                      )) }),
+                      activeTours.length > 0 && inactiveTours.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 px-2", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-px bg-slate-200 flex-1" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] font-bold text-slate-400 uppercase tracking-widest", children: "Inactive" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-px bg-slate-200 flex-1" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", children: inactiveTours.map((tour) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        TourCard,
+                        {
+                          tour,
+                          onEdit: () => {
+                            setAdminListOpen(false);
+                            editTour(tour);
+                          },
+                          onPlay: () => {
+                            setAdminListOpen(false);
+                            setTour(tour);
+                            setStatus("playing");
+                          },
+                          toggleTourActivation,
+                          isLoading,
+                          onActivationChange: setFeedback
+                        },
+                        tour.id
+                      )) }),
+                      filteredTours.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-center py-8 text-slate-400 text-sm", children: "No tours found." })
+                    ] });
+                  })()
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-6", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  Button,
+                  {
+                    className: "w-full h-11 gap-2 bg-[#495BFD] hover:bg-[#3b4fd9] text-white rounded-2xl shadow-lg shadow-blue-500/20 transition-all active:scale-95",
+                    onClick: () => {
+                      setAdminListOpen(false);
+                      setIsCreateTourDialogOpen(true);
+                    },
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "w-5 h-5" }),
+                      "Create New Tour"
+                    ]
+                  }
+                ) })
+              ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-[calc(100vh-10rem)] max-h-[700px]", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                StepEditor,
+                {
+                  isFloating: false,
+                  onBack: () => {
+                    stopRecording();
+                    setAdminListOpen(true);
+                  },
+                  onSuccess: setFeedback
+                }
+              ) })
+            },
+            "admin-panel"
+          ) : null }) }),
           status === "idle" && tours.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "fixed bottom-6 right-6 z-[2147483646] pointer-events-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
             "button",
             {
@@ -59943,10 +60481,7 @@ ${suffix}`;
               children: /* @__PURE__ */ jsxRuntimeExports.jsx(CircleQuestionMark, { className: "w-7 h-7 text-white" })
             }
           ) }),
-          status === "recording" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "contents pointer-events-auto", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(RecordingOverlay, {}),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(StepEditor, {})
-          ] }),
+          status === "recording" && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "contents pointer-events-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsx(RecordingOverlay, {}) }),
           status === "playing" && /* @__PURE__ */ jsxRuntimeExports.jsx(WidgetTourPlayer, {}),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             CreateTourDialog,
@@ -59954,23 +60489,24 @@ ${suffix}`;
               isOpen: isCreateTourDialogOpen,
               onClose: () => setIsCreateTourDialogOpen(false)
             }
-          )
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Toaster, { position: "top-center", expand: true, richColors: true, duration: 3e3 })
         ]
       }
     );
   }
-  const styles = '/*! tailwindcss v4.1.17 | MIT License | https://tailwindcss.com */\n@import "https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700;800;900&display=swap";@import "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap";@layer properties{@supports (((-webkit-hyphens:none)) and (not (margin-trim:inline))) or ((-moz-orient:inline) and (not (color:rgb(from red r g b)))){*,:before,:after,::backdrop{--tw-translate-x:0;--tw-translate-y:0;--tw-translate-z:0;--tw-scale-x:1;--tw-scale-y:1;--tw-scale-z:1;--tw-rotate-x:initial;--tw-rotate-y:initial;--tw-rotate-z:initial;--tw-skew-x:initial;--tw-skew-y:initial;--tw-pan-x:initial;--tw-pan-y:initial;--tw-pinch-zoom:initial;--tw-space-y-reverse:0;--tw-space-x-reverse:0;--tw-divide-x-reverse:0;--tw-border-style:solid;--tw-divide-y-reverse:0;--tw-gradient-position:initial;--tw-gradient-from:#0000;--tw-gradient-via:#0000;--tw-gradient-to:#0000;--tw-gradient-stops:initial;--tw-gradient-via-stops:initial;--tw-gradient-from-position:0%;--tw-gradient-via-position:50%;--tw-gradient-to-position:100%;--tw-leading:initial;--tw-font-weight:initial;--tw-tracking:initial;--tw-ordinal:initial;--tw-slashed-zero:initial;--tw-numeric-figure:initial;--tw-numeric-spacing:initial;--tw-numeric-fraction:initial;--tw-shadow:0 0 #0000;--tw-shadow-color:initial;--tw-shadow-alpha:100%;--tw-inset-shadow:0 0 #0000;--tw-inset-shadow-color:initial;--tw-inset-shadow-alpha:100%;--tw-ring-color:initial;--tw-ring-shadow:0 0 #0000;--tw-inset-ring-color:initial;--tw-inset-ring-shadow:0 0 #0000;--tw-ring-inset:initial;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-offset-shadow:0 0 #0000;--tw-outline-style:solid;--tw-blur:initial;--tw-brightness:initial;--tw-contrast:initial;--tw-grayscale:initial;--tw-hue-rotate:initial;--tw-invert:initial;--tw-opacity:initial;--tw-saturate:initial;--tw-sepia:initial;--tw-drop-shadow:initial;--tw-drop-shadow-color:initial;--tw-drop-shadow-alpha:100%;--tw-drop-shadow-size:initial;--tw-backdrop-blur:initial;--tw-backdrop-brightness:initial;--tw-backdrop-contrast:initial;--tw-backdrop-grayscale:initial;--tw-backdrop-hue-rotate:initial;--tw-backdrop-invert:initial;--tw-backdrop-opacity:initial;--tw-backdrop-saturate:initial;--tw-backdrop-sepia:initial;--tw-duration:initial;--tw-ease:initial}}}@layer theme{:root,:host{--font-sans:"Gabarito",system-ui,-apple-system,sans-serif;--font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;--color-red-50:oklch(97.1% .013 17.38);--color-red-200:oklch(88.5% .062 18.334);--color-red-500:oklch(63.7% .237 25.331);--color-red-600:oklch(57.7% .245 27.325);--color-red-700:oklch(50.5% .213 27.518);--color-yellow-500:oklch(79.5% .184 86.047);--color-green-500:oklch(72.3% .219 149.579);--color-green-600:oklch(62.7% .194 149.214);--color-blue-50:oklch(97% .014 254.604);--color-blue-500:oklch(62.3% .214 259.815);--color-blue-600:oklch(54.6% .245 262.881);--color-purple-500:oklch(62.7% .265 303.9);--color-purple-600:oklch(55.8% .288 302.321);--color-slate-50:oklch(98.4% .003 247.858);--color-slate-100:oklch(96.8% .007 247.896);--color-slate-200:oklch(92.9% .013 255.508);--color-slate-300:oklch(86.9% .022 252.894);--color-slate-500:oklch(55.4% .046 257.417);--color-slate-800:oklch(27.9% .041 260.031);--color-slate-900:oklch(20.8% .042 265.755);--color-gray-50:oklch(98.5% .002 247.839);--color-gray-100:oklch(96.7% .003 264.542);--color-gray-200:oklch(92.8% .006 264.531);--color-gray-400:oklch(70.7% .022 261.325);--color-gray-500:oklch(55.1% .027 264.364);--color-gray-600:oklch(44.6% .03 256.802);--color-gray-700:oklch(37.3% .034 259.733);--color-gray-900:oklch(21% .034 264.665);--color-neutral-700:oklch(37.1% 0 0);--color-neutral-800:oklch(26.9% 0 0);--color-neutral-900:oklch(20.5% 0 0);--color-black:#000;--color-white:#fff;--spacing:.25rem;--container-sm:24rem;--container-md:28rem;--container-lg:32rem;--container-xl:36rem;--container-2xl:42rem;--container-6xl:72rem;--container-7xl:80rem;--text-xs:.75rem;--text-xs--line-height:calc(1/.75);--text-sm:.875rem;--text-sm--line-height:calc(1.25/.875);--text-base:1rem;--text-base--line-height:calc(1.5/1);--text-lg:1.125rem;--text-lg--line-height:calc(1.75/1.125);--text-xl:1.25rem;--text-xl--line-height:calc(1.75/1.25);--text-2xl:1.5rem;--text-2xl--line-height:calc(2/1.5);--text-3xl:1.875rem;--text-3xl--line-height:calc(2.25/1.875);--text-4xl:2.25rem;--text-4xl--line-height:calc(2.5/2.25);--text-5xl:3rem;--text-5xl--line-height:1;--text-7xl:4.5rem;--text-7xl--line-height:1;--font-weight-medium:500;--font-weight-semibold:600;--font-weight-bold:700;--tracking-tight:-.025em;--tracking-wide:.025em;--tracking-wider:.05em;--tracking-widest:.1em;--leading-tight:1.25;--leading-relaxed:1.625;--radius-2xl:1rem;--radius-3xl:1.5rem;--drop-shadow-2xl:0 25px 25px #00000026;--ease-in:cubic-bezier(.4,0,1,1);--ease-out:cubic-bezier(0,0,.2,1);--ease-in-out:cubic-bezier(.4,0,.2,1);--animate-spin:spin 1s linear infinite;--animate-ping:ping 1s cubic-bezier(0,0,.2,1)infinite;--animate-pulse:pulse 2s cubic-bezier(.4,0,.6,1)infinite;--animate-bounce:bounce 1s infinite;--blur-sm:8px;--blur-md:12px;--blur-xl:24px;--default-transition-duration:.15s;--default-transition-timing-function:cubic-bezier(.4,0,.2,1);--default-font-family:"Gabarito",system-ui,-apple-system,sans-serif;--default-mono-font-family:var(--font-mono)}}@layer base{*,:after,:before,::backdrop{box-sizing:border-box;border:0 solid;margin:0;padding:0}::file-selector-button{box-sizing:border-box;border:0 solid;margin:0;padding:0}html,:host{-webkit-text-size-adjust:100%;tab-size:4;line-height:1.5;font-family:var(--default-font-family,ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji");font-feature-settings:var(--default-font-feature-settings,normal);font-variation-settings:var(--default-font-variation-settings,normal);-webkit-tap-highlight-color:transparent}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;-webkit-text-decoration:inherit;-webkit-text-decoration:inherit;-webkit-text-decoration:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,samp,pre{font-family:var(--default-mono-font-family,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace);font-feature-settings:var(--default-mono-font-feature-settings,normal);font-variation-settings:var(--default-mono-font-variation-settings,normal);font-size:1em}small{font-size:80%}sub,sup{vertical-align:baseline;font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}:-moz-focusring{outline:auto}progress{vertical-align:baseline}summary{display:list-item}ol,ul,menu{list-style:none}img,svg,video,canvas,audio,iframe,embed,object{vertical-align:middle;display:block}img,video{max-width:100%;height:auto}button,input,select,optgroup,textarea{font:inherit;font-feature-settings:inherit;font-variation-settings:inherit;letter-spacing:inherit;color:inherit;opacity:1;background-color:#0000;border-radius:0}::file-selector-button{font:inherit;font-feature-settings:inherit;font-variation-settings:inherit;letter-spacing:inherit;color:inherit;opacity:1;background-color:#0000;border-radius:0}:where(select:is([multiple],[size])) optgroup{font-weight:bolder}:where(select:is([multiple],[size])) optgroup option{padding-inline-start:20px}::file-selector-button{margin-inline-end:4px}::placeholder{opacity:1}@supports (not ((-webkit-appearance:-apple-pay-button))) or (contain-intrinsic-size:1px){::placeholder{color:currentColor}@supports (color:color-mix(in lab, red, red)){::placeholder{color:color-mix(in oklab,currentcolor 50%,transparent)}}}textarea{resize:vertical}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-date-and-time-value{min-height:1lh;text-align:inherit}::-webkit-datetime-edit{display:inline-flex}::-webkit-datetime-edit-fields-wrapper{padding:0}::-webkit-datetime-edit{padding-block:0}::-webkit-datetime-edit-year-field{padding-block:0}::-webkit-datetime-edit-month-field{padding-block:0}::-webkit-datetime-edit-day-field{padding-block:0}::-webkit-datetime-edit-hour-field{padding-block:0}::-webkit-datetime-edit-minute-field{padding-block:0}::-webkit-datetime-edit-second-field{padding-block:0}::-webkit-datetime-edit-millisecond-field{padding-block:0}::-webkit-datetime-edit-meridiem-field{padding-block:0}::-webkit-calendar-picker-indicator{line-height:1}:-moz-ui-invalid{box-shadow:none}button,input:where([type=button],[type=reset],[type=submit]){appearance:button}::file-selector-button{appearance:button}::-webkit-inner-spin-button{height:auto}::-webkit-outer-spin-button{height:auto}[hidden]:where(:not([hidden=until-found])){display:none!important}}@layer components;@layer utilities{.pointer-events-auto{pointer-events:auto}.pointer-events-none{pointer-events:none}.collapse{visibility:collapse}.invisible{visibility:hidden}.visible{visibility:visible}.sr-only{clip-path:inset(50%);white-space:nowrap;border-width:0;width:1px;height:1px;margin:-1px;padding:0;position:absolute;overflow:hidden}.not-sr-only{clip-path:none;white-space:normal;width:auto;height:auto;margin:0;padding:0;position:static;overflow:visible}.absolute{position:absolute}.fixed{position:fixed}.relative{position:relative}.static{position:static}.sticky{position:sticky}.inset-0{inset:calc(var(--spacing)*0)}.-top-2{top:calc(var(--spacing)*-2)}.top-0{top:calc(var(--spacing)*0)}.top-1{top:calc(var(--spacing)*1)}.top-1\\/2{top:50%}.top-4{top:calc(var(--spacing)*4)}.top-6{top:calc(var(--spacing)*6)}.top-20{top:calc(var(--spacing)*20)}.top-full{top:100%}.-right-2{right:calc(var(--spacing)*-2)}.right-0{right:calc(var(--spacing)*0)}.right-4{right:calc(var(--spacing)*4)}.right-6{right:calc(var(--spacing)*6)}.bottom-6{bottom:calc(var(--spacing)*6)}.bottom-8{bottom:calc(var(--spacing)*8)}.bottom-16{bottom:calc(var(--spacing)*16)}.left-0{left:calc(var(--spacing)*0)}.left-1{left:calc(var(--spacing)*1)}.left-1\\/2{left:50%}.left-6{left:calc(var(--spacing)*6)}.left-full{left:100%}.isolate{isolation:isolate}.isolation-auto{isolation:auto}.z-10{z-index:10}.z-40{z-index:40}.z-50{z-index:50}.z-\\[40\\]{z-index:40}.z-\\[50\\]{z-index:50}.z-\\[100\\]{z-index:100}.z-\\[101\\]{z-index:101}.z-\\[2147483640\\]{z-index:2147483640}.z-\\[2147483646\\]{z-index:2147483646}.z-\\[2147483647\\],.z-\\[2147483649\\]{z-index:2147483647}.col-span-full{grid-column:1/-1}.container{width:100%}@media (min-width:40rem){.container{max-width:40rem}}@media (min-width:48rem){.container{max-width:48rem}}@media (min-width:64rem){.container{max-width:64rem}}@media (min-width:80rem){.container{max-width:80rem}}@media (min-width:96rem){.container{max-width:96rem}}.m-4{margin:calc(var(--spacing)*4)}.mx-auto{margin-inline:auto}.my-8{margin-block:calc(var(--spacing)*8)}.-mt-2{margin-top:calc(var(--spacing)*-2)}.mt-1{margin-top:calc(var(--spacing)*1)}.mt-2{margin-top:calc(var(--spacing)*2)}.mt-10{margin-top:calc(var(--spacing)*10)}.-mr-2{margin-right:calc(var(--spacing)*-2)}.mr-1{margin-right:calc(var(--spacing)*1)}.mr-2{margin-right:calc(var(--spacing)*2)}.mr-3{margin-right:calc(var(--spacing)*3)}.mb-1{margin-bottom:calc(var(--spacing)*1)}.mb-2{margin-bottom:calc(var(--spacing)*2)}.mb-3{margin-bottom:calc(var(--spacing)*3)}.mb-4{margin-bottom:calc(var(--spacing)*4)}.mb-6{margin-bottom:calc(var(--spacing)*6)}.mb-8{margin-bottom:calc(var(--spacing)*8)}.mb-10{margin-bottom:calc(var(--spacing)*10)}.mb-16{margin-bottom:calc(var(--spacing)*16)}.ml-1{margin-left:calc(var(--spacing)*1)}.ml-2{margin-left:calc(var(--spacing)*2)}.block{display:block}.contents{display:contents}.flex{display:flex}.flow-root{display:flow-root}.grid{display:grid}.hidden{display:none}.inline{display:inline}.inline-block{display:inline-block}.inline-flex{display:inline-flex}.inline-grid{display:inline-grid}.inline-table{display:inline-table}.list-item{display:list-item}.table{display:table}.table-caption{display:table-caption}.table-cell{display:table-cell}.table-column{display:table-column}.table-column-group{display:table-column-group}.table-footer-group{display:table-footer-group}.table-header-group{display:table-header-group}.table-row{display:table-row}.table-row-group{display:table-row-group}.aspect-\\[16\\/10\\]{aspect-ratio:16/10}.h-1{height:calc(var(--spacing)*1)}.h-1\\.5{height:calc(var(--spacing)*1.5)}.h-2{height:calc(var(--spacing)*2)}.h-3{height:calc(var(--spacing)*3)}.h-4{height:calc(var(--spacing)*4)}.h-5{height:calc(var(--spacing)*5)}.h-6{height:calc(var(--spacing)*6)}.h-7{height:calc(var(--spacing)*7)}.h-8{height:calc(var(--spacing)*8)}.h-9{height:calc(var(--spacing)*9)}.h-10{height:calc(var(--spacing)*10)}.h-12{height:calc(var(--spacing)*12)}.h-14{height:calc(var(--spacing)*14)}.h-16{height:calc(var(--spacing)*16)}.h-24{height:calc(var(--spacing)*24)}.h-\\[500px\\]{height:500px}.h-full{height:100%}.max-h-\\[calc\\(100vh-8rem\\)\\]{max-height:calc(100vh - 8rem)}.min-h-\\[calc\\(100vh-80px\\)\\]{min-height:calc(100vh - 80px)}.min-h-screen{min-height:100vh}.w-1{width:calc(var(--spacing)*1)}.w-1\\.5{width:calc(var(--spacing)*1.5)}.w-2{width:calc(var(--spacing)*2)}.w-3{width:calc(var(--spacing)*3)}.w-4{width:calc(var(--spacing)*4)}.w-5{width:calc(var(--spacing)*5)}.w-6{width:calc(var(--spacing)*6)}.w-7{width:calc(var(--spacing)*7)}.w-8{width:calc(var(--spacing)*8)}.w-10{width:calc(var(--spacing)*10)}.w-12{width:calc(var(--spacing)*12)}.w-14{width:calc(var(--spacing)*14)}.w-16{width:calc(var(--spacing)*16)}.w-24{width:calc(var(--spacing)*24)}.w-80{width:calc(var(--spacing)*80)}.w-fit{width:fit-content}.w-full{width:100%}.max-w-2xl{max-width:var(--container-2xl)}.max-w-6xl{max-width:var(--container-6xl)}.max-w-7xl{max-width:var(--container-7xl)}.max-w-\\[80\\%\\]{max-width:80%}.max-w-\\[150px\\]{max-width:150px}.max-w-\\[200px\\]{max-width:200px}.max-w-lg{max-width:var(--container-lg)}.max-w-md{max-width:var(--container-md)}.max-w-sm{max-width:var(--container-sm)}.max-w-xl{max-width:var(--container-xl)}.min-w-0{min-width:calc(var(--spacing)*0)}.flex-1{flex:1}.shrink{flex-shrink:1}.grow{flex-grow:1}.border-collapse{border-collapse:collapse}.-translate-x-1{--tw-translate-x:calc(var(--spacing)*-1);translate:var(--tw-translate-x)var(--tw-translate-y)}.-translate-x-1\\/2{--tw-translate-x:calc(calc(1/2*100%)*-1);translate:var(--tw-translate-x)var(--tw-translate-y)}.-translate-y-1{--tw-translate-y:calc(var(--spacing)*-1);translate:var(--tw-translate-x)var(--tw-translate-y)}.-translate-y-1\\/2{--tw-translate-y:calc(calc(1/2*100%)*-1);translate:var(--tw-translate-x)var(--tw-translate-y)}.translate-none{translate:none}.scale-3d{scale:var(--tw-scale-x)var(--tw-scale-y)var(--tw-scale-z)}.-rotate-12{rotate:-12deg}.transform{transform:var(--tw-rotate-x,)var(--tw-rotate-y,)var(--tw-rotate-z,)var(--tw-skew-x,)var(--tw-skew-y,)}.animate-bounce{animation:var(--animate-bounce)}.animate-ping{animation:var(--animate-ping)}.animate-pulse{animation:var(--animate-pulse)}.animate-spin{animation:var(--animate-spin)}.cursor-grab{cursor:grab}.cursor-pointer{cursor:pointer}.touch-pinch-zoom{--tw-pinch-zoom:pinch-zoom;touch-action:var(--tw-pan-x,)var(--tw-pan-y,)var(--tw-pinch-zoom,)}.resize{resize:both}.resize-none{resize:none}.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.items-start{align-items:flex-start}.justify-between{justify-content:space-between}.justify-center{justify-content:center}.justify-end{justify-content:flex-end}.justify-start{justify-content:flex-start}.gap-1{gap:calc(var(--spacing)*1)}.gap-1\\.5{gap:calc(var(--spacing)*1.5)}.gap-2{gap:calc(var(--spacing)*2)}.gap-3{gap:calc(var(--spacing)*3)}.gap-4{gap:calc(var(--spacing)*4)}.gap-6{gap:calc(var(--spacing)*6)}.gap-8{gap:calc(var(--spacing)*8)}:where(.space-y-1>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing)*1)*var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing)*1)*calc(1 - var(--tw-space-y-reverse)))}:where(.space-y-2>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing)*2)*var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing)*2)*calc(1 - var(--tw-space-y-reverse)))}:where(.space-y-3>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing)*3)*var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing)*3)*calc(1 - var(--tw-space-y-reverse)))}:where(.space-y-4>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing)*4)*var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing)*4)*calc(1 - var(--tw-space-y-reverse)))}:where(.space-y-6>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing)*6)*var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing)*6)*calc(1 - var(--tw-space-y-reverse)))}:where(.space-y-8>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing)*8)*var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing)*8)*calc(1 - var(--tw-space-y-reverse)))}:where(.space-y-reverse>:not(:last-child)){--tw-space-y-reverse:1}:where(.space-x-reverse>:not(:last-child)){--tw-space-x-reverse:1}:where(.divide-x>:not(:last-child)){--tw-divide-x-reverse:0;border-inline-style:var(--tw-border-style);border-inline-start-width:calc(1px*var(--tw-divide-x-reverse));border-inline-end-width:calc(1px*calc(1 - var(--tw-divide-x-reverse)))}:where(.divide-y>:not(:last-child)){--tw-divide-y-reverse:0;border-bottom-style:var(--tw-border-style);border-top-style:var(--tw-border-style);border-top-width:calc(1px*var(--tw-divide-y-reverse));border-bottom-width:calc(1px*calc(1 - var(--tw-divide-y-reverse)))}:where(.divide-y-reverse>:not(:last-child)){--tw-divide-y-reverse:1}.truncate{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.rounded{border-radius:.25rem}.rounded-2xl{border-radius:var(--radius-2xl)}.rounded-3xl{border-radius:var(--radius-3xl)}.rounded-\\[2\\.5rem\\]{border-radius:2.5rem}.rounded-\\[2rem\\]{border-radius:2rem}.rounded-full{border-radius:3.40282e38px}.rounded-lg{border-radius:var(--radius)}.rounded-md{border-radius:calc(var(--radius) - 2px)}.rounded-xl{border-radius:calc(var(--radius) + 4px)}.rounded-s{border-start-start-radius:.25rem;border-end-start-radius:.25rem}.rounded-ss{border-start-start-radius:.25rem}.rounded-e{border-start-end-radius:.25rem;border-end-end-radius:.25rem}.rounded-se{border-start-end-radius:.25rem}.rounded-ee{border-end-end-radius:.25rem}.rounded-es{border-end-start-radius:.25rem}.rounded-t{border-top-left-radius:.25rem;border-top-right-radius:.25rem}.rounded-l{border-top-left-radius:.25rem;border-bottom-left-radius:.25rem}.rounded-l-\\[1\\.5rem\\]{border-top-left-radius:1.5rem;border-bottom-left-radius:1.5rem}.rounded-l-lg{border-top-left-radius:var(--radius);border-bottom-left-radius:var(--radius)}.rounded-l-xl{border-top-left-radius:calc(var(--radius) + 4px);border-bottom-left-radius:calc(var(--radius) + 4px)}.rounded-tl{border-top-left-radius:.25rem}.rounded-tl-none{border-top-left-radius:0}.rounded-r{border-top-right-radius:.25rem;border-bottom-right-radius:.25rem}.rounded-tr{border-top-right-radius:.25rem}.rounded-tr-none{border-top-right-radius:0}.rounded-b{border-bottom-right-radius:.25rem;border-bottom-left-radius:.25rem}.rounded-br{border-bottom-right-radius:.25rem}.rounded-bl{border-bottom-left-radius:.25rem}.border{border-style:var(--tw-border-style);border-width:1px}.border-2{border-style:var(--tw-border-style);border-width:2px}.border-8{border-style:var(--tw-border-style);border-width:8px}.border-x{border-inline-style:var(--tw-border-style);border-inline-width:1px}.border-y{border-block-style:var(--tw-border-style);border-block-width:1px}.border-s{border-inline-start-style:var(--tw-border-style);border-inline-start-width:1px}.border-e{border-inline-end-style:var(--tw-border-style);border-inline-end-width:1px}.border-t{border-top-style:var(--tw-border-style);border-top-width:1px}.border-r{border-right-style:var(--tw-border-style);border-right-width:1px}.border-b{border-bottom-style:var(--tw-border-style);border-bottom-width:1px}.border-l{border-left-style:var(--tw-border-style);border-left-width:1px}.border-dashed{--tw-border-style:dashed;border-style:dashed}.border-border,.border-border\\/40{border-color:var(--border)}@supports (color:color-mix(in lab, red, red)){.border-border\\/40{border-color:color-mix(in oklab,var(--border)40%,transparent)}}.border-border\\/50{border-color:var(--border)}@supports (color:color-mix(in lab, red, red)){.border-border\\/50{border-color:color-mix(in oklab,var(--border)50%,transparent)}}.border-border\\/60{border-color:var(--border)}@supports (color:color-mix(in lab, red, red)){.border-border\\/60{border-color:color-mix(in oklab,var(--border)60%,transparent)}}.border-gray-100{border-color:var(--color-gray-100)}.border-gray-200{border-color:var(--color-gray-200)}.border-input{border-color:var(--input)}.border-neutral-800{border-color:var(--color-neutral-800)}.border-primary{border-color:var(--primary)}.border-red-200{border-color:var(--color-red-200)}.border-red-500{border-color:var(--color-red-500)}.border-transparent{border-color:#0000}.border-white{border-color:var(--color-white)}.border-white\\/10{border-color:#ffffff1a}@supports (color:color-mix(in lab, red, red)){.border-white\\/10{border-color:color-mix(in oklab,var(--color-white)10%,transparent)}}.bg-\\[\\#495BFD\\]{background-color:#495bfd}.bg-accent{background-color:var(--accent)}.bg-background,.bg-background\\/80{background-color:var(--background)}@supports (color:color-mix(in lab, red, red)){.bg-background\\/80{background-color:color-mix(in oklab,var(--background)80%,transparent)}}.bg-black{background-color:var(--color-black)}.bg-black\\/40{background-color:#0006}@supports (color:color-mix(in lab, red, red)){.bg-black\\/40{background-color:color-mix(in oklab,var(--color-black)40%,transparent)}}.bg-black\\/50{background-color:#00000080}@supports (color:color-mix(in lab, red, red)){.bg-black\\/50{background-color:color-mix(in oklab,var(--color-black)50%,transparent)}}.bg-black\\/60{background-color:#0009}@supports (color:color-mix(in lab, red, red)){.bg-black\\/60{background-color:color-mix(in oklab,var(--color-black)60%,transparent)}}.bg-black\\/80{background-color:#000c}@supports (color:color-mix(in lab, red, red)){.bg-black\\/80{background-color:color-mix(in oklab,var(--color-black)80%,transparent)}}.bg-blue-500{background-color:var(--color-blue-500)}.bg-blue-500\\/10{background-color:#3080ff1a}@supports (color:color-mix(in lab, red, red)){.bg-blue-500\\/10{background-color:color-mix(in oklab,var(--color-blue-500)10%,transparent)}}.bg-card{background-color:var(--card)}.bg-destructive{background-color:var(--destructive)}.bg-gray-50{background-color:var(--color-gray-50)}.bg-gray-50\\/50{background-color:#f9fafb80}@supports (color:color-mix(in lab, red, red)){.bg-gray-50\\/50{background-color:color-mix(in oklab,var(--color-gray-50)50%,transparent)}}.bg-green-500{background-color:var(--color-green-500)}.bg-green-500\\/30{background-color:#00c7584d}@supports (color:color-mix(in lab, red, red)){.bg-green-500\\/30{background-color:color-mix(in oklab,var(--color-green-500)30%,transparent)}}.bg-neutral-900{background-color:var(--color-neutral-900)}.bg-primary,.bg-primary\\/10{background-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.bg-primary\\/10{background-color:color-mix(in oklab,var(--primary)10%,transparent)}}.bg-purple-500{background-color:var(--color-purple-500)}.bg-purple-500\\/10{background-color:#ac4bff1a}@supports (color:color-mix(in lab, red, red)){.bg-purple-500\\/10{background-color:color-mix(in oklab,var(--color-purple-500)10%,transparent)}}.bg-red-50{background-color:var(--color-red-50)}.bg-red-500{background-color:var(--color-red-500)}.bg-red-500\\/20{background-color:#fb2c3633}@supports (color:color-mix(in lab, red, red)){.bg-red-500\\/20{background-color:color-mix(in oklab,var(--color-red-500)20%,transparent)}}.bg-red-500\\/30{background-color:#fb2c364d}@supports (color:color-mix(in lab, red, red)){.bg-red-500\\/30{background-color:color-mix(in oklab,var(--color-red-500)30%,transparent)}}.bg-red-600{background-color:var(--color-red-600)}.bg-secondary,.bg-secondary\\/20{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.bg-secondary\\/20{background-color:color-mix(in oklab,var(--secondary)20%,transparent)}}.bg-secondary\\/30{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.bg-secondary\\/30{background-color:color-mix(in oklab,var(--secondary)30%,transparent)}}.bg-secondary\\/50{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.bg-secondary\\/50{background-color:color-mix(in oklab,var(--secondary)50%,transparent)}}.bg-slate-100{background-color:var(--color-slate-100)}.bg-slate-300{background-color:var(--color-slate-300)}.bg-transparent{background-color:#0000}.bg-white{background-color:var(--color-white)}.bg-white\\/5{background-color:#ffffff0d}@supports (color:color-mix(in lab, red, red)){.bg-white\\/5{background-color:color-mix(in oklab,var(--color-white)5%,transparent)}}.bg-white\\/10{background-color:#ffffff1a}@supports (color:color-mix(in lab, red, red)){.bg-white\\/10{background-color:color-mix(in oklab,var(--color-white)10%,transparent)}}.bg-white\\/30{background-color:#ffffff4d}@supports (color:color-mix(in lab, red, red)){.bg-white\\/30{background-color:color-mix(in oklab,var(--color-white)30%,transparent)}}.bg-white\\/50{background-color:#ffffff80}@supports (color:color-mix(in lab, red, red)){.bg-white\\/50{background-color:color-mix(in oklab,var(--color-white)50%,transparent)}}.bg-white\\/80{background-color:#fffc}@supports (color:color-mix(in lab, red, red)){.bg-white\\/80{background-color:color-mix(in oklab,var(--color-white)80%,transparent)}}.bg-yellow-500{background-color:var(--color-yellow-500)}.bg-yellow-500\\/30{background-color:#edb2004d}@supports (color:color-mix(in lab, red, red)){.bg-yellow-500\\/30{background-color:color-mix(in oklab,var(--color-yellow-500)30%,transparent)}}.bg-gradient-to-b{--tw-gradient-position:to bottom in oklab;background-image:linear-gradient(var(--tw-gradient-stops))}.bg-gradient-to-r{--tw-gradient-position:to right in oklab;background-image:linear-gradient(var(--tw-gradient-stops))}.bg-gradient-to-tr{--tw-gradient-position:to top right in oklab;background-image:linear-gradient(var(--tw-gradient-stops))}.from-foreground{--tw-gradient-from:var(--foreground);--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.from-primary{--tw-gradient-from:var(--primary);--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.from-primary\\/5{--tw-gradient-from:var(--primary)}@supports (color:color-mix(in lab, red, red)){.from-primary\\/5{--tw-gradient-from:color-mix(in oklab,var(--primary)5%,transparent)}}.from-primary\\/5{--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.from-secondary{--tw-gradient-from:var(--secondary);--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.to-foreground{--tw-gradient-to:var(--foreground);--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.to-foreground\\/70{--tw-gradient-to:var(--foreground)}@supports (color:color-mix(in lab, red, red)){.to-foreground\\/70{--tw-gradient-to:color-mix(in oklab,var(--foreground)70%,transparent)}}.to-foreground\\/70{--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.to-primary{--tw-gradient-to:var(--primary);--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.to-transparent{--tw-gradient-to:transparent;--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.bg-clip-text{-webkit-background-clip:text;background-clip:text}.bg-repeat{background-repeat:repeat}.mask-no-clip{-webkit-mask-clip:no-clip;mask-clip:no-clip}.mask-repeat{-webkit-mask-repeat:repeat;mask-repeat:repeat}.fill-current{fill:currentColor}.fill-primary,.fill-primary\\/20{fill:var(--primary)}@supports (color:color-mix(in lab, red, red)){.fill-primary\\/20{fill:color-mix(in oklab,var(--primary)20%,transparent)}}.p-0{padding:calc(var(--spacing)*0)}.p-1{padding:calc(var(--spacing)*1)}.p-2{padding:calc(var(--spacing)*2)}.p-3{padding:calc(var(--spacing)*3)}.p-4{padding:calc(var(--spacing)*4)}.p-6{padding:calc(var(--spacing)*6)}.p-8{padding:calc(var(--spacing)*8)}.px-1{padding-inline:calc(var(--spacing)*1)}.px-1\\.5{padding-inline:calc(var(--spacing)*1.5)}.px-2{padding-inline:calc(var(--spacing)*2)}.px-3{padding-inline:calc(var(--spacing)*3)}.px-4{padding-inline:calc(var(--spacing)*4)}.px-5{padding-inline:calc(var(--spacing)*5)}.px-6{padding-inline:calc(var(--spacing)*6)}.px-8{padding-inline:calc(var(--spacing)*8)}.py-0{padding-block:calc(var(--spacing)*0)}.py-0\\.5{padding-block:calc(var(--spacing)*.5)}.py-1{padding-block:calc(var(--spacing)*1)}.py-1\\.5{padding-block:calc(var(--spacing)*1.5)}.py-2{padding-block:calc(var(--spacing)*2)}.py-3{padding-block:calc(var(--spacing)*3)}.py-4{padding-block:calc(var(--spacing)*4)}.py-5{padding-block:calc(var(--spacing)*5)}.py-8{padding-block:calc(var(--spacing)*8)}.py-10{padding-block:calc(var(--spacing)*10)}.py-12{padding-block:calc(var(--spacing)*12)}.py-20{padding-block:calc(var(--spacing)*20)}.py-24{padding-block:calc(var(--spacing)*24)}.pt-20{padding-top:calc(var(--spacing)*20)}.pt-32{padding-top:calc(var(--spacing)*32)}.pb-6{padding-bottom:calc(var(--spacing)*6)}.pb-20{padding-bottom:calc(var(--spacing)*20)}.text-center{text-align:center}.text-left{text-align:left}.font-mono{font-family:var(--font-mono)}.font-sans{font-family:Gabarito,system-ui,-apple-system,sans-serif}.font-serif{font-family:Fraunces,Georgia,serif}.text-2xl{font-size:var(--text-2xl);line-height:var(--tw-leading,var(--text-2xl--line-height))}.text-3xl{font-size:var(--text-3xl);line-height:var(--tw-leading,var(--text-3xl--line-height))}.text-4xl{font-size:var(--text-4xl);line-height:var(--tw-leading,var(--text-4xl--line-height))}.text-5xl{font-size:var(--text-5xl);line-height:var(--tw-leading,var(--text-5xl--line-height))}.text-base{font-size:var(--text-base);line-height:var(--tw-leading,var(--text-base--line-height))}.text-lg{font-size:var(--text-lg);line-height:var(--tw-leading,var(--text-lg--line-height))}.text-sm{font-size:var(--text-sm);line-height:var(--tw-leading,var(--text-sm--line-height))}.text-xl{font-size:var(--text-xl);line-height:var(--tw-leading,var(--text-xl--line-height))}.text-xs{font-size:var(--text-xs);line-height:var(--tw-leading,var(--text-xs--line-height))}.text-\\[10px\\]{font-size:10px}.leading-relaxed{--tw-leading:var(--leading-relaxed);line-height:var(--leading-relaxed)}.leading-tight{--tw-leading:var(--leading-tight);line-height:var(--leading-tight)}.font-bold{--tw-font-weight:var(--font-weight-bold);font-weight:var(--font-weight-bold)}.font-medium{--tw-font-weight:var(--font-weight-medium);font-weight:var(--font-weight-medium)}.font-semibold{--tw-font-weight:var(--font-weight-semibold);font-weight:var(--font-weight-semibold)}.tracking-tight{--tw-tracking:var(--tracking-tight);letter-spacing:var(--tracking-tight)}.tracking-wide{--tw-tracking:var(--tracking-wide);letter-spacing:var(--tracking-wide)}.tracking-wider{--tw-tracking:var(--tracking-wider);letter-spacing:var(--tracking-wider)}.tracking-widest{--tw-tracking:var(--tracking-widest);letter-spacing:var(--tracking-widest)}.text-wrap{text-wrap:wrap}.text-clip{text-overflow:clip}.text-ellipsis{text-overflow:ellipsis}.whitespace-nowrap{white-space:nowrap}.text-\\[\\#495BFD\\]{color:#495bfd}.text-accent{color:var(--accent)}.text-blue-500{color:var(--color-blue-500)}.text-blue-600{color:var(--color-blue-600)}.text-card-foreground{color:var(--card-foreground)}.text-destructive-foreground{color:var(--destructive-foreground)}.text-foreground{color:var(--foreground)}.text-gray-200{color:var(--color-gray-200)}.text-gray-400{color:var(--color-gray-400)}.text-gray-700{color:var(--color-gray-700)}.text-green-600{color:var(--color-green-600)}.text-muted-foreground,.text-muted-foreground\\/50{color:var(--muted-foreground)}@supports (color:color-mix(in lab, red, red)){.text-muted-foreground\\/50{color:color-mix(in oklab,var(--muted-foreground)50%,transparent)}}.text-neutral-700{color:var(--color-neutral-700)}.text-primary{color:var(--primary)}.text-primary-foreground{color:var(--primary-foreground)}.text-purple-600{color:var(--color-purple-600)}.text-red-500{color:var(--color-red-500)}.text-red-600{color:var(--color-red-600)}.text-red-700{color:var(--color-red-700)}.text-secondary-foreground{color:var(--secondary-foreground)}.text-slate-300{color:var(--color-slate-300)}.text-slate-500{color:var(--color-slate-500)}.text-slate-800{color:var(--color-slate-800)}.text-slate-900{color:var(--color-slate-900)}.text-transparent{color:#0000}.text-white{color:var(--color-white)}.text-yellow-500{color:var(--color-yellow-500)}.capitalize{text-transform:capitalize}.lowercase{text-transform:lowercase}.normal-case{text-transform:none}.uppercase{text-transform:uppercase}.italic{font-style:italic}.not-italic{font-style:normal}.diagonal-fractions{--tw-numeric-fraction:diagonal-fractions;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.lining-nums{--tw-numeric-figure:lining-nums;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.oldstyle-nums{--tw-numeric-figure:oldstyle-nums;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.ordinal{--tw-ordinal:ordinal;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.proportional-nums{--tw-numeric-spacing:proportional-nums;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.slashed-zero{--tw-slashed-zero:slashed-zero;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.stacked-fractions{--tw-numeric-fraction:stacked-fractions;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.tabular-nums{--tw-numeric-spacing:tabular-nums;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.normal-nums{font-variant-numeric:normal}.line-through{text-decoration-line:line-through}.no-underline{text-decoration-line:none}.overline{text-decoration-line:overline}.underline{text-decoration-line:underline}.underline-offset-4{text-underline-offset:4px}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.subpixel-antialiased{-webkit-font-smoothing:auto;-moz-osx-font-smoothing:auto}.accent-primary{accent-color:var(--primary)}.opacity-0{opacity:0}.opacity-75{opacity:.75}.shadow{--tw-shadow:0 1px 3px 0 var(--tw-shadow-color,#0000001a),0 1px 2px -1px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-2xl{--tw-shadow:0 25px 50px -12px var(--tw-shadow-color,#00000040);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-\\[0_32px_64px_-12px_rgba\\(0\\,0\\,0\\,0\\.5\\)\\]{--tw-shadow:0 32px 64px -12px var(--tw-shadow-color,#00000080);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-inner{--tw-shadow:inset 0 2px 4px 0 var(--tw-shadow-color,#0000000d);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px var(--tw-shadow-color,#0000001a),0 4px 6px -4px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 3px 0 var(--tw-shadow-color,#0000001a),0 1px 2px -1px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px var(--tw-shadow-color,#0000001a),0 8px 10px -6px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.ring{--tw-ring-shadow:var(--tw-ring-inset,)0 0 0 calc(1px + var(--tw-ring-offset-width))var(--tw-ring-color,currentcolor);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.ring-4{--tw-ring-shadow:var(--tw-ring-inset,)0 0 0 calc(4px + var(--tw-ring-offset-width))var(--tw-ring-color,currentcolor);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.inset-ring{--tw-inset-ring-shadow:inset 0 0 0 1px var(--tw-inset-ring-color,currentcolor);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-primary{--tw-shadow-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.shadow-primary{--tw-shadow-color:color-mix(in oklab,var(--primary)var(--tw-shadow-alpha),transparent)}}.shadow-primary\\/5{--tw-shadow-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.shadow-primary\\/5{--tw-shadow-color:color-mix(in oklab,color-mix(in oklab,var(--primary)5%,transparent)var(--tw-shadow-alpha),transparent)}}.shadow-primary\\/20{--tw-shadow-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.shadow-primary\\/20{--tw-shadow-color:color-mix(in oklab,color-mix(in oklab,var(--primary)20%,transparent)var(--tw-shadow-alpha),transparent)}}.shadow-red-500{--tw-shadow-color:oklch(63.7% .237 25.331)}@supports (color:color-mix(in lab, red, red)){.shadow-red-500{--tw-shadow-color:color-mix(in oklab,var(--color-red-500)var(--tw-shadow-alpha),transparent)}}.shadow-red-500\\/20{--tw-shadow-color:#fb2c3633}@supports (color:color-mix(in lab, red, red)){.shadow-red-500\\/20{--tw-shadow-color:color-mix(in oklab,color-mix(in oklab,var(--color-red-500)20%,transparent)var(--tw-shadow-alpha),transparent)}}.ring-neutral-900{--tw-ring-color:var(--color-neutral-900)}.ring-neutral-900\\/50{--tw-ring-color:#17171780}@supports (color:color-mix(in lab, red, red)){.ring-neutral-900\\/50{--tw-ring-color:color-mix(in oklab,var(--color-neutral-900)50%,transparent)}}.ring-primary{--tw-ring-color:var(--primary)}.ring-offset-4{--tw-ring-offset-width:4px;--tw-ring-offset-shadow:var(--tw-ring-inset,)0 0 0 var(--tw-ring-offset-width)var(--tw-ring-offset-color)}.ring-offset-background{--tw-ring-offset-color:var(--background)}.outline{outline-style:var(--tw-outline-style);outline-width:1px}.blur{--tw-blur:blur(8px);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.drop-shadow{--tw-drop-shadow-size:drop-shadow(0 1px 2px var(--tw-drop-shadow-color,#0000001a))drop-shadow(0 1px 1px var(--tw-drop-shadow-color,#0000000f));--tw-drop-shadow:drop-shadow(0 1px 2px #0000001a)drop-shadow(0 1px 1px #0000000f);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.drop-shadow-2xl{--tw-drop-shadow-size:drop-shadow(0 25px 25px var(--tw-drop-shadow-color,#00000026));--tw-drop-shadow:drop-shadow(var(--drop-shadow-2xl));filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.grayscale{--tw-grayscale:grayscale(100%);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.invert{--tw-invert:invert(100%);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.sepia{--tw-sepia:sepia(100%);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.filter{filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.backdrop-blur{--tw-backdrop-blur:blur(8px);-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-blur-md{--tw-backdrop-blur:blur(var(--blur-md));-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-blur-sm{--tw-backdrop-blur:blur(var(--blur-sm));-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-blur-xl{--tw-backdrop-blur:blur(var(--blur-xl));-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-grayscale{--tw-backdrop-grayscale:grayscale(100%);-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-invert{--tw-backdrop-invert:invert(100%);-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-sepia{--tw-backdrop-sepia:sepia(100%);-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-filter{-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.transition{transition-property:color,background-color,border-color,outline-color,text-decoration-color,fill,stroke,--tw-gradient-from,--tw-gradient-via,--tw-gradient-to,opacity,box-shadow,transform,translate,scale,rotate,filter,-webkit-backdrop-filter,backdrop-filter,display,content-visibility,overlay,pointer-events;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.transition-all{transition-property:all;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.transition-colors{transition-property:color,background-color,border-color,outline-color,text-decoration-color,fill,stroke,--tw-gradient-from,--tw-gradient-via,--tw-gradient-to;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.transition-opacity{transition-property:opacity;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.transition-shadow{transition-property:box-shadow;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.transition-transform{transition-property:transform,translate,scale,rotate;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.delay-100{transition-delay:.1s}.delay-200{transition-delay:.2s}.delay-300{transition-delay:.3s}.duration-200{--tw-duration:.2s;transition-duration:.2s}.duration-300{--tw-duration:.3s;transition-duration:.3s}.duration-500{--tw-duration:.5s;transition-duration:.5s}.duration-700{--tw-duration:.7s;transition-duration:.7s}.ease-in{--tw-ease:var(--ease-in);transition-timing-function:var(--ease-in)}.ease-in-out{--tw-ease:var(--ease-in-out);transition-timing-function:var(--ease-in-out)}.ease-out{--tw-ease:var(--ease-out);transition-timing-function:var(--ease-out)}.select-none{-webkit-user-select:none;user-select:none}:where(.divide-x-reverse>:not(:last-child)){--tw-divide-x-reverse:1}.ring-inset{--tw-ring-inset:inset}@media (hover:hover){.group-hover\\:-translate-x-1:is(:where(.group):hover *){--tw-translate-x:calc(var(--spacing)*-1);translate:var(--tw-translate-x)var(--tw-translate-y)}.group-hover\\:translate-x-1:is(:where(.group):hover *){--tw-translate-x:calc(var(--spacing)*1);translate:var(--tw-translate-x)var(--tw-translate-y)}.group-hover\\:scale-110:is(:where(.group):hover *){--tw-scale-x:110%;--tw-scale-y:110%;--tw-scale-z:110%;scale:var(--tw-scale-x)var(--tw-scale-y)}.group-hover\\:text-primary:is(:where(.group):hover *){color:var(--primary)}.group-hover\\:opacity-100:is(:where(.group):hover *){opacity:1}}.placeholder\\:text-gray-500::placeholder{color:var(--color-gray-500)}.placeholder\\:text-muted-foreground\\/50::placeholder{color:var(--muted-foreground)}@supports (color:color-mix(in lab, red, red)){.placeholder\\:text-muted-foreground\\/50::placeholder{color:color-mix(in oklab,var(--muted-foreground)50%,transparent)}}@media (hover:hover){.hover\\:-translate-y-1:hover{--tw-translate-y:calc(var(--spacing)*-1);translate:var(--tw-translate-x)var(--tw-translate-y)}.hover\\:scale-105:hover{--tw-scale-x:105%;--tw-scale-y:105%;--tw-scale-z:105%;scale:var(--tw-scale-x)var(--tw-scale-y)}.hover\\:scale-110:hover{--tw-scale-x:110%;--tw-scale-y:110%;--tw-scale-z:110%;scale:var(--tw-scale-x)var(--tw-scale-y)}.hover\\:scale-\\[1\\.02\\]:hover{scale:1.02}.hover\\:border-primary\\/50:hover{border-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.hover\\:border-primary\\/50:hover{border-color:color-mix(in oklab,var(--primary)50%,transparent)}}.hover\\:border-slate-200:hover{border-color:var(--color-slate-200)}.hover\\:bg-\\[\\#3b4fd9\\]:hover{background-color:#3b4fd9}.hover\\:bg-accent:hover{background-color:var(--accent)}.hover\\:bg-blue-50:hover{background-color:var(--color-blue-50)}.hover\\:bg-gray-50:hover{background-color:var(--color-gray-50)}.hover\\:bg-primary\\/90:hover{background-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.hover\\:bg-primary\\/90:hover{background-color:color-mix(in oklab,var(--primary)90%,transparent)}}.hover\\:bg-red-50:hover{background-color:var(--color-red-50)}.hover\\:bg-red-700:hover{background-color:var(--color-red-700)}.hover\\:bg-secondary:hover,.hover\\:bg-secondary\\/30:hover{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.hover\\:bg-secondary\\/30:hover{background-color:color-mix(in oklab,var(--secondary)30%,transparent)}}.hover\\:bg-secondary\\/50:hover{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.hover\\:bg-secondary\\/50:hover{background-color:color-mix(in oklab,var(--secondary)50%,transparent)}}.hover\\:bg-secondary\\/80:hover{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.hover\\:bg-secondary\\/80:hover{background-color:color-mix(in oklab,var(--secondary)80%,transparent)}}.hover\\:bg-slate-50:hover{background-color:var(--color-slate-50)}.hover\\:bg-slate-100:hover{background-color:var(--color-slate-100)}.hover\\:pr-4:hover{padding-right:calc(var(--spacing)*4)}.hover\\:text-accent-foreground:hover{color:var(--accent-foreground)}.hover\\:text-destructive:hover{color:var(--destructive)}.hover\\:text-foreground:hover{color:var(--foreground)}.hover\\:text-gray-600:hover{color:var(--color-gray-600)}.hover\\:text-primary:hover,.hover\\:text-primary\\/80:hover{color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.hover\\:text-primary\\/80:hover{color:color-mix(in oklab,var(--primary)80%,transparent)}}.hover\\:text-red-500:hover{color:var(--color-red-500)}.hover\\:text-red-700:hover{color:var(--color-red-700)}.hover\\:text-white:hover{color:var(--color-white)}.hover\\:underline:hover{text-decoration-line:underline}.hover\\:shadow-md:hover{--tw-shadow:0 4px 6px -1px var(--tw-shadow-color,#0000001a),0 2px 4px -2px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.hover\\:shadow-sm:hover{--tw-shadow:0 1px 3px 0 var(--tw-shadow-color,#0000001a),0 1px 2px -1px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.hover\\:shadow-xl:hover{--tw-shadow:0 20px 25px -5px var(--tw-shadow-color,#0000001a),0 8px 10px -6px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.hover\\:brightness-95:hover{--tw-brightness:brightness(95%);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.hover\\:brightness-110:hover{--tw-brightness:brightness(110%);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}}.focus\\:border-primary\\/50:focus{border-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.focus\\:border-primary\\/50:focus{border-color:color-mix(in oklab,var(--primary)50%,transparent)}}.focus\\:ring-2:focus{--tw-ring-shadow:var(--tw-ring-inset,)0 0 0 calc(2px + var(--tw-ring-offset-width))var(--tw-ring-color,currentcolor);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.focus\\:ring-primary\\/10:focus{--tw-ring-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.focus\\:ring-primary\\/10:focus{--tw-ring-color:color-mix(in oklab,var(--primary)10%,transparent)}}.focus\\:ring-primary\\/20:focus{--tw-ring-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.focus\\:ring-primary\\/20:focus{--tw-ring-color:color-mix(in oklab,var(--primary)20%,transparent)}}.focus\\:outline-none:focus{--tw-outline-style:none;outline-style:none}.focus-visible\\:ring-2:focus-visible{--tw-ring-shadow:var(--tw-ring-inset,)0 0 0 calc(2px + var(--tw-ring-offset-width))var(--tw-ring-color,currentcolor);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.focus-visible\\:ring-ring:focus-visible{--tw-ring-color:var(--ring)}.focus-visible\\:ring-offset-2:focus-visible{--tw-ring-offset-width:2px;--tw-ring-offset-shadow:var(--tw-ring-inset,)0 0 0 var(--tw-ring-offset-width)var(--tw-ring-offset-color)}.focus-visible\\:outline-none:focus-visible{--tw-outline-style:none;outline-style:none}.active\\:scale-95:active{--tw-scale-x:95%;--tw-scale-y:95%;--tw-scale-z:95%;scale:var(--tw-scale-x)var(--tw-scale-y)}.active\\:scale-\\[0\\.98\\]:active{scale:.98}.active\\:cursor-grabbing:active{cursor:grabbing}.disabled\\:pointer-events-none:disabled{pointer-events:none}.disabled\\:opacity-50:disabled{opacity:.5}@media (min-width:40rem){.sm\\:flex{display:flex}.sm\\:inline{display:inline}.sm\\:flex-row{flex-direction:row}}@media (min-width:48rem){.md\\:flex{display:flex}.md\\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.md\\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.md\\:flex-row{flex-direction:row}.md\\:items-center{align-items:center}.md\\:p-12{padding:calc(var(--spacing)*12)}.md\\:text-7xl{font-size:var(--text-7xl);line-height:var(--tw-leading,var(--text-7xl--line-height))}}@media (min-width:64rem){.lg\\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}}@media (prefers-color-scheme:dark){.dark\\:bg-gray-900{background-color:var(--color-gray-900)}.dark\\:text-gray-200{color:var(--color-gray-200)}}}:root{--background:#faf9f5;--foreground:#1a1a1a;--primary:#495bfd;--primary-foreground:#fff;--secondary:#fff;--secondary-foreground:#1a1a1a;--accent:#f4f4f5;--accent-foreground:#1a1a1a;--card:#fff;--card-foreground:#1a1a1a;--border:#e5e5e5;--muted:#737373;--radius:1rem;--surface-container-lowest:#fff;--surface-container-low:#f7f2fa;--surface-container:#f3edf7;--surface-container-high:#ece6f0;--surface-container-highest:#e6e0e9}body{background:var(--background);color:var(--foreground);font-family:var(--font-sans,sans-serif);overflow-x:hidden}.glass{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);background:#ffffffb3;border:1px solid #ffffff80;box-shadow:0 4px 6px -1px #0000001a,0 2px 4px -1px #0000000f}.glass-hover:hover{background:#ffffffe6;border-color:#fffc;transform:translateY(-1px)}@property --tw-translate-x{syntax:"*";inherits:false;initial-value:0}@property --tw-translate-y{syntax:"*";inherits:false;initial-value:0}@property --tw-translate-z{syntax:"*";inherits:false;initial-value:0}@property --tw-scale-x{syntax:"*";inherits:false;initial-value:1}@property --tw-scale-y{syntax:"*";inherits:false;initial-value:1}@property --tw-scale-z{syntax:"*";inherits:false;initial-value:1}@property --tw-rotate-x{syntax:"*";inherits:false}@property --tw-rotate-y{syntax:"*";inherits:false}@property --tw-rotate-z{syntax:"*";inherits:false}@property --tw-skew-x{syntax:"*";inherits:false}@property --tw-skew-y{syntax:"*";inherits:false}@property --tw-pan-x{syntax:"*";inherits:false}@property --tw-pan-y{syntax:"*";inherits:false}@property --tw-pinch-zoom{syntax:"*";inherits:false}@property --tw-space-y-reverse{syntax:"*";inherits:false;initial-value:0}@property --tw-space-x-reverse{syntax:"*";inherits:false;initial-value:0}@property --tw-divide-x-reverse{syntax:"*";inherits:false;initial-value:0}@property --tw-border-style{syntax:"*";inherits:false;initial-value:solid}@property --tw-divide-y-reverse{syntax:"*";inherits:false;initial-value:0}@property --tw-gradient-position{syntax:"*";inherits:false}@property --tw-gradient-from{syntax:"<color>";inherits:false;initial-value:#0000}@property --tw-gradient-via{syntax:"<color>";inherits:false;initial-value:#0000}@property --tw-gradient-to{syntax:"<color>";inherits:false;initial-value:#0000}@property --tw-gradient-stops{syntax:"*";inherits:false}@property --tw-gradient-via-stops{syntax:"*";inherits:false}@property --tw-gradient-from-position{syntax:"<length-percentage>";inherits:false;initial-value:0%}@property --tw-gradient-via-position{syntax:"<length-percentage>";inherits:false;initial-value:50%}@property --tw-gradient-to-position{syntax:"<length-percentage>";inherits:false;initial-value:100%}@property --tw-leading{syntax:"*";inherits:false}@property --tw-font-weight{syntax:"*";inherits:false}@property --tw-tracking{syntax:"*";inherits:false}@property --tw-ordinal{syntax:"*";inherits:false}@property --tw-slashed-zero{syntax:"*";inherits:false}@property --tw-numeric-figure{syntax:"*";inherits:false}@property --tw-numeric-spacing{syntax:"*";inherits:false}@property --tw-numeric-fraction{syntax:"*";inherits:false}@property --tw-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-shadow-color{syntax:"*";inherits:false}@property --tw-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-inset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-shadow-color{syntax:"*";inherits:false}@property --tw-inset-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-ring-color{syntax:"*";inherits:false}@property --tw-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-ring-color{syntax:"*";inherits:false}@property --tw-inset-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-ring-inset{syntax:"*";inherits:false}@property --tw-ring-offset-width{syntax:"<length>";inherits:false;initial-value:0}@property --tw-ring-offset-color{syntax:"*";inherits:false;initial-value:#fff}@property --tw-ring-offset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-outline-style{syntax:"*";inherits:false;initial-value:solid}@property --tw-blur{syntax:"*";inherits:false}@property --tw-brightness{syntax:"*";inherits:false}@property --tw-contrast{syntax:"*";inherits:false}@property --tw-grayscale{syntax:"*";inherits:false}@property --tw-hue-rotate{syntax:"*";inherits:false}@property --tw-invert{syntax:"*";inherits:false}@property --tw-opacity{syntax:"*";inherits:false}@property --tw-saturate{syntax:"*";inherits:false}@property --tw-sepia{syntax:"*";inherits:false}@property --tw-drop-shadow{syntax:"*";inherits:false}@property --tw-drop-shadow-color{syntax:"*";inherits:false}@property --tw-drop-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-drop-shadow-size{syntax:"*";inherits:false}@property --tw-backdrop-blur{syntax:"*";inherits:false}@property --tw-backdrop-brightness{syntax:"*";inherits:false}@property --tw-backdrop-contrast{syntax:"*";inherits:false}@property --tw-backdrop-grayscale{syntax:"*";inherits:false}@property --tw-backdrop-hue-rotate{syntax:"*";inherits:false}@property --tw-backdrop-invert{syntax:"*";inherits:false}@property --tw-backdrop-opacity{syntax:"*";inherits:false}@property --tw-backdrop-saturate{syntax:"*";inherits:false}@property --tw-backdrop-sepia{syntax:"*";inherits:false}@property --tw-duration{syntax:"*";inherits:false}@property --tw-ease{syntax:"*";inherits:false}@keyframes spin{to{transform:rotate(360deg)}}@keyframes ping{75%,to{opacity:0;transform:scale(2)}}@keyframes pulse{50%{opacity:.5}}@keyframes bounce{0%,to{animation-timing-function:cubic-bezier(.8,0,1,1);transform:translateY(-25%)}50%{animation-timing-function:cubic-bezier(0,0,.2,1);transform:none}}';
+  const styles = '/*! tailwindcss v4.1.17 | MIT License | https://tailwindcss.com */\n@import "https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700;800;900&display=swap";@import "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap";@layer properties{@supports (((-webkit-hyphens:none)) and (not (margin-trim:inline))) or ((-moz-orient:inline) and (not (color:rgb(from red r g b)))){*,:before,:after,::backdrop{--tw-translate-x:0;--tw-translate-y:0;--tw-translate-z:0;--tw-scale-x:1;--tw-scale-y:1;--tw-scale-z:1;--tw-rotate-x:initial;--tw-rotate-y:initial;--tw-rotate-z:initial;--tw-skew-x:initial;--tw-skew-y:initial;--tw-pan-x:initial;--tw-pan-y:initial;--tw-pinch-zoom:initial;--tw-space-y-reverse:0;--tw-space-x-reverse:0;--tw-divide-x-reverse:0;--tw-border-style:solid;--tw-divide-y-reverse:0;--tw-gradient-position:initial;--tw-gradient-from:#0000;--tw-gradient-via:#0000;--tw-gradient-to:#0000;--tw-gradient-stops:initial;--tw-gradient-via-stops:initial;--tw-gradient-from-position:0%;--tw-gradient-via-position:50%;--tw-gradient-to-position:100%;--tw-leading:initial;--tw-font-weight:initial;--tw-tracking:initial;--tw-ordinal:initial;--tw-slashed-zero:initial;--tw-numeric-figure:initial;--tw-numeric-spacing:initial;--tw-numeric-fraction:initial;--tw-shadow:0 0 #0000;--tw-shadow-color:initial;--tw-shadow-alpha:100%;--tw-inset-shadow:0 0 #0000;--tw-inset-shadow-color:initial;--tw-inset-shadow-alpha:100%;--tw-ring-color:initial;--tw-ring-shadow:0 0 #0000;--tw-inset-ring-color:initial;--tw-inset-ring-shadow:0 0 #0000;--tw-ring-inset:initial;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-offset-shadow:0 0 #0000;--tw-outline-style:solid;--tw-blur:initial;--tw-brightness:initial;--tw-contrast:initial;--tw-grayscale:initial;--tw-hue-rotate:initial;--tw-invert:initial;--tw-opacity:initial;--tw-saturate:initial;--tw-sepia:initial;--tw-drop-shadow:initial;--tw-drop-shadow-color:initial;--tw-drop-shadow-alpha:100%;--tw-drop-shadow-size:initial;--tw-backdrop-blur:initial;--tw-backdrop-brightness:initial;--tw-backdrop-contrast:initial;--tw-backdrop-grayscale:initial;--tw-backdrop-hue-rotate:initial;--tw-backdrop-invert:initial;--tw-backdrop-opacity:initial;--tw-backdrop-saturate:initial;--tw-backdrop-sepia:initial;--tw-duration:initial;--tw-ease:initial}}}@layer theme{:root,:host{--font-sans:"Gabarito",system-ui,-apple-system,sans-serif;--font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;--color-red-50:oklch(97.1% .013 17.38);--color-red-100:oklch(93.6% .032 17.717);--color-red-200:oklch(88.5% .062 18.334);--color-red-400:oklch(70.4% .191 22.216);--color-red-500:oklch(63.7% .237 25.331);--color-red-600:oklch(57.7% .245 27.325);--color-red-700:oklch(50.5% .213 27.518);--color-amber-500:oklch(76.9% .188 70.08);--color-yellow-400:oklch(85.2% .199 91.936);--color-yellow-500:oklch(79.5% .184 86.047);--color-green-400:oklch(79.2% .209 151.711);--color-green-500:oklch(72.3% .219 149.579);--color-green-600:oklch(62.7% .194 149.214);--color-emerald-50:oklch(97.9% .021 166.113);--color-emerald-100:oklch(95% .052 163.051);--color-emerald-400:oklch(76.5% .177 163.223);--color-emerald-500:oklch(69.6% .17 162.48);--color-emerald-600:oklch(59.6% .145 163.225);--color-blue-50:oklch(97% .014 254.604);--color-blue-100:oklch(93.2% .032 255.585);--color-blue-400:oklch(70.7% .165 254.624);--color-blue-500:oklch(62.3% .214 259.815);--color-blue-600:oklch(54.6% .245 262.881);--color-purple-500:oklch(62.7% .265 303.9);--color-purple-600:oklch(55.8% .288 302.321);--color-slate-50:oklch(98.4% .003 247.858);--color-slate-100:oklch(96.8% .007 247.896);--color-slate-200:oklch(92.9% .013 255.508);--color-slate-300:oklch(86.9% .022 252.894);--color-slate-400:oklch(70.4% .04 256.788);--color-slate-500:oklch(55.4% .046 257.417);--color-slate-600:oklch(44.6% .043 257.281);--color-slate-700:oklch(37.2% .044 257.287);--color-slate-800:oklch(27.9% .041 260.031);--color-slate-900:oklch(20.8% .042 265.755);--color-gray-50:oklch(98.5% .002 247.839);--color-gray-100:oklch(96.7% .003 264.542);--color-gray-200:oklch(92.8% .006 264.531);--color-gray-400:oklch(70.7% .022 261.325);--color-gray-500:oklch(55.1% .027 264.364);--color-gray-600:oklch(44.6% .03 256.802);--color-gray-700:oklch(37.3% .034 259.733);--color-gray-900:oklch(21% .034 264.665);--color-neutral-700:oklch(37.1% 0 0);--color-neutral-800:oklch(26.9% 0 0);--color-neutral-900:oklch(20.5% 0 0);--color-black:#000;--color-white:#fff;--spacing:.25rem;--container-xs:20rem;--container-sm:24rem;--container-md:28rem;--container-lg:32rem;--container-xl:36rem;--container-2xl:42rem;--container-6xl:72rem;--container-7xl:80rem;--text-xs:.75rem;--text-xs--line-height:calc(1/.75);--text-sm:.875rem;--text-sm--line-height:calc(1.25/.875);--text-base:1rem;--text-base--line-height:calc(1.5/1);--text-lg:1.125rem;--text-lg--line-height:calc(1.75/1.125);--text-xl:1.25rem;--text-xl--line-height:calc(1.75/1.25);--text-2xl:1.5rem;--text-2xl--line-height:calc(2/1.5);--text-3xl:1.875rem;--text-3xl--line-height:calc(2.25/1.875);--text-4xl:2.25rem;--text-4xl--line-height:calc(2.5/2.25);--text-5xl:3rem;--text-5xl--line-height:1;--text-7xl:4.5rem;--text-7xl--line-height:1;--font-weight-medium:500;--font-weight-semibold:600;--font-weight-bold:700;--font-weight-black:900;--tracking-tight:-.025em;--tracking-wide:.025em;--tracking-wider:.05em;--tracking-widest:.1em;--leading-tight:1.25;--leading-relaxed:1.625;--radius-2xl:1rem;--radius-3xl:1.5rem;--drop-shadow-2xl:0 25px 25px #00000026;--ease-in:cubic-bezier(.4,0,1,1);--ease-out:cubic-bezier(0,0,.2,1);--ease-in-out:cubic-bezier(.4,0,.2,1);--animate-spin:spin 1s linear infinite;--animate-ping:ping 1s cubic-bezier(0,0,.2,1)infinite;--animate-pulse:pulse 2s cubic-bezier(.4,0,.6,1)infinite;--animate-bounce:bounce 1s infinite;--blur-sm:8px;--blur-md:12px;--blur-xl:24px;--default-transition-duration:.15s;--default-transition-timing-function:cubic-bezier(.4,0,.2,1);--default-font-family:"Gabarito",system-ui,-apple-system,sans-serif;--default-mono-font-family:var(--font-mono)}}@layer base{*,:after,:before,::backdrop{box-sizing:border-box;border:0 solid;margin:0;padding:0}::file-selector-button{box-sizing:border-box;border:0 solid;margin:0;padding:0}html,:host{-webkit-text-size-adjust:100%;tab-size:4;line-height:1.5;font-family:var(--default-font-family,ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji");font-feature-settings:var(--default-font-feature-settings,normal);font-variation-settings:var(--default-font-variation-settings,normal);-webkit-tap-highlight-color:transparent}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;-webkit-text-decoration:inherit;-webkit-text-decoration:inherit;-webkit-text-decoration:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,samp,pre{font-family:var(--default-mono-font-family,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace);font-feature-settings:var(--default-mono-font-feature-settings,normal);font-variation-settings:var(--default-mono-font-variation-settings,normal);font-size:1em}small{font-size:80%}sub,sup{vertical-align:baseline;font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}:-moz-focusring{outline:auto}progress{vertical-align:baseline}summary{display:list-item}ol,ul,menu{list-style:none}img,svg,video,canvas,audio,iframe,embed,object{vertical-align:middle;display:block}img,video{max-width:100%;height:auto}button,input,select,optgroup,textarea{font:inherit;font-feature-settings:inherit;font-variation-settings:inherit;letter-spacing:inherit;color:inherit;opacity:1;background-color:#0000;border-radius:0}::file-selector-button{font:inherit;font-feature-settings:inherit;font-variation-settings:inherit;letter-spacing:inherit;color:inherit;opacity:1;background-color:#0000;border-radius:0}:where(select:is([multiple],[size])) optgroup{font-weight:bolder}:where(select:is([multiple],[size])) optgroup option{padding-inline-start:20px}::file-selector-button{margin-inline-end:4px}::placeholder{opacity:1}@supports (not ((-webkit-appearance:-apple-pay-button))) or (contain-intrinsic-size:1px){::placeholder{color:currentColor}@supports (color:color-mix(in lab, red, red)){::placeholder{color:color-mix(in oklab,currentcolor 50%,transparent)}}}textarea{resize:vertical}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-date-and-time-value{min-height:1lh;text-align:inherit}::-webkit-datetime-edit{display:inline-flex}::-webkit-datetime-edit-fields-wrapper{padding:0}::-webkit-datetime-edit{padding-block:0}::-webkit-datetime-edit-year-field{padding-block:0}::-webkit-datetime-edit-month-field{padding-block:0}::-webkit-datetime-edit-day-field{padding-block:0}::-webkit-datetime-edit-hour-field{padding-block:0}::-webkit-datetime-edit-minute-field{padding-block:0}::-webkit-datetime-edit-second-field{padding-block:0}::-webkit-datetime-edit-millisecond-field{padding-block:0}::-webkit-datetime-edit-meridiem-field{padding-block:0}::-webkit-calendar-picker-indicator{line-height:1}:-moz-ui-invalid{box-shadow:none}button,input:where([type=button],[type=reset],[type=submit]){appearance:button}::file-selector-button{appearance:button}::-webkit-inner-spin-button{height:auto}::-webkit-outer-spin-button{height:auto}[hidden]:where(:not([hidden=until-found])){display:none!important}}@layer components;@layer utilities{.pointer-events-auto{pointer-events:auto}.pointer-events-none{pointer-events:none}.collapse{visibility:collapse}.invisible{visibility:hidden}.visible{visibility:visible}.sr-only{clip-path:inset(50%);white-space:nowrap;border-width:0;width:1px;height:1px;margin:-1px;padding:0;position:absolute;overflow:hidden}.not-sr-only{clip-path:none;white-space:normal;width:auto;height:auto;margin:0;padding:0;position:static;overflow:visible}.absolute{position:absolute}.fixed{position:fixed}.relative{position:relative}.static{position:static}.sticky{position:sticky}.inset-0{inset:calc(var(--spacing)*0)}.-top-2{top:calc(var(--spacing)*-2)}.top-0{top:calc(var(--spacing)*0)}.top-0\\.5{top:calc(var(--spacing)*.5)}.top-1{top:calc(var(--spacing)*1)}.top-1\\/2{top:50%}.top-4{top:calc(var(--spacing)*4)}.top-6{top:calc(var(--spacing)*6)}.top-8{top:calc(var(--spacing)*8)}.top-20{top:calc(var(--spacing)*20)}.top-24{top:calc(var(--spacing)*24)}.top-full{top:100%}.-right-2{right:calc(var(--spacing)*-2)}.right-0{right:calc(var(--spacing)*0)}.right-4{right:calc(var(--spacing)*4)}.right-6{right:calc(var(--spacing)*6)}.bottom-6{bottom:calc(var(--spacing)*6)}.bottom-8{bottom:calc(var(--spacing)*8)}.bottom-16{bottom:calc(var(--spacing)*16)}.left-0{left:calc(var(--spacing)*0)}.left-1{left:calc(var(--spacing)*1)}.left-1\\/2{left:50%}.left-6{left:calc(var(--spacing)*6)}.left-7{left:calc(var(--spacing)*7)}.left-full{left:100%}.isolate{isolation:isolate}.isolation-auto{isolation:auto}.z-10{z-index:10}.z-40{z-index:40}.z-50{z-index:50}.z-\\[40\\]{z-index:40}.z-\\[50\\]{z-index:50}.z-\\[100\\]{z-index:100}.z-\\[101\\]{z-index:101}.z-\\[2147483640\\]{z-index:2147483640}.z-\\[2147483641\\]{z-index:2147483641}.z-\\[2147483646\\]{z-index:2147483646}.z-\\[2147483647\\],.z-\\[2147483649\\]{z-index:2147483647}.col-span-2{grid-column:span 2/span 2}.col-span-full{grid-column:1/-1}.container{width:100%}@media (min-width:40rem){.container{max-width:40rem}}@media (min-width:48rem){.container{max-width:48rem}}@media (min-width:64rem){.container{max-width:64rem}}@media (min-width:80rem){.container{max-width:80rem}}@media (min-width:96rem){.container{max-width:96rem}}.m-4{margin:calc(var(--spacing)*4)}.mx-auto{margin-inline:auto}.my-8{margin-block:calc(var(--spacing)*8)}.-mt-2{margin-top:calc(var(--spacing)*-2)}.mt-1{margin-top:calc(var(--spacing)*1)}.mt-2{margin-top:calc(var(--spacing)*2)}.mt-4{margin-top:calc(var(--spacing)*4)}.mt-10{margin-top:calc(var(--spacing)*10)}.mt-12{margin-top:calc(var(--spacing)*12)}.-mr-2{margin-right:calc(var(--spacing)*-2)}.mr-1{margin-right:calc(var(--spacing)*1)}.mr-2{margin-right:calc(var(--spacing)*2)}.mr-3{margin-right:calc(var(--spacing)*3)}.mr-6{margin-right:calc(var(--spacing)*6)}.mb-1{margin-bottom:calc(var(--spacing)*1)}.mb-2{margin-bottom:calc(var(--spacing)*2)}.mb-3{margin-bottom:calc(var(--spacing)*3)}.mb-4{margin-bottom:calc(var(--spacing)*4)}.mb-6{margin-bottom:calc(var(--spacing)*6)}.mb-8{margin-bottom:calc(var(--spacing)*8)}.mb-10{margin-bottom:calc(var(--spacing)*10)}.mb-16{margin-bottom:calc(var(--spacing)*16)}.ml-1{margin-left:calc(var(--spacing)*1)}.ml-2{margin-left:calc(var(--spacing)*2)}.ml-\\[-20px\\]{margin-left:-20px}.block{display:block}.contents{display:contents}.flex{display:flex}.flow-root{display:flow-root}.grid{display:grid}.hidden{display:none}.inline{display:inline}.inline-block{display:inline-block}.inline-flex{display:inline-flex}.inline-grid{display:inline-grid}.inline-table{display:inline-table}.list-item{display:list-item}.table{display:table}.table-caption{display:table-caption}.table-cell{display:table-cell}.table-column{display:table-column}.table-column-group{display:table-column-group}.table-footer-group{display:table-footer-group}.table-header-group{display:table-header-group}.table-row{display:table-row}.table-row-group{display:table-row-group}.h-1{height:calc(var(--spacing)*1)}.h-1\\.5{height:calc(var(--spacing)*1.5)}.h-2{height:calc(var(--spacing)*2)}.h-3{height:calc(var(--spacing)*3)}.h-3\\.5{height:calc(var(--spacing)*3.5)}.h-4{height:calc(var(--spacing)*4)}.h-5{height:calc(var(--spacing)*5)}.h-6{height:calc(var(--spacing)*6)}.h-7{height:calc(var(--spacing)*7)}.h-8{height:calc(var(--spacing)*8)}.h-9{height:calc(var(--spacing)*9)}.h-10{height:calc(var(--spacing)*10)}.h-11{height:calc(var(--spacing)*11)}.h-12{height:calc(var(--spacing)*12)}.h-14{height:calc(var(--spacing)*14)}.h-16{height:calc(var(--spacing)*16)}.h-24{height:calc(var(--spacing)*24)}.h-\\[600px\\]{height:600px}.h-\\[calc\\(100vh-10rem\\)\\]{height:calc(100vh - 10rem)}.h-full{height:100%}.h-px{height:1px}.max-h-\\[300px\\]{max-height:300px}.max-h-\\[700px\\]{max-height:700px}.max-h-\\[calc\\(100vh-10rem\\)\\]{max-height:calc(100vh - 10rem)}.min-h-\\[calc\\(100vh-80px\\)\\]{min-height:calc(100vh - 80px)}.min-h-screen{min-height:100vh}.w-1{width:calc(var(--spacing)*1)}.w-1\\.5{width:calc(var(--spacing)*1.5)}.w-2{width:calc(var(--spacing)*2)}.w-3{width:calc(var(--spacing)*3)}.w-3\\.5{width:calc(var(--spacing)*3.5)}.w-4{width:calc(var(--spacing)*4)}.w-5{width:calc(var(--spacing)*5)}.w-6{width:calc(var(--spacing)*6)}.w-7{width:calc(var(--spacing)*7)}.w-8{width:calc(var(--spacing)*8)}.w-10{width:calc(var(--spacing)*10)}.w-12{width:calc(var(--spacing)*12)}.w-14{width:calc(var(--spacing)*14)}.w-16{width:calc(var(--spacing)*16)}.w-24{width:calc(var(--spacing)*24)}.w-80{width:calc(var(--spacing)*80)}.w-fit{width:fit-content}.w-full{width:100%}.w-px{width:1px}.max-w-2xl{max-width:var(--container-2xl)}.max-w-6xl{max-width:var(--container-6xl)}.max-w-7xl{max-width:var(--container-7xl)}.max-w-\\[80\\%\\]{max-width:80%}.max-w-\\[150px\\]{max-width:150px}.max-w-\\[320px\\]{max-width:320px}.max-w-lg{max-width:var(--container-lg)}.max-w-md{max-width:var(--container-md)}.max-w-sm{max-width:var(--container-sm)}.max-w-xl{max-width:var(--container-xl)}.max-w-xs{max-width:var(--container-xs)}.min-w-0{min-width:calc(var(--spacing)*0)}.min-w-\\[120px\\]{min-width:120px}.flex-1{flex:1}.shrink{flex-shrink:1}.shrink-0{flex-shrink:0}.grow{flex-grow:1}.border-collapse{border-collapse:collapse}.-translate-x-1{--tw-translate-x:calc(var(--spacing)*-1);translate:var(--tw-translate-x)var(--tw-translate-y)}.-translate-x-1\\/2{--tw-translate-x:calc(calc(1/2*100%)*-1);translate:var(--tw-translate-x)var(--tw-translate-y)}.-translate-y-1{--tw-translate-y:calc(var(--spacing)*-1);translate:var(--tw-translate-x)var(--tw-translate-y)}.-translate-y-1\\/2{--tw-translate-y:calc(calc(1/2*100%)*-1);translate:var(--tw-translate-x)var(--tw-translate-y)}.translate-none{translate:none}.scale-3d{scale:var(--tw-scale-x)var(--tw-scale-y)var(--tw-scale-z)}.-rotate-12{rotate:-12deg}.rotate-180{rotate:180deg}.transform{transform:var(--tw-rotate-x,)var(--tw-rotate-y,)var(--tw-rotate-z,)var(--tw-skew-x,)var(--tw-skew-y,)}.animate-bounce{animation:var(--animate-bounce)}.animate-ping{animation:var(--animate-ping)}.animate-pulse{animation:var(--animate-pulse)}.animate-spin{animation:var(--animate-spin)}.cursor-grab{cursor:grab}.cursor-not-allowed{cursor:not-allowed}.cursor-pointer{cursor:pointer}.touch-pinch-zoom{--tw-pinch-zoom:pinch-zoom;touch-action:var(--tw-pan-x,)var(--tw-pan-y,)var(--tw-pinch-zoom,)}.resize{resize:both}.resize-none{resize:none}.appearance-none{appearance:none}.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.items-start{align-items:flex-start}.justify-between{justify-content:space-between}.justify-center{justify-content:center}.justify-end{justify-content:flex-end}.justify-start{justify-content:flex-start}.gap-1{gap:calc(var(--spacing)*1)}.gap-1\\.5{gap:calc(var(--spacing)*1.5)}.gap-2{gap:calc(var(--spacing)*2)}.gap-3{gap:calc(var(--spacing)*3)}.gap-4{gap:calc(var(--spacing)*4)}.gap-6{gap:calc(var(--spacing)*6)}.gap-8{gap:calc(var(--spacing)*8)}:where(.space-y-1>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing)*1)*var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing)*1)*calc(1 - var(--tw-space-y-reverse)))}:where(.space-y-2>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing)*2)*var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing)*2)*calc(1 - var(--tw-space-y-reverse)))}:where(.space-y-3>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing)*3)*var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing)*3)*calc(1 - var(--tw-space-y-reverse)))}:where(.space-y-4>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing)*4)*var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing)*4)*calc(1 - var(--tw-space-y-reverse)))}:where(.space-y-5>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing)*5)*var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing)*5)*calc(1 - var(--tw-space-y-reverse)))}:where(.space-y-6>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing)*6)*var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing)*6)*calc(1 - var(--tw-space-y-reverse)))}:where(.space-y-8>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing)*8)*var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing)*8)*calc(1 - var(--tw-space-y-reverse)))}:where(.space-y-reverse>:not(:last-child)){--tw-space-y-reverse:1}:where(.space-x-reverse>:not(:last-child)){--tw-space-x-reverse:1}:where(.divide-x>:not(:last-child)){--tw-divide-x-reverse:0;border-inline-style:var(--tw-border-style);border-inline-start-width:calc(1px*var(--tw-divide-x-reverse));border-inline-end-width:calc(1px*calc(1 - var(--tw-divide-x-reverse)))}:where(.divide-y>:not(:last-child)){--tw-divide-y-reverse:0;border-bottom-style:var(--tw-border-style);border-top-style:var(--tw-border-style);border-top-width:calc(1px*var(--tw-divide-y-reverse));border-bottom-width:calc(1px*calc(1 - var(--tw-divide-y-reverse)))}:where(.divide-y-reverse>:not(:last-child)){--tw-divide-y-reverse:1}.truncate{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.rounded{border-radius:.25rem}.rounded-2xl{border-radius:var(--radius-2xl)}.rounded-3xl{border-radius:var(--radius-3xl)}.rounded-\\[2\\.5rem\\]{border-radius:2.5rem}.rounded-\\[2rem\\]{border-radius:2rem}.rounded-full{border-radius:3.40282e38px}.rounded-lg{border-radius:var(--radius)}.rounded-md{border-radius:calc(var(--radius) - 2px)}.rounded-xl{border-radius:calc(var(--radius) + 4px)}.rounded-s{border-start-start-radius:.25rem;border-end-start-radius:.25rem}.rounded-ss{border-start-start-radius:.25rem}.rounded-e{border-start-end-radius:.25rem;border-end-end-radius:.25rem}.rounded-se{border-start-end-radius:.25rem}.rounded-ee{border-end-end-radius:.25rem}.rounded-es{border-end-start-radius:.25rem}.rounded-t{border-top-left-radius:.25rem;border-top-right-radius:.25rem}.rounded-l{border-top-left-radius:.25rem;border-bottom-left-radius:.25rem}.rounded-l-2xl{border-top-left-radius:var(--radius-2xl);border-bottom-left-radius:var(--radius-2xl)}.rounded-l-lg{border-top-left-radius:var(--radius);border-bottom-left-radius:var(--radius)}.rounded-l-xl{border-top-left-radius:calc(var(--radius) + 4px);border-bottom-left-radius:calc(var(--radius) + 4px)}.rounded-tl{border-top-left-radius:.25rem}.rounded-tl-none{border-top-left-radius:0}.rounded-r{border-top-right-radius:.25rem;border-bottom-right-radius:.25rem}.rounded-r-none{border-top-right-radius:0;border-bottom-right-radius:0}.rounded-tr{border-top-right-radius:.25rem}.rounded-tr-none{border-top-right-radius:0}.rounded-b{border-bottom-right-radius:.25rem;border-bottom-left-radius:.25rem}.rounded-br{border-bottom-right-radius:.25rem}.rounded-bl{border-bottom-left-radius:.25rem}.border{border-style:var(--tw-border-style);border-width:1px}.border-2{border-style:var(--tw-border-style);border-width:2px}.border-8{border-style:var(--tw-border-style);border-width:8px}.border-x{border-inline-style:var(--tw-border-style);border-inline-width:1px}.border-y{border-block-style:var(--tw-border-style);border-block-width:1px}.border-s{border-inline-start-style:var(--tw-border-style);border-inline-start-width:1px}.border-e{border-inline-end-style:var(--tw-border-style);border-inline-end-width:1px}.border-t{border-top-style:var(--tw-border-style);border-top-width:1px}.border-r{border-right-style:var(--tw-border-style);border-right-width:1px}.border-r-0{border-right-style:var(--tw-border-style);border-right-width:0}.border-b{border-bottom-style:var(--tw-border-style);border-bottom-width:1px}.border-l{border-left-style:var(--tw-border-style);border-left-width:1px}.border-dashed{--tw-border-style:dashed;border-style:dashed}.border-none{--tw-border-style:none;border-style:none}.border-blue-400{border-color:var(--color-blue-400)}.border-border,.border-border\\/40{border-color:var(--border)}@supports (color:color-mix(in lab, red, red)){.border-border\\/40{border-color:color-mix(in oklab,var(--border)40%,transparent)}}.border-border\\/50{border-color:var(--border)}@supports (color:color-mix(in lab, red, red)){.border-border\\/50{border-color:color-mix(in oklab,var(--border)50%,transparent)}}.border-border\\/60{border-color:var(--border)}@supports (color:color-mix(in lab, red, red)){.border-border\\/60{border-color:color-mix(in oklab,var(--border)60%,transparent)}}.border-emerald-100{border-color:var(--color-emerald-100)}.border-gray-100{border-color:var(--color-gray-100)}.border-gray-200{border-color:var(--color-gray-200)}.border-input{border-color:var(--input)}.border-neutral-700{border-color:var(--color-neutral-700)}.border-neutral-800{border-color:var(--color-neutral-800)}.border-primary{border-color:var(--primary)}.border-red-200{border-color:var(--color-red-200)}.border-red-500{border-color:var(--color-red-500)}.border-slate-100{border-color:var(--color-slate-100)}.border-slate-200{border-color:var(--color-slate-200)}.border-slate-200\\/60{border-color:#e2e8f099}@supports (color:color-mix(in lab, red, red)){.border-slate-200\\/60{border-color:color-mix(in oklab,var(--color-slate-200)60%,transparent)}}.border-slate-700{border-color:var(--color-slate-700)}.border-slate-800{border-color:var(--color-slate-800)}.border-transparent{border-color:#0000}.border-white{border-color:var(--color-white)}.border-white\\/10{border-color:#ffffff1a}@supports (color:color-mix(in lab, red, red)){.border-white\\/10{border-color:color-mix(in oklab,var(--color-white)10%,transparent)}}.bg-\\[\\#0f172a\\]{background-color:#0f172a}.bg-\\[\\#1e293b\\]{background-color:#1e293b}.bg-\\[\\#495BFD\\]{background-color:#495bfd}.bg-accent,.bg-accent\\/50{background-color:var(--accent)}@supports (color:color-mix(in lab, red, red)){.bg-accent\\/50{background-color:color-mix(in oklab,var(--accent)50%,transparent)}}.bg-amber-500{background-color:var(--color-amber-500)}.bg-background,.bg-background\\/50{background-color:var(--background)}@supports (color:color-mix(in lab, red, red)){.bg-background\\/50{background-color:color-mix(in oklab,var(--background)50%,transparent)}}.bg-background\\/80{background-color:var(--background)}@supports (color:color-mix(in lab, red, red)){.bg-background\\/80{background-color:color-mix(in oklab,var(--background)80%,transparent)}}.bg-black{background-color:var(--color-black)}.bg-black\\/40{background-color:#0006}@supports (color:color-mix(in lab, red, red)){.bg-black\\/40{background-color:color-mix(in oklab,var(--color-black)40%,transparent)}}.bg-black\\/50{background-color:#00000080}@supports (color:color-mix(in lab, red, red)){.bg-black\\/50{background-color:color-mix(in oklab,var(--color-black)50%,transparent)}}.bg-black\\/60{background-color:#0009}@supports (color:color-mix(in lab, red, red)){.bg-black\\/60{background-color:color-mix(in oklab,var(--color-black)60%,transparent)}}.bg-black\\/80{background-color:#000c}@supports (color:color-mix(in lab, red, red)){.bg-black\\/80{background-color:color-mix(in oklab,var(--color-black)80%,transparent)}}.bg-blue-50{background-color:var(--color-blue-50)}.bg-blue-500{background-color:var(--color-blue-500)}.bg-blue-500\\/10{background-color:#3080ff1a}@supports (color:color-mix(in lab, red, red)){.bg-blue-500\\/10{background-color:color-mix(in oklab,var(--color-blue-500)10%,transparent)}}.bg-border,.bg-border\\/60{background-color:var(--border)}@supports (color:color-mix(in lab, red, red)){.bg-border\\/60{background-color:color-mix(in oklab,var(--border)60%,transparent)}}.bg-card,.bg-card\\/40{background-color:var(--card)}@supports (color:color-mix(in lab, red, red)){.bg-card\\/40{background-color:color-mix(in oklab,var(--card)40%,transparent)}}.bg-destructive{background-color:var(--destructive)}.bg-emerald-50{background-color:var(--color-emerald-50)}.bg-emerald-500{background-color:var(--color-emerald-500)}.bg-gray-50{background-color:var(--color-gray-50)}.bg-green-400{background-color:var(--color-green-400)}.bg-green-500{background-color:var(--color-green-500)}.bg-neutral-900{background-color:var(--color-neutral-900)}.bg-primary,.bg-primary\\/10{background-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.bg-primary\\/10{background-color:color-mix(in oklab,var(--primary)10%,transparent)}}.bg-purple-500{background-color:var(--color-purple-500)}.bg-purple-500\\/10{background-color:#ac4bff1a}@supports (color:color-mix(in lab, red, red)){.bg-purple-500\\/10{background-color:color-mix(in oklab,var(--color-purple-500)10%,transparent)}}.bg-red-50{background-color:var(--color-red-50)}.bg-red-400{background-color:var(--color-red-400)}.bg-red-500{background-color:var(--color-red-500)}.bg-red-500\\/20{background-color:#fb2c3633}@supports (color:color-mix(in lab, red, red)){.bg-red-500\\/20{background-color:color-mix(in oklab,var(--color-red-500)20%,transparent)}}.bg-red-600{background-color:var(--color-red-600)}.bg-secondary,.bg-secondary\\/10{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.bg-secondary\\/10{background-color:color-mix(in oklab,var(--secondary)10%,transparent)}}.bg-secondary\\/20{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.bg-secondary\\/20{background-color:color-mix(in oklab,var(--secondary)20%,transparent)}}.bg-secondary\\/30{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.bg-secondary\\/30{background-color:color-mix(in oklab,var(--secondary)30%,transparent)}}.bg-secondary\\/50{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.bg-secondary\\/50{background-color:color-mix(in oklab,var(--secondary)50%,transparent)}}.bg-slate-50{background-color:var(--color-slate-50)}.bg-slate-100{background-color:var(--color-slate-100)}.bg-slate-200{background-color:var(--color-slate-200)}.bg-slate-200\\/50{background-color:#e2e8f080}@supports (color:color-mix(in lab, red, red)){.bg-slate-200\\/50{background-color:color-mix(in oklab,var(--color-slate-200)50%,transparent)}}.bg-slate-300{background-color:var(--color-slate-300)}.bg-slate-400{background-color:var(--color-slate-400)}.bg-slate-900{background-color:var(--color-slate-900)}.bg-transparent{background-color:#0000}.bg-white{background-color:var(--color-white)}.bg-white\\/5{background-color:#ffffff0d}@supports (color:color-mix(in lab, red, red)){.bg-white\\/5{background-color:color-mix(in oklab,var(--color-white)5%,transparent)}}.bg-white\\/10{background-color:#ffffff1a}@supports (color:color-mix(in lab, red, red)){.bg-white\\/10{background-color:color-mix(in oklab,var(--color-white)10%,transparent)}}.bg-white\\/80{background-color:#fffc}@supports (color:color-mix(in lab, red, red)){.bg-white\\/80{background-color:color-mix(in oklab,var(--color-white)80%,transparent)}}.bg-yellow-400{background-color:var(--color-yellow-400)}.bg-yellow-500{background-color:var(--color-yellow-500)}.bg-gradient-to-b{--tw-gradient-position:to bottom in oklab;background-image:linear-gradient(var(--tw-gradient-stops))}.bg-gradient-to-r{--tw-gradient-position:to right in oklab;background-image:linear-gradient(var(--tw-gradient-stops))}.bg-gradient-to-tr{--tw-gradient-position:to top right in oklab;background-image:linear-gradient(var(--tw-gradient-stops))}.from-foreground{--tw-gradient-from:var(--foreground);--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.from-primary{--tw-gradient-from:var(--primary);--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.from-primary\\/5{--tw-gradient-from:var(--primary)}@supports (color:color-mix(in lab, red, red)){.from-primary\\/5{--tw-gradient-from:color-mix(in oklab,var(--primary)5%,transparent)}}.from-primary\\/5{--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.from-secondary{--tw-gradient-from:var(--secondary);--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.to-foreground{--tw-gradient-to:var(--foreground);--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.to-foreground\\/70{--tw-gradient-to:var(--foreground)}@supports (color:color-mix(in lab, red, red)){.to-foreground\\/70{--tw-gradient-to:color-mix(in oklab,var(--foreground)70%,transparent)}}.to-foreground\\/70{--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.to-primary{--tw-gradient-to:var(--primary);--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.to-transparent{--tw-gradient-to:transparent;--tw-gradient-stops:var(--tw-gradient-via-stops,var(--tw-gradient-position),var(--tw-gradient-from)var(--tw-gradient-from-position),var(--tw-gradient-to)var(--tw-gradient-to-position))}.bg-clip-text{-webkit-background-clip:text;background-clip:text}.bg-repeat{background-repeat:repeat}.mask-no-clip{-webkit-mask-clip:no-clip;mask-clip:no-clip}.mask-repeat{-webkit-mask-repeat:repeat;mask-repeat:repeat}.fill-current{fill:currentColor}.fill-primary,.fill-primary\\/20{fill:var(--primary)}@supports (color:color-mix(in lab, red, red)){.fill-primary\\/20{fill:color-mix(in oklab,var(--primary)20%,transparent)}}.p-0{padding:calc(var(--spacing)*0)}.p-1{padding:calc(var(--spacing)*1)}.p-1\\.5{padding:calc(var(--spacing)*1.5)}.p-2{padding:calc(var(--spacing)*2)}.p-2\\.5{padding:calc(var(--spacing)*2.5)}.p-3{padding:calc(var(--spacing)*3)}.p-4{padding:calc(var(--spacing)*4)}.p-5{padding:calc(var(--spacing)*5)}.p-6{padding:calc(var(--spacing)*6)}.p-8{padding:calc(var(--spacing)*8)}.px-0{padding-inline:calc(var(--spacing)*0)}.px-1{padding-inline:calc(var(--spacing)*1)}.px-1\\.5{padding-inline:calc(var(--spacing)*1.5)}.px-2{padding-inline:calc(var(--spacing)*2)}.px-3{padding-inline:calc(var(--spacing)*3)}.px-3\\.5{padding-inline:calc(var(--spacing)*3.5)}.px-4{padding-inline:calc(var(--spacing)*4)}.px-5{padding-inline:calc(var(--spacing)*5)}.px-6{padding-inline:calc(var(--spacing)*6)}.px-8{padding-inline:calc(var(--spacing)*8)}.py-0{padding-block:calc(var(--spacing)*0)}.py-0\\.5{padding-block:calc(var(--spacing)*.5)}.py-1{padding-block:calc(var(--spacing)*1)}.py-1\\.5{padding-block:calc(var(--spacing)*1.5)}.py-2{padding-block:calc(var(--spacing)*2)}.py-2\\.5{padding-block:calc(var(--spacing)*2.5)}.py-3{padding-block:calc(var(--spacing)*3)}.py-4{padding-block:calc(var(--spacing)*4)}.py-5{padding-block:calc(var(--spacing)*5)}.py-6{padding-block:calc(var(--spacing)*6)}.py-8{padding-block:calc(var(--spacing)*8)}.py-10{padding-block:calc(var(--spacing)*10)}.py-12{padding-block:calc(var(--spacing)*12)}.py-20{padding-block:calc(var(--spacing)*20)}.py-24{padding-block:calc(var(--spacing)*24)}.pt-0{padding-top:calc(var(--spacing)*0)}.pt-0\\.5{padding-top:calc(var(--spacing)*.5)}.pt-2{padding-top:calc(var(--spacing)*2)}.pt-8{padding-top:calc(var(--spacing)*8)}.pt-20{padding-top:calc(var(--spacing)*20)}.pt-32{padding-top:calc(var(--spacing)*32)}.pr-1{padding-right:calc(var(--spacing)*1)}.pr-2{padding-right:calc(var(--spacing)*2)}.pr-2\\.5{padding-right:calc(var(--spacing)*2.5)}.pr-3{padding-right:calc(var(--spacing)*3)}.pb-2{padding-bottom:calc(var(--spacing)*2)}.pb-6{padding-bottom:calc(var(--spacing)*6)}.pb-20{padding-bottom:calc(var(--spacing)*20)}.pl-3{padding-left:calc(var(--spacing)*3)}.pl-4{padding-left:calc(var(--spacing)*4)}.text-center{text-align:center}.text-left{text-align:left}.font-mono{font-family:var(--font-mono)}.font-sans{font-family:Gabarito,system-ui,-apple-system,sans-serif}.font-serif{font-family:Fraunces,Georgia,serif}.text-2xl{font-size:var(--text-2xl);line-height:var(--tw-leading,var(--text-2xl--line-height))}.text-3xl{font-size:var(--text-3xl);line-height:var(--tw-leading,var(--text-3xl--line-height))}.text-4xl{font-size:var(--text-4xl);line-height:var(--tw-leading,var(--text-4xl--line-height))}.text-5xl{font-size:var(--text-5xl);line-height:var(--tw-leading,var(--text-5xl--line-height))}.text-base{font-size:var(--text-base);line-height:var(--tw-leading,var(--text-base--line-height))}.text-lg{font-size:var(--text-lg);line-height:var(--tw-leading,var(--text-lg--line-height))}.text-sm{font-size:var(--text-sm);line-height:var(--tw-leading,var(--text-sm--line-height))}.text-xl{font-size:var(--text-xl);line-height:var(--tw-leading,var(--text-xl--line-height))}.text-xs{font-size:var(--text-xs);line-height:var(--tw-leading,var(--text-xs--line-height))}.text-\\[10px\\]{font-size:10px}.leading-none{--tw-leading:1;line-height:1}.leading-relaxed{--tw-leading:var(--leading-relaxed);line-height:var(--leading-relaxed)}.leading-tight{--tw-leading:var(--leading-tight);line-height:var(--leading-tight)}.font-black{--tw-font-weight:var(--font-weight-black);font-weight:var(--font-weight-black)}.font-bold{--tw-font-weight:var(--font-weight-bold);font-weight:var(--font-weight-bold)}.font-medium{--tw-font-weight:var(--font-weight-medium);font-weight:var(--font-weight-medium)}.font-semibold{--tw-font-weight:var(--font-weight-semibold);font-weight:var(--font-weight-semibold)}.tracking-\\[0\\.15em\\]{--tw-tracking:.15em;letter-spacing:.15em}.tracking-tight{--tw-tracking:var(--tracking-tight);letter-spacing:var(--tracking-tight)}.tracking-wide{--tw-tracking:var(--tracking-wide);letter-spacing:var(--tracking-wide)}.tracking-wider{--tw-tracking:var(--tracking-wider);letter-spacing:var(--tracking-wider)}.tracking-widest{--tw-tracking:var(--tracking-widest);letter-spacing:var(--tracking-widest)}.text-wrap{text-wrap:wrap}.break-all{word-break:break-all}.text-clip{text-overflow:clip}.text-ellipsis{text-overflow:ellipsis}.whitespace-nowrap{white-space:nowrap}.text-\\[\\#495BFD\\]{color:#495bfd}.text-accent{color:var(--accent)}.text-amber-500{color:var(--color-amber-500)}.text-blue-400{color:var(--color-blue-400)}.text-blue-500{color:var(--color-blue-500)}.text-blue-600{color:var(--color-blue-600)}.text-card-foreground{color:var(--card-foreground)}.text-destructive-foreground{color:var(--destructive-foreground)}.text-emerald-400{color:var(--color-emerald-400)}.text-emerald-500{color:var(--color-emerald-500)}.text-emerald-600{color:var(--color-emerald-600)}.text-foreground,.text-foreground\\/80{color:var(--foreground)}@supports (color:color-mix(in lab, red, red)){.text-foreground\\/80{color:color-mix(in oklab,var(--foreground)80%,transparent)}}.text-gray-200{color:var(--color-gray-200)}.text-gray-400{color:var(--color-gray-400)}.text-gray-700{color:var(--color-gray-700)}.text-green-600{color:var(--color-green-600)}.text-muted-foreground,.text-muted-foreground\\/50{color:var(--muted-foreground)}@supports (color:color-mix(in lab, red, red)){.text-muted-foreground\\/50{color:color-mix(in oklab,var(--muted-foreground)50%,transparent)}}.text-neutral-700{color:var(--color-neutral-700)}.text-primary{color:var(--primary)}.text-primary-foreground{color:var(--primary-foreground)}.text-primary\\/60{color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.text-primary\\/60{color:color-mix(in oklab,var(--primary)60%,transparent)}}.text-purple-600{color:var(--color-purple-600)}.text-red-500{color:var(--color-red-500)}.text-red-600{color:var(--color-red-600)}.text-red-700{color:var(--color-red-700)}.text-secondary-foreground{color:var(--secondary-foreground)}.text-slate-200{color:var(--color-slate-200)}.text-slate-300{color:var(--color-slate-300)}.text-slate-400{color:var(--color-slate-400)}.text-slate-500{color:var(--color-slate-500)}.text-slate-600{color:var(--color-slate-600)}.text-slate-700{color:var(--color-slate-700)}.text-slate-800{color:var(--color-slate-800)}.text-slate-900{color:var(--color-slate-900)}.text-transparent{color:#0000}.text-white{color:var(--color-white)}.text-yellow-500{color:var(--color-yellow-500)}.capitalize{text-transform:capitalize}.lowercase{text-transform:lowercase}.normal-case{text-transform:none}.uppercase{text-transform:uppercase}.italic{font-style:italic}.not-italic{font-style:normal}.diagonal-fractions{--tw-numeric-fraction:diagonal-fractions;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.lining-nums{--tw-numeric-figure:lining-nums;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.oldstyle-nums{--tw-numeric-figure:oldstyle-nums;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.ordinal{--tw-ordinal:ordinal;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.proportional-nums{--tw-numeric-spacing:proportional-nums;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.slashed-zero{--tw-slashed-zero:slashed-zero;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.stacked-fractions{--tw-numeric-fraction:stacked-fractions;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.tabular-nums{--tw-numeric-spacing:tabular-nums;font-variant-numeric:var(--tw-ordinal,)var(--tw-slashed-zero,)var(--tw-numeric-figure,)var(--tw-numeric-spacing,)var(--tw-numeric-fraction,)}.normal-nums{font-variant-numeric:normal}.line-through{text-decoration-line:line-through}.no-underline{text-decoration-line:none}.overline{text-decoration-line:overline}.underline{text-decoration-line:underline}.underline-offset-4{text-underline-offset:4px}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.subpixel-antialiased{-webkit-font-smoothing:auto;-moz-osx-font-smoothing:auto}.accent-primary{accent-color:var(--primary)}.opacity-0{opacity:0}.opacity-40{opacity:.4}.opacity-50{opacity:.5}.opacity-60{opacity:.6}.opacity-75{opacity:.75}.opacity-85{opacity:.85}.shadow{--tw-shadow:0 1px 3px 0 var(--tw-shadow-color,#0000001a),0 1px 2px -1px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-2xl{--tw-shadow:0 25px 50px -12px var(--tw-shadow-color,#00000040);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-\\[0_0_8px_rgba\\(16\\,185\\,129\\,0\\.5\\)\\]{--tw-shadow:0 0 8px var(--tw-shadow-color,#10b98180);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-\\[0_2px_8px_-2px_rgba\\(0\\,0\\,0\\,0\\.05\\)\\]{--tw-shadow:0 2px 8px -2px var(--tw-shadow-color,#0000000d);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-inner{--tw-shadow:inset 0 2px 4px 0 var(--tw-shadow-color,#0000000d);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px var(--tw-shadow-color,#0000001a),0 4px 6px -4px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px var(--tw-shadow-color,#0000001a),0 2px 4px -2px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 3px 0 var(--tw-shadow-color,#0000001a),0 1px 2px -1px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px var(--tw-shadow-color,#0000001a),0 8px 10px -6px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.ring{--tw-ring-shadow:var(--tw-ring-inset,)0 0 0 calc(1px + var(--tw-ring-offset-width))var(--tw-ring-color,currentcolor);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.ring-4{--tw-ring-shadow:var(--tw-ring-inset,)0 0 0 calc(4px + var(--tw-ring-offset-width))var(--tw-ring-color,currentcolor);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.inset-ring{--tw-inset-ring-shadow:inset 0 0 0 1px var(--tw-inset-ring-color,currentcolor);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.shadow-blue-500{--tw-shadow-color:oklch(62.3% .214 259.815)}@supports (color:color-mix(in lab, red, red)){.shadow-blue-500{--tw-shadow-color:color-mix(in oklab,var(--color-blue-500)var(--tw-shadow-alpha),transparent)}}.shadow-blue-500\\/20{--tw-shadow-color:#3080ff33}@supports (color:color-mix(in lab, red, red)){.shadow-blue-500\\/20{--tw-shadow-color:color-mix(in oklab,color-mix(in oklab,var(--color-blue-500)20%,transparent)var(--tw-shadow-alpha),transparent)}}.shadow-primary{--tw-shadow-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.shadow-primary{--tw-shadow-color:color-mix(in oklab,var(--primary)var(--tw-shadow-alpha),transparent)}}.shadow-primary\\/5{--tw-shadow-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.shadow-primary\\/5{--tw-shadow-color:color-mix(in oklab,color-mix(in oklab,var(--primary)5%,transparent)var(--tw-shadow-alpha),transparent)}}.shadow-primary\\/10{--tw-shadow-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.shadow-primary\\/10{--tw-shadow-color:color-mix(in oklab,color-mix(in oklab,var(--primary)10%,transparent)var(--tw-shadow-alpha),transparent)}}.shadow-primary\\/20{--tw-shadow-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.shadow-primary\\/20{--tw-shadow-color:color-mix(in oklab,color-mix(in oklab,var(--primary)20%,transparent)var(--tw-shadow-alpha),transparent)}}.shadow-red-500{--tw-shadow-color:oklch(63.7% .237 25.331)}@supports (color:color-mix(in lab, red, red)){.shadow-red-500{--tw-shadow-color:color-mix(in oklab,var(--color-red-500)var(--tw-shadow-alpha),transparent)}}.shadow-red-500\\/20{--tw-shadow-color:#fb2c3633}@supports (color:color-mix(in lab, red, red)){.shadow-red-500\\/20{--tw-shadow-color:color-mix(in oklab,color-mix(in oklab,var(--color-red-500)20%,transparent)var(--tw-shadow-alpha),transparent)}}.ring-neutral-900{--tw-ring-color:var(--color-neutral-900)}.ring-primary{--tw-ring-color:var(--primary)}.ring-offset-4{--tw-ring-offset-width:4px;--tw-ring-offset-shadow:var(--tw-ring-inset,)0 0 0 var(--tw-ring-offset-width)var(--tw-ring-offset-color)}.ring-offset-background{--tw-ring-offset-color:var(--background)}.outline{outline-style:var(--tw-outline-style);outline-width:1px}.blur{--tw-blur:blur(8px);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.drop-shadow{--tw-drop-shadow-size:drop-shadow(0 1px 2px var(--tw-drop-shadow-color,#0000001a))drop-shadow(0 1px 1px var(--tw-drop-shadow-color,#0000000f));--tw-drop-shadow:drop-shadow(0 1px 2px #0000001a)drop-shadow(0 1px 1px #0000000f);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.drop-shadow-2xl{--tw-drop-shadow-size:drop-shadow(0 25px 25px var(--tw-drop-shadow-color,#00000026));--tw-drop-shadow:drop-shadow(var(--drop-shadow-2xl));filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.grayscale{--tw-grayscale:grayscale(100%);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.grayscale-\\[0\\.1\\]{--tw-grayscale:grayscale(.1);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.invert{--tw-invert:invert(100%);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.sepia{--tw-sepia:sepia(100%);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.filter{filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.backdrop-blur{--tw-backdrop-blur:blur(8px);-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-blur-md{--tw-backdrop-blur:blur(var(--blur-md));-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-blur-sm{--tw-backdrop-blur:blur(var(--blur-sm));-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-blur-xl{--tw-backdrop-blur:blur(var(--blur-xl));-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-grayscale{--tw-backdrop-grayscale:grayscale(100%);-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-invert{--tw-backdrop-invert:invert(100%);-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-sepia{--tw-backdrop-sepia:sepia(100%);-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.backdrop-filter{-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,)}.transition{transition-property:color,background-color,border-color,outline-color,text-decoration-color,fill,stroke,--tw-gradient-from,--tw-gradient-via,--tw-gradient-to,opacity,box-shadow,transform,translate,scale,rotate,filter,-webkit-backdrop-filter,backdrop-filter,display,content-visibility,overlay,pointer-events;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.transition-all{transition-property:all;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.transition-colors{transition-property:color,background-color,border-color,outline-color,text-decoration-color,fill,stroke,--tw-gradient-from,--tw-gradient-via,--tw-gradient-to;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.transition-opacity{transition-property:opacity;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.transition-shadow{transition-property:box-shadow;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.transition-transform{transition-property:transform,translate,scale,rotate;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.delay-100{transition-delay:.1s}.delay-200{transition-delay:.2s}.delay-300{transition-delay:.3s}.duration-200{--tw-duration:.2s;transition-duration:.2s}.duration-300{--tw-duration:.3s;transition-duration:.3s}.duration-500{--tw-duration:.5s;transition-duration:.5s}.duration-700{--tw-duration:.7s;transition-duration:.7s}.ease-in{--tw-ease:var(--ease-in);transition-timing-function:var(--ease-in)}.ease-in-out{--tw-ease:var(--ease-in-out);transition-timing-function:var(--ease-in-out)}.ease-out{--tw-ease:var(--ease-out);transition-timing-function:var(--ease-out)}.outline-none{--tw-outline-style:none;outline-style:none}.select-none{-webkit-user-select:none;user-select:none}:where(.divide-x-reverse>:not(:last-child)){--tw-divide-x-reverse:1}.ring-inset{--tw-ring-inset:inset}@media (hover:hover){.group-hover\\:-translate-x-1:is(:where(.group):hover *){--tw-translate-x:calc(var(--spacing)*-1);translate:var(--tw-translate-x)var(--tw-translate-y)}.group-hover\\:translate-x-1:is(:where(.group):hover *){--tw-translate-x:calc(var(--spacing)*1);translate:var(--tw-translate-x)var(--tw-translate-y)}.group-hover\\:scale-110:is(:where(.group):hover *){--tw-scale-x:110%;--tw-scale-y:110%;--tw-scale-z:110%;scale:var(--tw-scale-x)var(--tw-scale-y)}.group-hover\\:text-primary:is(:where(.group):hover *){color:var(--primary)}.group-hover\\:text-slate-600:is(:where(.group):hover *){color:var(--color-slate-600)}.group-hover\\:opacity-100:is(:where(.group):hover *){opacity:1}}.placeholder\\:text-gray-500::placeholder{color:var(--color-gray-500)}.placeholder\\:text-muted-foreground\\/50::placeholder{color:var(--muted-foreground)}@supports (color:color-mix(in lab, red, red)){.placeholder\\:text-muted-foreground\\/50::placeholder{color:color-mix(in oklab,var(--muted-foreground)50%,transparent)}}@media (hover:hover){.hover\\:relative:hover{position:relative}.hover\\:z-10:hover{z-index:10}.hover\\:-translate-y-1:hover{--tw-translate-y:calc(var(--spacing)*-1);translate:var(--tw-translate-x)var(--tw-translate-y)}.hover\\:scale-105:hover{--tw-scale-x:105%;--tw-scale-y:105%;--tw-scale-z:105%;scale:var(--tw-scale-x)var(--tw-scale-y)}.hover\\:scale-110:hover{--tw-scale-x:110%;--tw-scale-y:110%;--tw-scale-z:110%;scale:var(--tw-scale-x)var(--tw-scale-y)}.hover\\:scale-\\[1\\.01\\]:hover{scale:1.01}.hover\\:scale-\\[1\\.02\\]:hover{scale:1.02}.hover\\:bg-\\[\\#3b4fd9\\]:hover{background-color:#3b4fd9}.hover\\:bg-accent:hover{background-color:var(--accent)}.hover\\:bg-background\\/80:hover{background-color:var(--background)}@supports (color:color-mix(in lab, red, red)){.hover\\:bg-background\\/80:hover{background-color:color-mix(in oklab,var(--background)80%,transparent)}}.hover\\:bg-blue-50:hover{background-color:var(--color-blue-50)}.hover\\:bg-blue-100:hover{background-color:var(--color-blue-100)}.hover\\:bg-gray-50:hover{background-color:var(--color-gray-50)}.hover\\:bg-primary\\/10:hover{background-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.hover\\:bg-primary\\/10:hover{background-color:color-mix(in oklab,var(--primary)10%,transparent)}}.hover\\:bg-primary\\/90:hover{background-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.hover\\:bg-primary\\/90:hover{background-color:color-mix(in oklab,var(--primary)90%,transparent)}}.hover\\:bg-red-50:hover{background-color:var(--color-red-50)}.hover\\:bg-red-100:hover{background-color:var(--color-red-100)}.hover\\:bg-red-700:hover{background-color:var(--color-red-700)}.hover\\:bg-secondary:hover,.hover\\:bg-secondary\\/30:hover{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.hover\\:bg-secondary\\/30:hover{background-color:color-mix(in oklab,var(--secondary)30%,transparent)}}.hover\\:bg-secondary\\/40:hover{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.hover\\:bg-secondary\\/40:hover{background-color:color-mix(in oklab,var(--secondary)40%,transparent)}}.hover\\:bg-secondary\\/50:hover{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.hover\\:bg-secondary\\/50:hover{background-color:color-mix(in oklab,var(--secondary)50%,transparent)}}.hover\\:bg-secondary\\/80:hover{background-color:var(--secondary)}@supports (color:color-mix(in lab, red, red)){.hover\\:bg-secondary\\/80:hover{background-color:color-mix(in oklab,var(--secondary)80%,transparent)}}.hover\\:bg-slate-100:hover{background-color:var(--color-slate-100)}.hover\\:bg-slate-200:hover{background-color:var(--color-slate-200)}.hover\\:bg-slate-800:hover{background-color:var(--color-slate-800)}.hover\\:pr-5:hover{padding-right:calc(var(--spacing)*5)}.hover\\:pl-3:hover{padding-left:calc(var(--spacing)*3)}.hover\\:text-\\[\\#495BFD\\]:hover{color:#495bfd}.hover\\:text-accent-foreground:hover{color:var(--accent-foreground)}.hover\\:text-destructive:hover{color:var(--destructive)}.hover\\:text-foreground:hover{color:var(--foreground)}.hover\\:text-primary:hover,.hover\\:text-primary\\/80:hover{color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.hover\\:text-primary\\/80:hover{color:color-mix(in oklab,var(--primary)80%,transparent)}}.hover\\:text-red-500:hover{color:var(--color-red-500)}.hover\\:text-slate-600:hover{color:var(--color-slate-600)}.hover\\:text-slate-700:hover{color:var(--color-slate-700)}.hover\\:text-slate-800:hover{color:var(--color-slate-800)}.hover\\:text-white:hover{color:var(--color-white)}.hover\\:underline:hover{text-decoration-line:underline}.hover\\:shadow-lg:hover{--tw-shadow:0 10px 15px -3px var(--tw-shadow-color,#0000001a),0 4px 6px -4px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.hover\\:shadow-md:hover{--tw-shadow:0 4px 6px -1px var(--tw-shadow-color,#0000001a),0 2px 4px -2px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.hover\\:shadow-sm:hover{--tw-shadow:0 1px 3px 0 var(--tw-shadow-color,#0000001a),0 1px 2px -1px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.hover\\:shadow-xl:hover{--tw-shadow:0 20px 25px -5px var(--tw-shadow-color,#0000001a),0 8px 10px -6px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.hover\\:shadow-primary\\/30:hover{--tw-shadow-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.hover\\:shadow-primary\\/30:hover{--tw-shadow-color:color-mix(in oklab,color-mix(in oklab,var(--primary)30%,transparent)var(--tw-shadow-alpha),transparent)}}.hover\\:brightness-95:hover{--tw-brightness:brightness(95%);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.hover\\:brightness-110:hover{--tw-brightness:brightness(110%);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}}.focus\\:border-\\[\\#495BFD\\]:focus{border-color:#495bfd}.focus\\:ring-0:focus{--tw-ring-shadow:var(--tw-ring-inset,)0 0 0 calc(0px + var(--tw-ring-offset-width))var(--tw-ring-color,currentcolor);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.focus\\:ring-2:focus{--tw-ring-shadow:var(--tw-ring-inset,)0 0 0 calc(2px + var(--tw-ring-offset-width))var(--tw-ring-color,currentcolor);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.focus\\:ring-4:focus{--tw-ring-shadow:var(--tw-ring-inset,)0 0 0 calc(4px + var(--tw-ring-offset-width))var(--tw-ring-color,currentcolor);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.focus\\:ring-blue-500\\/5:focus{--tw-ring-color:#3080ff0d}@supports (color:color-mix(in lab, red, red)){.focus\\:ring-blue-500\\/5:focus{--tw-ring-color:color-mix(in oklab,var(--color-blue-500)5%,transparent)}}.focus\\:ring-primary\\/20:focus{--tw-ring-color:var(--primary)}@supports (color:color-mix(in lab, red, red)){.focus\\:ring-primary\\/20:focus{--tw-ring-color:color-mix(in oklab,var(--primary)20%,transparent)}}.focus\\:outline-none:focus{--tw-outline-style:none;outline-style:none}.focus-visible\\:ring-2:focus-visible{--tw-ring-shadow:var(--tw-ring-inset,)0 0 0 calc(2px + var(--tw-ring-offset-width))var(--tw-ring-color,currentcolor);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.focus-visible\\:ring-ring:focus-visible{--tw-ring-color:var(--ring)}.focus-visible\\:ring-offset-2:focus-visible{--tw-ring-offset-width:2px;--tw-ring-offset-shadow:var(--tw-ring-inset,)0 0 0 var(--tw-ring-offset-width)var(--tw-ring-offset-color)}.focus-visible\\:outline-none:focus-visible{--tw-outline-style:none;outline-style:none}.active\\:scale-90:active{--tw-scale-x:90%;--tw-scale-y:90%;--tw-scale-z:90%;scale:var(--tw-scale-x)var(--tw-scale-y)}.active\\:scale-95:active{--tw-scale-x:95%;--tw-scale-y:95%;--tw-scale-z:95%;scale:var(--tw-scale-x)var(--tw-scale-y)}.active\\:scale-\\[0\\.98\\]:active{scale:.98}.active\\:cursor-grabbing:active{cursor:grabbing}.disabled\\:pointer-events-none:disabled{pointer-events:none}.disabled\\:opacity-50:disabled{opacity:.5}@media (min-width:40rem){.sm\\:flex{display:flex}.sm\\:inline{display:inline}.sm\\:flex-row{flex-direction:row}}@media (min-width:48rem){.md\\:block{display:block}.md\\:flex{display:flex}.md\\:max-w-\\[50\\%\\]{max-width:50%}.md\\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.md\\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.md\\:flex-row{flex-direction:row}.md\\:items-center{align-items:center}.md\\:p-12{padding:calc(var(--spacing)*12)}.md\\:text-7xl{font-size:var(--text-7xl);line-height:var(--tw-leading,var(--text-7xl--line-height))}}@media (min-width:64rem){.lg\\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}}@media (prefers-color-scheme:dark){.dark\\:bg-gray-900{background-color:var(--color-gray-900)}.dark\\:text-gray-200{color:var(--color-gray-200)}}}:root{--background:#faf9f5;--foreground:#1a1a1a;--primary:#495bfd;--primary-foreground:#fff;--secondary:#fff;--secondary-foreground:#1a1a1a;--accent:#f4f4f5;--accent-foreground:#1a1a1a;--card:#fff;--card-foreground:#1a1a1a;--border:#e5e5e5;--muted:#737373;--radius:1rem;--surface-container-lowest:#fff;--surface-container-low:#f7f2fa;--surface-container:#f3edf7;--surface-container-high:#ece6f0;--surface-container-highest:#e6e0e9}body{background:var(--background);color:var(--foreground);font-family:var(--font-sans,sans-serif);overflow-x:hidden}.glass{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);background:#ffffffb3;border:1px solid #ffffff80;box-shadow:0 4px 6px -1px #0000001a,0 2px 4px -1px #0000000f}.glass-hover:hover{background:#ffffffe6;border-color:#fffc;transform:translateY(-1px)}@property --tw-translate-x{syntax:"*";inherits:false;initial-value:0}@property --tw-translate-y{syntax:"*";inherits:false;initial-value:0}@property --tw-translate-z{syntax:"*";inherits:false;initial-value:0}@property --tw-scale-x{syntax:"*";inherits:false;initial-value:1}@property --tw-scale-y{syntax:"*";inherits:false;initial-value:1}@property --tw-scale-z{syntax:"*";inherits:false;initial-value:1}@property --tw-rotate-x{syntax:"*";inherits:false}@property --tw-rotate-y{syntax:"*";inherits:false}@property --tw-rotate-z{syntax:"*";inherits:false}@property --tw-skew-x{syntax:"*";inherits:false}@property --tw-skew-y{syntax:"*";inherits:false}@property --tw-pan-x{syntax:"*";inherits:false}@property --tw-pan-y{syntax:"*";inherits:false}@property --tw-pinch-zoom{syntax:"*";inherits:false}@property --tw-space-y-reverse{syntax:"*";inherits:false;initial-value:0}@property --tw-space-x-reverse{syntax:"*";inherits:false;initial-value:0}@property --tw-divide-x-reverse{syntax:"*";inherits:false;initial-value:0}@property --tw-border-style{syntax:"*";inherits:false;initial-value:solid}@property --tw-divide-y-reverse{syntax:"*";inherits:false;initial-value:0}@property --tw-gradient-position{syntax:"*";inherits:false}@property --tw-gradient-from{syntax:"<color>";inherits:false;initial-value:#0000}@property --tw-gradient-via{syntax:"<color>";inherits:false;initial-value:#0000}@property --tw-gradient-to{syntax:"<color>";inherits:false;initial-value:#0000}@property --tw-gradient-stops{syntax:"*";inherits:false}@property --tw-gradient-via-stops{syntax:"*";inherits:false}@property --tw-gradient-from-position{syntax:"<length-percentage>";inherits:false;initial-value:0%}@property --tw-gradient-via-position{syntax:"<length-percentage>";inherits:false;initial-value:50%}@property --tw-gradient-to-position{syntax:"<length-percentage>";inherits:false;initial-value:100%}@property --tw-leading{syntax:"*";inherits:false}@property --tw-font-weight{syntax:"*";inherits:false}@property --tw-tracking{syntax:"*";inherits:false}@property --tw-ordinal{syntax:"*";inherits:false}@property --tw-slashed-zero{syntax:"*";inherits:false}@property --tw-numeric-figure{syntax:"*";inherits:false}@property --tw-numeric-spacing{syntax:"*";inherits:false}@property --tw-numeric-fraction{syntax:"*";inherits:false}@property --tw-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-shadow-color{syntax:"*";inherits:false}@property --tw-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-inset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-shadow-color{syntax:"*";inherits:false}@property --tw-inset-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-ring-color{syntax:"*";inherits:false}@property --tw-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-ring-color{syntax:"*";inherits:false}@property --tw-inset-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-ring-inset{syntax:"*";inherits:false}@property --tw-ring-offset-width{syntax:"<length>";inherits:false;initial-value:0}@property --tw-ring-offset-color{syntax:"*";inherits:false;initial-value:#fff}@property --tw-ring-offset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-outline-style{syntax:"*";inherits:false;initial-value:solid}@property --tw-blur{syntax:"*";inherits:false}@property --tw-brightness{syntax:"*";inherits:false}@property --tw-contrast{syntax:"*";inherits:false}@property --tw-grayscale{syntax:"*";inherits:false}@property --tw-hue-rotate{syntax:"*";inherits:false}@property --tw-invert{syntax:"*";inherits:false}@property --tw-opacity{syntax:"*";inherits:false}@property --tw-saturate{syntax:"*";inherits:false}@property --tw-sepia{syntax:"*";inherits:false}@property --tw-drop-shadow{syntax:"*";inherits:false}@property --tw-drop-shadow-color{syntax:"*";inherits:false}@property --tw-drop-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-drop-shadow-size{syntax:"*";inherits:false}@property --tw-backdrop-blur{syntax:"*";inherits:false}@property --tw-backdrop-brightness{syntax:"*";inherits:false}@property --tw-backdrop-contrast{syntax:"*";inherits:false}@property --tw-backdrop-grayscale{syntax:"*";inherits:false}@property --tw-backdrop-hue-rotate{syntax:"*";inherits:false}@property --tw-backdrop-invert{syntax:"*";inherits:false}@property --tw-backdrop-opacity{syntax:"*";inherits:false}@property --tw-backdrop-saturate{syntax:"*";inherits:false}@property --tw-backdrop-sepia{syntax:"*";inherits:false}@property --tw-duration{syntax:"*";inherits:false}@property --tw-ease{syntax:"*";inherits:false}@keyframes spin{to{transform:rotate(360deg)}}@keyframes ping{75%,to{opacity:0;transform:scale(2)}}@keyframes pulse{50%{opacity:.5}}@keyframes bounce{0%,to{animation-timing-function:cubic-bezier(.8,0,1,1);transform:translateY(-25%)}50%{animation-timing-function:cubic-bezier(0,0,.2,1);transform:none}}';
   (function() {
-    console.log("GuideMark Widget Loading...");
+    console.log("Product Tour Widget Loading...");
     const script = document.currentScript || document.querySelector("script[data-project-id]");
     const projectId = script == null ? void 0 : script.getAttribute("data-project-id");
     const autoStart = (script == null ? void 0 : script.getAttribute("data-auto-start")) !== "false";
     const showAdminPanel = (script == null ? void 0 : script.getAttribute("data-admin-panel")) !== "false";
     if (!projectId) {
-      console.error("GuideMark: No project ID found");
+      console.error("Product Tour: No project ID found");
       return;
     }
-    const hostId = "guidemark-host";
+    const hostId = "producttour-host";
     if (document.getElementById(hostId)) return;
     const host = document.createElement("div");
     host.id = hostId;
@@ -59984,7 +60520,7 @@ ${suffix}`;
     styleEl.textContent = styles;
     shadow.appendChild(styleEl);
     const container = document.createElement("div");
-    container.id = "guidemark-root";
+    container.id = "producttour-root";
     container.style.width = "100%";
     container.style.height = "100%";
     container.style.pointerEvents = "none";
