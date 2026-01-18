@@ -9,6 +9,7 @@ import { Suspense } from "react";
 import { AuthProvider } from "@/components/AuthProvider";
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://producttour.app'),
   title: "Product Tour",
   description: "The easiest way to create interactive product tours.",
 };

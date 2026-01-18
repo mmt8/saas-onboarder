@@ -90,8 +90,10 @@ export default function Home() {
           <div>
             <h4 className="font-bold mb-4">Product</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-primary">Features</a></li>
-              <li><a href="#" className="hover:text-primary">Pricing</a></li>
+              <li><Link href="/#features" className="hover:text-primary">Features</Link></li>
+              <li><Link href="/terms" className="hover:text-primary">Terms & Conditions</Link></li>
+              <li><Link href="/privacy" className="hover:text-primary">Privacy Policy</Link></li>
+              <li><Link href="/impressum" className="hover:text-primary">Imprint (Impressum)</Link></li>
             </ul>
           </div>
         </div>
