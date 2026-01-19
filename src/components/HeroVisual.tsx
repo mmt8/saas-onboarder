@@ -92,7 +92,7 @@ export function HeroVisual() {
                 className="w-full h-full relative z-0 rounded-[2.5rem] overflow-hidden border border-black/5 shadow-2xl"
             >
                 <img
-                    src="/brain/a60a2b90-9d4c-47db-a5a7-284b3a03ca1e/financial_dashboard_hero_1768825274256.png"
+                    src="/hero-dashboard.png"
                     alt="Financial Dashboard"
                     className="w-full h-full object-cover scale-110"
                 />
