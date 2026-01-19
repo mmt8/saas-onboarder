@@ -1,63 +1,175 @@
 "use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useTourStore } from "@/store/tour-store";
-import { LogOut, User } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
 
 export function Navbar() {
     const { user, signOut } = useTourStore();
+    const [scrolled, setScrolled] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 10);
+        };
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    // Prevent scrolling when mobile menu is open
+    useEffect(() => {
+        if (mobileMenuOpen) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "unset";
+        }
+    }, [mobileMenuOpen]);
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 border-b border-border/40 bg-background/80 backdrop-blur-md">
-            <Link href="/" className="flex items-center gap-2">
-                <div className="w-8 h-8 flex items-center justify-center">
-                    <img src="/logo.svg" alt="Product Tour Logo" className="w-full h-full" />
-                </div>
-                <span className="font-bold text-xl tracking-tight text-foreground">Product Tour</span>
-            </Link>
-
-            <div className="hidden md:flex items-center gap-8">
-                <Link href="/#features" className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors">
-                    Features
-                </Link>
-                <Link href="/#how-it-works" className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors">
-                    How it Works
-                </Link>
-                {user && (
-                    <Link href="/dashboard" className="text-base font-medium text-primary hover:text-primary/80 transition-colors">
-                        Dashboard
+        <>
+            <header
+                className={cn(
+                    "fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-300",
+                    scrolled ? "py-4 md:py-6" : "py-6 md:py-8"
+                )}
+            >
+                {/* 1. Left: Logo (Standalone) */}
+                <div className="flex items-center z-50 relative">
+                    <Link href="/" className="flex items-center gap-0.5 group">
+                        <img src="/logo.svg" alt="Product Tour Logo" className="w-9 h-9 transition-transform group-hover:scale-105" />
+                        <span className="font-serif font-bold text-2xl tracking-tight text-foreground hidden md:block ml-1">Product Tour</span>
                     </Link>
-                )}
-            </div>
+                </div>
 
-            <div className="flex items-center gap-4">
-                {user ? (
-                    <>
-                        <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-full border border-border/50">
-                            <User className="w-4 h-4" />
-                            <span className="max-w-[150px] truncate">{user.email}</span>
-                        </div>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => signOut()}
-                            className="text-muted-foreground hover:text-destructive gap-2"
+                {/* 2. Center: Navigation Pill (Desktop Only) */}
+                <nav
+                    className={cn(
+                        "hidden md:flex items-center px-2 p-1.5 rounded-full transition-all duration-300 border border-black/5 dark:border-white/10 shadow-sm backdrop-blur-xl absolute left-1/2 -translate-x-1/2",
+                        "bg-white/50 dark:bg-[#1C1C1E]/70"
+                    )}
+                >
+                    <NavLink href="/#features">Features</NavLink>
+                    <NavLink href="/pricing">Pricing</NavLink>
+                    <NavLink href="/resources">Resources</NavLink>
+                </nav>
+
+                {/* 3. Right: Actions & Mobile Toggle */}
+                <div className="flex items-center gap-3 z-50 relative">
+                    {/* Desktop Actions */}
+                    <div className="hidden md:flex items-center gap-3">
+                        {user ? (
+                            <>
+                                <Link href="/dashboard">
+                                    <Button variant="ghost" className="rounded-full text-muted-foreground hover:text-foreground">
+                                        Dashboard
+                                    </Button>
+                                </Link>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => signOut()}
+                                    className="rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                >
+                                    <LogOut className="w-5 h-5" />
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Link href="/login">
+                                    <Button variant="ghost" className="rounded-full font-medium text-foreground/80 hover:text-foreground">
+                                        Sign In
+                                    </Button>
+                                </Link>
+                                <Button asChild className="rounded-full px-6 font-bold shadow-lg hover:scale-105 transition-transform">
+                                    <Link href="/signup">Get Started</Link>
+                                </Button>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Mobile Actions (Visible on small screens) */}
+                    <div className="flex md:hidden items-center gap-3">
+                        {!user && (
+                            <Button asChild size="sm" className="rounded-full font-bold">
+                                <Link href="/signup">Get Started</Link>
+                            </Button>
+                        )}
+                        <button
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="w-10 h-10 flex items-center justify-center rounded-full bg-foreground/5 hover:bg-foreground/10 transition-colors backdrop-blur-md"
                         >
-                            <LogOut className="w-4 h-4" />
-                            <span className="hidden sm:inline">Logout</span>
-                        </Button>
-                    </>
-                ) : (
-                    <>
-                        <Link href="/login" className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors">
-                            Sign In
-                        </Link>
-                        <Button asChild className="rounded-full px-6 shadow-lg shadow-primary/20">
-                            <Link href="/signup">Get Started</Link>
-                        </Button>
-                    </>
+                            {mobileMenuOpen ? (
+                                <X className="w-5 h-5 text-foreground" />
+                            ) : (
+                                <Menu className="w-5 h-5 text-foreground" />
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            {/* Mobile Menu Overlay */}
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="fixed inset-0 z-40 bg-background/95 backdrop-blur-3xl pt-24 px-6 md:hidden flex flex-col"
+                    >
+                        <div className="flex flex-col gap-6 text-center mt-10">
+                            <MobileNavLink href="/#features" onClick={() => setMobileMenuOpen(false)}>Features</MobileNavLink>
+                            <MobileNavLink href="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</MobileNavLink>
+                            <MobileNavLink href="/resources" onClick={() => setMobileMenuOpen(false)}>Resources</MobileNavLink>
+
+                            <div className="h-px bg-border/50 w-full my-4" />
+
+                            {user ? (
+                                <>
+                                    <MobileNavLink href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</MobileNavLink>
+                                    <button
+                                        onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                                        className="text-2xl font-bold font-serif text-destructive hover:text-destructive/80 transition-colors py-2"
+                                    >
+                                        Sign Out
+                                    </button>
+                                </>
+                            ) : (
+                                <MobileNavLink href="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</MobileNavLink>
+                            )}
+                        </div>
+                    </motion.div>
                 )}
-            </div>
-        </nav>
+            </AnimatePresence>
+        </>
+    );
+}
+
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+    return (
+        <Link
+            href={href}
+            className="px-5 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:bg-foreground/5 rounded-full"
+        >
+            {children}
+        </Link>
+    );
+}
+
+function MobileNavLink({ href, children, onClick }: { href: string; children: React.ReactNode; onClick: () => void }) {
+    return (
+        <Link
+            href={href}
+            onClick={onClick}
+            className="text-3xl font-bold font-serif text-foreground hover:text-primary transition-colors py-2"
+        >
+            {children}
+        </Link>
     );
 }

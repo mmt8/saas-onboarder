@@ -6,10 +6,7 @@ import path from 'path';
 export default defineConfig({
     plugins: [react()],
     define: {
-        'process.env': {
-            NEXT_PUBLIC_SUPABASE_URL: 'https://naiuhnzdampxdewizhin.supabase.co',
-            NEXT_PUBLIC_SUPABASE_ANON_KEY: 'sb_publishable_I7TFMHsf_lNAQzm4JNdpLA_JZpCQ5ce'
-        }
+        'process.env': process.env
     },
     resolve: {
         alias: {

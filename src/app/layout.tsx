@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Gabarito, Fraunces } from "next/font/google"; // Import fonts
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { AdminToolbar } from "@/components/admin/AdminToolbar";
@@ -7,6 +8,17 @@ import { StepEditor } from "@/components/admin/StepEditor";
 import { TourPlayer } from "@/components/player/TourPlayer";
 import { Suspense } from "react";
 import { AuthProvider } from "@/components/AuthProvider";
+import { cn } from "@/lib/utils";
+
+const gabarito = Gabarito({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-serif",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://producttour.app'),
@@ -21,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased" suppressHydrationWarning>
+      <body className={cn("font-sans antialiased", gabarito.variable, fraunces.variable)} suppressHydrationWarning>
         <AuthProvider>
           <Navbar />
           <AdminToolbar />
