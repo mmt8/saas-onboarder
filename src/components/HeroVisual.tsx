@@ -49,7 +49,7 @@ const Tooltip = ({ description, buttonText, className, x, y, parallaxFactor, var
             }}
             className={`absolute z-20 ${className}`}
         >
-            <div className={`border rounded-[1.4rem] p-6 min-w-[240px] pointer-events-auto flex flex-col gap-4 text-left transition-transform hover:scale-[1.02] ${style.container}`}>
+            <div className={`border rounded-[1.4rem] p-6 min-w-[240px] pointer-events-auto flex flex-col gap-4 text-left transition-all ${style.container}`}>
                 <p className={`text-sm leading-relaxed font-medium ${style.text}`}>{description}</p>
                 <button
                     className={`px-4 py-2 text-xs font-bold transition-all rounded-full self-end ${style.button}`}
