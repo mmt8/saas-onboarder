@@ -31,7 +31,9 @@ export function WidgetTourPlayer() {
         primaryColor: '#495BFD',
         borderRadius: '12',
         paddingV: '10',
-        paddingH: '20'
+        paddingH: '20',
+        tooltipStyle: 'solid' as const,
+        tooltipColor: '#495BFD'
     };
 
     // Auto-start tour from URL param
@@ -163,33 +165,37 @@ export function WidgetTourPlayer() {
                 key={currentStep.id}
                 className={cn(
                     "fixed z-[2147483649] p-6 rounded-2xl shadow-2xl border max-w-sm",
-                    theme.darkMode
-                        ? "bg-[#1e293b] border-slate-700 text-white"
-                        : "bg-white border-slate-100 text-slate-900"
+                    theme.tooltipStyle === 'glass'
+                        ? (theme.darkMode ? "bg-white/40 backdrop-blur-md border-white/20 text-slate-900" : "bg-[#282828]/20 backdrop-blur-md border-white/20 text-white shadow-[0_15px_24.5px_rgba(0,0,0,0.24),0_7px_10.5px_rgba(0,0,0,0.15)]")
+                        : (theme.darkMode ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-100 text-slate-900")
                 )}
                 style={{
                     left: Math.min(window.innerWidth - 360, Math.max(20, targetRect.left)),
                     top: targetRect.bottom + 40 > window.innerHeight - 200
                         ? targetRect.top - 220
-                        : targetRect.bottom + 20
+                        : targetRect.bottom + 20,
+                    ...(theme.tooltipStyle === 'color' ? { backgroundColor: theme.tooltipColor, color: 'white', border: 'none' } : {}),
+                    ...(theme.tooltipStyle === 'glass' && !theme.darkMode ? { textShadow: '0 1px 2px rgba(0,0,0,0.4)' } : {})
                 }}
             >
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-2">
                         <span
-                            className="flex items-center justify-center w-6 h-6 rounded-full text-white text-xs font-bold"
-                            style={{ backgroundColor: theme.primaryColor }}
+                            className="flex items-center justify-center w-6 h-6 rounded-full text-white text-[10px] font-bold"
+                            style={{ backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor : 'rgba(0,0,0,0.15)' }}
                         >
                             {currentStepIndex + 1}
                         </span>
-                        <span className={cn("text-xs", theme.darkMode ? "text-slate-400" : "text-gray-400")}>
+                        <span className={cn("text-xs font-medium",
+                            theme.tooltipStyle === 'solid' ? (theme.darkMode ? "text-slate-400" : "text-gray-400") : (theme.darkMode && theme.tooltipStyle === 'glass' ? "text-slate-500" : "text-white/60")
+                        )}>
                             of {currentTour.steps.length}
                         </span>
                     </div>
                     <button
                         className={cn(
                             "h-6 w-6 -mr-2 -mt-2 rounded-full flex items-center justify-center transition-colors",
-                            theme.darkMode ? "hover:bg-slate-800" : "hover:bg-slate-100"
+                            (theme.darkMode || (theme.tooltipStyle === 'glass' && theme.darkMode)) ? "hover:bg-black/5" : "hover:bg-white/10"
                         )}
                         onClick={() => setStatus('idle')}
                     >
@@ -197,18 +203,22 @@ export function WidgetTourPlayer() {
                     </button>
                 </div>
 
-                <p className={cn("mb-6 leading-relaxed", theme.darkMode ? "text-slate-200" : "text-gray-700")}>
+                <p className={cn("mb-6 leading-relaxed text-sm",
+                    theme.tooltipStyle === 'solid' ? (theme.darkMode ? "text-slate-200" : "text-gray-700") : (theme.darkMode && theme.tooltipStyle === 'glass' ? "text-slate-800" : "text-white")
+                )}>
                     {currentStep.content || "Click on this element to proceed."}
                 </p>
 
                 <div className="flex justify-end">
                     <button
                         onClick={handleNext}
-                        className="group flex items-center justify-center font-bold text-white shadow-sm hover:brightness-110 active:scale-95 transition-all"
+                        className="group flex items-center justify-center font-bold shadow-sm hover:brightness-110 active:scale-95 transition-all"
                         style={{
-                            backgroundColor: theme.primaryColor,
+                            backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor : 'rgba(0,0,0,0.1)',
+                            color: (theme.darkMode && theme.tooltipStyle === 'glass') ? '#1e293b' : 'white',
                             borderRadius: `${theme.borderRadius}px`,
-                            padding: `${theme.paddingV}px ${theme.paddingH}px`
+                            padding: `${theme.paddingV}px ${theme.paddingH}px`,
+                            fontSize: '0.9rem'
                         }}
                     >
                         {isLastStep ? 'Finish' : 'Next'}

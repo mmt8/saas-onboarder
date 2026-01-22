@@ -76,11 +76,29 @@ export default function SettingsPage() {
         const baseStyle = { fontFamily: theme.fontFamily };
 
         if (theme.tooltipStyle === 'glass') {
+            if (theme.darkMode) {
+                // Dark Glass (Light background, dark text)
+                return {
+                    ...baseStyle,
+                    background: 'rgba(255, 255, 255, 0.4)',
+                    backdropFilter: 'blur(15px)',
+                    WebkitBackdropFilter: 'blur(15px)',
+                    boxShadow: `
+                        inset 0 2px 0 rgba(255, 255, 255, 0.8),
+                        inset 0 -2px 0 rgba(0, 0, 0, 0.1),
+                        0 15px 24.5px 0px rgba(0, 0, 0, 0.1),
+                        0 7px 10.5px 0px rgba(0, 0, 0, 0.05)
+                    `,
+                    color: '#1e293b',
+                    border: 'none',
+                };
+            }
+            // Standard Glass (Darker background, light text)
             return {
                 ...baseStyle,
                 background: 'rgba(40, 40, 40, 0.2)',
                 backdropFilter: 'blur(15px)',
-                WebkitBackdropFilter: 'blur(15px)', // Safari support
+                WebkitBackdropFilter: 'blur(15px)',
                 boxShadow: `
                     inset 0 2px 0 rgba(255, 255, 255, 0.8),
                     inset 0 -2px 0 rgba(0, 0, 0, 0.3),
@@ -91,6 +109,7 @@ export default function SettingsPage() {
                 `,
                 color: 'white',
                 border: 'none',
+                textShadow: '0 1px 2px rgba(0,0,0,0.4)'
             };
         }
 
@@ -220,13 +239,13 @@ export default function SettingsPage() {
                         />
                     </div>
 
-                    {/* Dark Mode (Only relevant for Solid style primarily) */}
-                    <div className={cn("space-y-3 transition-opacity", theme.tooltipStyle !== 'solid' && "opacity-50 pointer-events-none")}>
+                    {/* Dark Mode - Always available for Solid, specialized for Glass */}
+                    <div className="space-y-3">
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Theme Mode</label>
                         <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-xl border border-border/50">
                             <span className="text-sm font-medium text-foreground">Dark Theme</span>
                             <div
-                                onClick={() => theme.tooltipStyle === 'solid' && setTheme({ ...theme, darkMode: !theme.darkMode })}
+                                onClick={() => setTheme({ ...theme, darkMode: !theme.darkMode })}
                                 className={cn(
                                     "w-12 h-6 rounded-full transition-colors cursor-pointer relative",
                                     theme.darkMode ? "bg-primary" : "bg-slate-300"
@@ -240,24 +259,26 @@ export default function SettingsPage() {
                         </div>
                     </div>
 
-                    {/* Primary Color */}
-                    <div className="space-y-3">
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Color</label>
-                        <div className="flex gap-3">
-                            <input
-                                type="color"
-                                value={theme.primaryColor}
-                                onChange={(e) => setTheme({ ...theme, primaryColor: e.target.value })}
-                                className="w-12 h-12 rounded-xl border-none p-0 bg-transparent cursor-pointer"
-                            />
-                            <input
-                                type="text"
-                                value={theme.primaryColor}
-                                onChange={(e) => setTheme({ ...theme, primaryColor: e.target.value })}
-                                className="flex-1 bg-secondary/20 border border-border rounded-xl px-4 py-3 font-mono text-sm text-foreground"
-                            />
+                    {/* Primary Color - Hidden for Color/Glass as they use Playground behavior */}
+                    {theme.tooltipStyle === 'solid' && (
+                        <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Color</label>
+                            <div className="flex gap-3">
+                                <input
+                                    type="color"
+                                    value={theme.primaryColor}
+                                    onChange={(e) => setTheme({ ...theme, primaryColor: e.target.value })}
+                                    className="w-12 h-12 rounded-xl border-none p-0 bg-transparent cursor-pointer"
+                                />
+                                <input
+                                    type="text"
+                                    value={theme.primaryColor}
+                                    onChange={(e) => setTheme({ ...theme, primaryColor: e.target.value })}
+                                    className="flex-1 bg-secondary/20 border border-border rounded-xl px-4 py-3 font-mono text-sm text-foreground"
+                                />
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Border Radius */}
                     <div className="space-y-3">
@@ -338,14 +359,13 @@ export default function SettingsPage() {
                         style={getPreviewStyle()}
                     >
                         <div className="flex items-center gap-2 mb-4">
-                            <span className="flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold"
+                            <span className="flex items-center justify-center w-6 h-6 rounded-full text-white text-[10px] font-bold"
                                 style={{
-                                    backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor : 'rgba(255,255,255,0.2)',
-                                    color: '#fff'
+                                    backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor : 'rgba(0,0,0,0.15)',
                                 }}>1</span>
-                            <span className={cn("text-xs",
-                                theme.tooltipStyle === 'solid' ? (theme.darkMode ? "opacity-60" : "opacity-40") : "opacity-80"
-                            )}>Preview Step</span>
+                            <span className={cn("text-xs font-medium",
+                                theme.tooltipStyle === 'solid' ? (theme.darkMode ? "opacity-60" : "opacity-40") : (theme.darkMode && theme.tooltipStyle === 'glass' ? "text-slate-500" : "text-white/60")
+                            )}>of 3</span>
                         </div>
 
                         <p className="text-sm mb-6 leading-relaxed">
@@ -354,9 +374,10 @@ export default function SettingsPage() {
 
                         <div className="flex justify-end">
                             <button
-                                className="text-sm font-bold shadow-sm hover:brightness-110 active:scale-95 transition-all text-white"
+                                className="text-sm font-bold shadow-sm hover:brightness-110 active:scale-95 transition-all"
                                 style={{
-                                    backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor : 'rgba(0,0,0,0.2)',
+                                    backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor : 'rgba(0,0,0,0.1)',
+                                    color: (theme.darkMode && theme.tooltipStyle === 'glass') ? '#1e293b' : 'white',
                                     borderRadius: `${theme.borderRadius}px`,
                                     padding: `${theme.paddingV}px ${theme.paddingH}px`
                                 }}

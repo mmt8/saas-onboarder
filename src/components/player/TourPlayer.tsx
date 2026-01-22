@@ -126,10 +126,10 @@ export function TourPlayer() {
             >
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-bold">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-[10px] font-bold">
                             {currentStepIndex + 1}
                         </span>
-                        <span className="text-xs text-gray-400">of {currentTour.steps.length}</span>
+                        <span className="text-xs text-gray-400 font-medium">of {currentTour.steps.length}</span>
                     </div>
                     <Button
                         variant="ghost"
