@@ -65,7 +65,7 @@ export function Navbar() {
                     {/* Desktop Actions */}
                     <div className="hidden md:flex items-center gap-3">
                         <Link href="/login">
-                            <Button variant="ghost" className="font-bold text-[15px] text-muted-foreground hover:text-primary">
+                            <Button variant="ghost" className="h-14 rounded-full font-bold text-[15px] text-muted-foreground hover:text-primary">
                                 Sign In
                             </Button>
                         </Link>

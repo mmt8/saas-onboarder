@@ -23,13 +23,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#E65221]/20 via-background to-background pointer-events-none" />
 
           <div className="max-w-7xl mx-auto px-6 relative z-10 text-center flex flex-col items-center">
-
-            <Badge variant="secondary" className="mb-8 py-1.5 px-4 rounded-full border border-primary/20 bg-primary/5 text-primary animate-in fade-in zoom-in duration-500">
-              <Sparkles className="w-3.5 h-3.5 mr-2 fill-primary" />
-              <span>Free in Beta</span>
-            </Badge>
-
-            <h1 className="text-6xl md:text-8xl font-bold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 font-serif max-w-4xl leading-[1.1] z-30 relative">
+            <h1 className="text-6xl md:text-8xl font-bold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 font-serif max-w-4xl leading-[1.1] z-30 relative pt-12">
               Onboard users <br />
               <span className="text-[#E65221]">at warp speed.</span>
             </h1>
@@ -47,9 +41,6 @@ export default function Home() {
                   Get Started for Free
                   <ArrowRight className="ml-2 w-6 h-6" />
                 </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="rounded-full px-12 h-16 text-xl border-2 w-full sm:w-auto backdrop-blur-md bg-white/5 border-white/20" asChild>
-                <Link href="/demo">Interactive Demo</Link>
               </Button>
             </div>
 
