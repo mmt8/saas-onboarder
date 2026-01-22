@@ -2,9 +2,9 @@
 
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 
 interface TooltipProps {
-    title: string;
     description: string;
     buttonColor: string;
     buttonText: string;
@@ -12,29 +12,48 @@ interface TooltipProps {
     x: string;
     y: string;
     parallaxFactor: number;
+    buttonRounded?: string;
 }
 
-const Tooltip = ({ title, description, buttonColor, buttonText, className, x, y, parallaxFactor }: TooltipProps) => {
+const Tooltip = ({ description, buttonText, className, x, y, parallaxFactor, variant, buttonRounded = "rounded-3xl" }:
+    { description: string, buttonText: string, className?: string, x: string, y: string, parallaxFactor: number, variant: 'yellow' | 'fuchsia' | 'emerald', buttonRounded?: string }) => {
+
+    const variantStyles = {
+        yellow: {
+            bg: "bg-[#422006]", // Deep Yellow/Brown (Darker than button)
+            text: "text-yellow-400",
+            border: "border-yellow-500/20"
+        },
+        fuchsia: {
+            bg: "bg-[#4a044e]", // Deep Fuchsia
+            text: "text-fuchsia-400",
+            border: "border-fuchsia-500/20"
+        },
+        emerald: {
+            bg: "bg-[#064e3b]", // Deep Emerald
+            text: "text-emerald-400",
+            border: "border-emerald-500/20"
+        }
+    };
+
+    const style = variantStyles[variant];
+
     return (
         <motion.div
             style={{
                 left: x,
                 top: y,
-                // These will be driven by the parent's parallax state
             }}
             className={`absolute z-20 ${className}`}
         >
-            <div className="bg-white/80 dark:bg-[#1C1C1E]/90 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-4 shadow-2xl min-w-[200px] pointer-events-auto">
-                <h4 className="font-bold text-sm mb-1">{title}</h4>
-                <p className="text-[11px] text-muted-foreground mb-3 leading-tight">{description}</p>
+            <div className={`${style.bg} ${style.border} border backdrop-blur-md rounded-[1.4rem] p-6 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] min-w-[240px] pointer-events-auto flex flex-col gap-4 text-left transition-transform hover:scale-[1.02]`}>
+                <p className="text-sm text-white/90 leading-relaxed font-medium">{description}</p>
                 <button
-                    className={`w-full py-1.5 rounded-lg text-white text-[10px] font-bold shadow-lg transition-transform hover:scale-105 ${buttonColor}`}
+                    className={`px-0 py-0 text-sm font-bold transition-opacity hover:opacity-80 self-end ${style.text}`}
                 >
                     {buttonText}
                 </button>
             </div>
-            {/* Tooltip Arrow/Tail */}
-            <div className="absolute -bottom-2 left-6 w-4 h-4 bg-white/80 dark:bg-[#1C1C1E]/90 border-r border-b border-white/20 dark:border-white/10 rotate-45" />
         </motion.div>
     );
 };
@@ -61,8 +80,7 @@ export function HeroVisual() {
     const toolX2 = useTransform(smoothX, [-300, 300], [40, -40]);
     const toolY2 = useTransform(smoothY, [-300, 300], [40, -40]);
 
-    const toolX3 = useTransform(smoothX, [-300, 300], [-30, 30]);
-    const toolY3 = useTransform(smoothY, [-300, 300], [60, -60]);
+    // Removed Tooltip 3 (Blue)
 
     const toolX4 = useTransform(smoothX, [-300, 300], [20, -20]);
     const toolY4 = useTransform(smoothY, [-300, 300], [-40, 40]);
@@ -84,70 +102,59 @@ export function HeroVisual() {
     return (
         <div
             ref={containerRef}
-            className="w-full max-w-5xl mx-auto aspect-video relative group perspective-1000 mb-20"
+            className="w-full max-w-5xl mx-auto aspect-video relative group mb-20"
         >
             {/* Dashboard Background */}
             <motion.div
-                style={{ x: bgX, y: bgY, rotateX: useTransform(smoothY, [-300, 300], [2, -2]), rotateY: useTransform(smoothX, [-300, 300], [-2, 2]) }}
                 className="w-full h-full relative z-0 rounded-[2.5rem] overflow-hidden border border-black/5 shadow-2xl"
             >
-                <img
+                <Image
                     src="/hero-dashboard.png"
                     alt="Financial Dashboard"
-                    className="w-full h-full object-cover scale-110"
+                    fill
+                    priority
+                    unoptimized
+                    quality={100}
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 1200px"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
             </motion.div>
 
             {/* Tooltips (Foreground Layer) */}
 
-            {/* 1. Yellow Tooltip */}
+            {/* 1. Yellow Tooltip - Rectangle */}
             <motion.div style={{ x: toolX1, y: toolY1 }} className="absolute z-20 left-[15%] top-[25%] pointer-events-none">
                 <Tooltip
                     x="0" y="0" parallaxFactor={1.5}
-                    title="Balance Overview"
-                    description="Real-time wealth tracking across all assets."
-                    buttonColor="bg-yellow-400 hover:bg-yellow-500"
-                    buttonText="View Sources"
+                    description="Sync your bank accounts to track cash flow automatically."
+                    buttonText="Next"
+                    variant="yellow"
                 />
             </motion.div>
 
-            {/* 2. Fuchsia Tooltip */}
+            {/* 2. Fuchsia Tooltip - Rounded Rect */}
             <motion.div style={{ x: toolX2, y: toolY2 }} className="absolute z-20 right-[20%] top-[15%] pointer-events-none">
                 <Tooltip
                     x="0" y="0" parallaxFactor={1.8}
-                    title="Growth Analytics"
-                    description="Predictive insights for your portfolio."
-                    buttonColor="bg-fuchsia-500 hover:bg-fuchsia-600"
-                    buttonText="Analyze Deeply"
+                    description="Visualize your monthly revenue trends and forecast growth."
+                    buttonText="Finish"
+                    variant="fuchsia"
                 />
             </motion.div>
 
-            {/* 3. Blue Tooltip */}
-            <motion.div style={{ x: toolX3, y: toolY3 }} className="absolute z-20 left-[45%] bottom-[20%] pointer-events-none">
-                <Tooltip
-                    x="0" y="0" parallaxFactor={1.2}
-                    title="Recent Moves"
-                    description="Every transaction accounted for instantly."
-                    buttonColor="bg-blue-500 hover:bg-blue-600"
-                    buttonText="Full History"
-                />
-            </motion.div>
-
-            {/* 4. Green Tooltip */}
-            <motion.div style={{ x: toolX4, y: toolY4 }} className="absolute z-20 right-[10%] bottom-[35%] pointer-events-none">
+            {/* 4. Green Tooltip - Rounded (4px) - Moved Left by ~80px (right 10% -> 25%) */}
+            <motion.div style={{ x: toolX4, y: toolY4 }} className="absolute z-20 right-[25%] bottom-[35%] pointer-events-none">
                 <Tooltip
                     x="0" y="0" parallaxFactor={2.0}
-                    title="Alert Center"
-                    description="Stay informed on market volatility."
-                    buttonColor="bg-emerald-500 hover:bg-emerald-600"
-                    buttonText="Set Alerts"
+                    description="Set up custom alerts for large transactions."
+                    buttonText="Next"
+                    variant="emerald"
                 />
             </motion.div>
 
             {/* Ambient Background Glows */}
-            <div className="absolute -z-10 -top-20 -left-20 w-80 h-80 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute -z-10 -bottom-20 -right-20 w-80 h-80 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
+            <motion.div style={{ x: useTransform(bgX, (val) => val * -1.5), y: useTransform(bgY, (val) => val * -1.5) }} className="absolute -z-10 -top-20 -left-20 w-80 h-80 bg-[#E65221]/20 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
+            <motion.div style={{ x: useTransform(bgX, (val) => val * 1.5), y: useTransform(bgY, (val) => val * 1.5) }} className="absolute -z-10 -bottom-20 -right-20 w-80 h-80 bg-fuchsia-500/20 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
         </div>
     );
 }

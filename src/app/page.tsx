@@ -12,8 +12,15 @@ export default function Home() {
     <div className="min-h-screen bg-background flex flex-col font-sans selection:bg-primary/20">
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative pt-40 pb-20 overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background pointer-events-none" />
+        <section className="relative pt-20 pb-20 overflow-hidden">
+          {/* Top Orange Gradient */}
+          <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80 pointer-events-none">
+            <div
+              className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#E65221] to-[#ff8c00] opacity-50 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+              style={{ clipPath: "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)" }}
+            />
+          </div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#E65221]/20 via-background to-background pointer-events-none" />
 
           <div className="max-w-7xl mx-auto px-6 relative z-10 text-center flex flex-col items-center">
 
@@ -24,7 +31,7 @@ export default function Home() {
 
             <h1 className="text-6xl md:text-8xl font-bold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 font-serif max-w-4xl leading-[1.1] z-30 relative">
               Onboard users <br />
-              <span className="text-primary">at warp speed.</span>
+              <span className="text-[#E65221]">at warp speed.</span>
             </h1>
 
             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 leading-relaxed font-medium z-30 relative">
@@ -34,26 +41,26 @@ export default function Home() {
             {/* Parallax Hero Visual */}
             <HeroVisual />
 
-            <div className="flex flex-col sm:flex-row items-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300 w-full justify-center z-40 relative -mt-32">
-              <Button size="lg" className="rounded-full px-10 h-16 text-lg shadow-2xl hover:scale-105 transition-all bg-primary hover:bg-primary/90 w-full sm:w-auto border-4 border-white/10" asChild>
+            <div className="flex flex-col sm:flex-row items-center gap-6 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300 w-full justify-center z-40 relative -mt-24">
+              <Button size="lg" className="rounded-full px-12 h-16 text-xl shadow-2xl hover:scale-105 transition-all bg-primary hover:bg-primary/90 w-full sm:w-auto border-4 border-white/10" asChild>
                 <Link href="/signup">
-                  Start Building for Free
-                  <ArrowRight className="ml-2 w-5 h-5" />
+                  Get Started for Free
+                  <ArrowRight className="ml-2 w-6 h-6" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="rounded-full px-10 h-16 text-lg hover:bg-white/10 border-2 w-full sm:w-auto backdrop-blur-md bg-white/5" asChild>
-                <Link href="/demo">View Interactive Demo</Link>
+              <Button size="lg" variant="outline" className="rounded-full px-12 h-16 text-xl hover:bg-white/10 border-2 w-full sm:w-auto backdrop-blur-md bg-white/5 border-white/20" asChild>
+                <Link href="/demo">Interactive Demo</Link>
               </Button>
             </div>
 
             {/* Social Proof Placeholder */}
-            <div className="mt-20 pt-10 border-t border-border/40 w-full max-w-xl mx-auto opacity-70">
-              <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-6">Trusted by innovative product teams</p>
-              <div className="flex justify-between items-center grayscale opacity-50">
-                <div className="h-8 w-24 bg-foreground/20 rounded animate-pulse" />
-                <div className="h-8 w-24 bg-foreground/20 rounded animate-pulse" />
-                <div className="h-8 w-24 bg-foreground/20 rounded animate-pulse" />
-                <div className="h-8 w-24 bg-foreground/20 rounded animate-pulse" />
+            <div className="mt-24 py-12 border-t border-border/20 w-full max-w-2xl mx-auto opacity-80">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-8">Trusted by innovative product teams</p>
+              <div className="flex justify-between items-center grayscale opacity-30 gap-8">
+                <div className="h-6 w-24 bg-foreground/20 rounded" />
+                <div className="h-6 w-24 bg-foreground/20 rounded" />
+                <div className="h-6 w-24 bg-foreground/20 rounded" />
+                <div className="h-6 w-24 bg-foreground/20 rounded" />
               </div>
             </div>
           </div>
@@ -139,7 +146,15 @@ export default function Home() {
         <FAQ />
 
         {/* Coming Soon Section */}
-        <section className="py-24 bg-[#1C1C1E] text-white overflow-hidden relative border-t border-white/5">
+        {/* Coming Soon Section */}
+        {/* Coming Soon Section */}
+        <section className="py-24 bg-[#582400] text-white overflow-hidden relative border-t border-white/10">
+          {/* Lively Background elements */}
+          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+            <div className="absolute top-1/4 -left-20 w-80 h-80 bg-orange-500/10 rounded-full blur-[100px]" />
+            <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-primary/10 rounded-full blur-[100px]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-[0.03]" />
+          </div>
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-8">
               <div>
@@ -191,40 +206,43 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/40 py-12 bg-background">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
+      {/* Footer */}
+      {/* Footer */}
+      <footer className="border-t border-white/10 py-16 bg-[#582400] text-white/80 relative overflow-hidden">
+        {/* Decorative background element for footer */}
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[120px] -mb-48 -mr-48 pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 relative z-10">
           <div className="md:col-span-2 flex flex-col items-start gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 flex items-center justify-center bg-foreground/5 rounded-lg">
-                <img src="/logo.svg" alt="Product Tour Logo" className="w-5 h-5 opacity-80" />
-              </div>
-              <span className="font-serif font-bold text-xl">Product Tour</span>
+            <div className="flex items-center gap-1.5">
+              <img src="/logo.svg" alt="Product Tour Logo" className="w-8 h-8 opacity-90" />
+              <span className="font-serif font-bold text-xl text-white">Product Tour</span>
             </div>
-            <p className="text-muted-foreground mt-2 max-w-sm leading-relaxed">
+            <p className="text-white/60 mt-2 max-w-sm leading-relaxed">
               The easiest way to create interactive product walkthroughs.
               Helping SaaS companies improve activation and reduce churn.
             </p>
           </div>
 
           <div>
-            <h4 className="font-bold mb-6 font-serif">Product</h4>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li><Link href="/#features" className="hover:text-foreground transition-colors">Features</Link></li>
-              <li><Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
-              <li><Link href="/login" className="hover:text-foreground transition-colors">Login</Link></li>
+            <h4 className="font-bold mb-6 font-serif text-white">Product</h4>
+            <ul className="space-y-3 text-sm text-white/60">
+              <li><Link href="/#features" className="hover:text-white transition-colors">Features</Link></li>
+              <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+              <li><Link href="/login" className="hover:text-white transition-colors">Login</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold mb-6 font-serif">Legal</h4>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms & Conditions</Link></li>
-              <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/impressum" className="hover:text-foreground transition-colors">Imprint</Link></li>
+            <h4 className="font-bold mb-6 font-serif text-white">Legal</h4>
+            <ul className="space-y-3 text-sm text-white/60">
+              <li><Link href="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
+              <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/impressum" className="hover:text-white transition-colors">Imprint</Link></li>
             </ul>
           </div>
         </div>
-        <div className="mt-16 pt-8 border-t border-border/40 text-center text-sm text-muted-foreground">
+        <div className="mt-16 pt-8 border-t border-white/10 text-center text-sm text-white/40">
           © {new Date().getFullYear()} Product Tour. All rights reserved.
         </div>
       </footer>

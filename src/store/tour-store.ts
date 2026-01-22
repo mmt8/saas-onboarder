@@ -469,8 +469,8 @@ export const useTourStore = create<TourState>()(
 
             signUp: async (email, password) => {
                 const { data, error } = await supabase.auth.signUp({ email, password });
-                if (!error) set({ user: data.user });
-                return { error };
+                if (!error && data.user) set({ user: data.user });
+                return { data, error };
             },
 
             signIn: async (email, password) => {

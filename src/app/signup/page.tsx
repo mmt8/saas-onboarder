@@ -32,9 +32,12 @@ export default function SignupPage() {
 
         setLocalLoading(true);
         try {
-            const { error } = await signUp(email, password);
+            const { data, error } = await signUp(email, password);
             if (error) {
                 toast.error(error.message);
+            } else if (data?.user && (!data.user.identities || data.user.identities.length === 0)) {
+                // Supabase returns success with empty identities if user exists and obfuscation is on
+                toast.error("This email is already registered. Please sign in instead.");
             } else {
                 toast.success("Account created successfully!");
                 router.refresh();

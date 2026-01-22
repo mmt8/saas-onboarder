@@ -49,7 +49,7 @@ export function Navbar() {
                 {/* 2. Center: Navigation Pill (Desktop Only) */}
                 <nav
                     className={cn(
-                        "hidden md:flex items-center px-2 p-1.5 rounded-full transition-all duration-300 border border-black/5 dark:border-white/10 shadow-sm backdrop-blur-xl absolute left-1/2 -translate-x-1/2",
+                        "hidden md:flex items-center px-2 h-14 rounded-full transition-all duration-300 border border-black/5 dark:border-white/10 shadow-sm backdrop-blur-xl absolute left-1/2 -translate-x-1/2",
                         "bg-white/50 dark:bg-[#1C1C1E]/70"
                     )}
                 >
@@ -81,11 +81,11 @@ export function Navbar() {
                         ) : (
                             <>
                                 <Link href="/login">
-                                    <Button variant="ghost" className="rounded-full font-medium text-foreground/80 hover:text-foreground">
+                                    <Button variant="ghost" className="rounded-full font-medium text-base text-foreground/80 hover:text-foreground">
                                         Sign In
                                     </Button>
                                 </Link>
-                                <Button asChild className="rounded-full px-6 font-bold shadow-lg hover:scale-105 transition-transform">
+                                <Button asChild className="rounded-full px-8 h-14 font-bold text-base shadow-lg hover:scale-105 transition-transform flex items-center">
                                     <Link href="/signup">Get Started</Link>
                                 </Button>
                             </>
@@ -95,7 +95,7 @@ export function Navbar() {
                     {/* Mobile Actions (Visible on small screens) */}
                     <div className="flex md:hidden items-center gap-3">
                         {!user && (
-                            <Button asChild size="sm" className="rounded-full font-bold">
+                            <Button asChild size="default" className="rounded-full font-bold text-base px-6">
                                 <Link href="/signup">Get Started</Link>
                             </Button>
                         )}
@@ -155,7 +155,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
     return (
         <Link
             href={href}
-            className="px-5 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:bg-foreground/5 rounded-full"
+            className="px-6 h-full flex items-center text-base font-semibold text-muted-foreground hover:text-foreground transition-colors hover:bg-foreground/5 rounded-full"
         >
             {children}
         </Link>
