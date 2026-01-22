@@ -23,19 +23,19 @@ const Tooltip = ({ description, buttonText, className, x, y, parallaxFactor, var
             // Glass (Darkened Theme)
             container: "bg-black/20 backdrop-blur-md border-white/10 text-white shadow-[0_15px_24.5px_rgba(0,0,0,0.24),0_7px_10.5px_rgba(0,0,0,0.15)]",
             text: "text-white/90",
-            button: "bg-white/10 text-white hover:bg-white/20"
+            button: "bg-white/10 text-white hover:bg-white/20 rounded-full"
         },
         fuchsia: {
             // Full Color (Fuchsia)
             container: "bg-[#4a044e] border-fuchsia-500/20 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)]",
             text: "text-white/90",
-            button: "bg-fuchsia-500/20 text-fuchsia-400 hover:bg-fuchsia-500/30"
+            button: "bg-fuchsia-500/20 text-fuchsia-400 hover:bg-fuchsia-500/30 rounded-full"
         },
         emerald: {
             // Solid (Light)
             container: "bg-white border-slate-100 text-slate-900 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]",
             text: "text-slate-700",
-            button: "bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm"
+            button: "bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm rounded-none"
         }
     };
 
@@ -52,7 +52,7 @@ const Tooltip = ({ description, buttonText, className, x, y, parallaxFactor, var
             <div className={`border rounded-[1.4rem] p-6 min-w-[240px] pointer-events-auto flex flex-col gap-4 text-left transition-all ${style.container}`}>
                 <p className={`text-sm leading-relaxed font-medium ${style.text}`}>{description}</p>
                 <button
-                    className={`px-4 py-2 text-xs font-bold transition-all rounded-full self-end ${style.button}`}
+                    className={`px-4 py-2 text-xs font-bold transition-all self-end ${style.button}`}
                 >
                     {buttonText}
                 </button>
