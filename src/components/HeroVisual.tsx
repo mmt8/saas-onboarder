@@ -20,10 +20,10 @@ const Tooltip = ({ description, buttonText, className, x, y, parallaxFactor, var
 
     const variantStyles = {
         yellow: {
-            // Glass (Light Theme)
-            container: "bg-white/40 backdrop-blur-md border-white/20 text-slate-900 shadow-[0_15px_24.5px_rgba(0,0,0,0.1),0_7px_10.5px_rgba(0,0,0,0.05)]",
-            text: "text-slate-800",
-            button: "bg-black/10 text-slate-900 hover:bg-black/20"
+            // Glass (Darkened Theme)
+            container: "bg-black/20 backdrop-blur-md border-white/10 text-white shadow-[0_15px_24.5px_rgba(0,0,0,0.24),0_7px_10.5px_rgba(0,0,0,0.15)]",
+            text: "text-white/90",
+            button: "bg-white/10 text-white hover:bg-white/20"
         },
         fuchsia: {
             // Full Color (Fuchsia)
