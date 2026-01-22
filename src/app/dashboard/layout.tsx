@@ -10,7 +10,8 @@ import { CreateProjectDialog } from "@/components/admin/CreateProjectDialog";
 import { Sparkles } from "lucide-react";
 import { DashboardNav } from "@/components/admin/DashboardNav";
 import { InstallationTutorialModal } from "@/components/admin/InstallationTutorialModal";
-import { RefreshCw, Play, Circle, AlertCircle } from "lucide-react";
+import { RefreshCw, Play, Circle, AlertCircle, LogOut, User } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -68,7 +69,8 @@ export default function DashboardLayout({
         isLoading,
         user,
         isAuthLoading,
-        fetchTours
+        fetchTours,
+        signOut
     } = useTourStore();
 
     const [isInstallationModalOpen, setIsInstallationModalOpen] = useState(false);
@@ -188,11 +190,32 @@ export default function DashboardLayout({
     };
 
     return (
-        <div className="min-h-screen bg-background p-8">
+        <div className="min-h-screen bg-background pt-2 px-8 pb-8">
             <div className="max-w-6xl mx-auto space-y-8">
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-8">
+                    {/* New Header Section */}
                     <div className="flex items-center justify-between">
-                        <h1 className="text-3xl font-bold text-foreground font-fraunces">Dashboard</h1>
+                        <Link href="/dashboard" className="flex items-center gap-2 group">
+                            <img src="/logo.svg" alt="Product Tour Logo" className="w-8 h-8 transition-transform group-hover:scale-105" />
+                            <span className="font-serif font-bold text-xl tracking-tight text-foreground">Product Tour</span>
+                        </Link>
+
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href="/dashboard/settings"
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-black/5 active:bg-black/10 transition-all rounded-full uppercase tracking-widest group"
+                            >
+                                <User className="w-4 h-4 transition-transform group-hover:scale-110" />
+                                Account
+                            </Link>
+                            <button
+                                onClick={() => signOut()}
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-muted-foreground hover:text-destructive hover:bg-black/5 active:bg-black/10 transition-all rounded-full group uppercase tracking-widest"
+                            >
+                                <LogOut className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                                Logout
+                            </button>
+                        </div>
                     </div>
 
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-2 pl-4 bg-card/40 border border-border/50 rounded-[2rem] backdrop-blur-xl shadow-sm">

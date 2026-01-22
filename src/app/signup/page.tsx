@@ -66,14 +66,14 @@ export default function SignupPage() {
 
     if (isAuthLoading) {
         return (
-            <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 bg-secondary/20">
+            <div className="min-h-[calc(100vh-80px)] pt-20 flex items-center justify-center p-6 bg-secondary/20">
                 <Loader2 className="w-12 h-12 animate-spin text-primary" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 bg-secondary/20">
+        <div className="min-h-[calc(100vh-80px)] pt-20 flex items-center justify-center p-6 bg-secondary/20">
             <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-primary/5 border border-border/50 p-8 md:p-12">
                 <div className="text-center mb-10">
                     <h1 className="text-4xl font-bold font-fraunces mb-3">Get Started</h1>

@@ -42,7 +42,7 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <TourPlayer />
           </Suspense>
-          <main className="min-h-screen pt-20">
+          <main className="min-h-screen">
             {children}
           </main>
         </AuthProvider>
