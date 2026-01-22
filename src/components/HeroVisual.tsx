@@ -15,24 +15,27 @@ interface TooltipProps {
     buttonRounded?: string;
 }
 
-const Tooltip = ({ description, buttonText, className, x, y, parallaxFactor, variant, buttonRounded = "rounded-3xl" }:
-    { description: string, buttonText: string, className?: string, x: string, y: string, parallaxFactor: number, variant: 'yellow' | 'fuchsia' | 'emerald', buttonRounded?: string }) => {
+const Tooltip = ({ description, buttonText, className, x, y, parallaxFactor, variant }:
+    { description: string, buttonText: string, className?: string, x: string, y: string, parallaxFactor: number, variant: 'yellow' | 'fuchsia' | 'emerald' }) => {
 
     const variantStyles = {
         yellow: {
-            bg: "bg-[#422006]", // Deep Yellow/Brown (Darker than button)
-            text: "text-yellow-400",
-            border: "border-yellow-500/20"
+            // Glass (Light Theme)
+            container: "bg-white/40 backdrop-blur-md border-white/20 text-slate-900 shadow-[0_15px_24.5px_rgba(0,0,0,0.1),0_7px_10.5px_rgba(0,0,0,0.05)]",
+            text: "text-slate-800",
+            button: "bg-black/10 text-slate-900 hover:bg-black/20"
         },
         fuchsia: {
-            bg: "bg-[#4a044e]", // Deep Fuchsia
-            text: "text-fuchsia-400",
-            border: "border-fuchsia-500/20"
+            // Full Color (Fuchsia)
+            container: "bg-[#4a044e] border-fuchsia-500/20 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)]",
+            text: "text-white/90",
+            button: "bg-fuchsia-500/20 text-fuchsia-400 hover:bg-fuchsia-500/30"
         },
         emerald: {
-            bg: "bg-[#064e3b]", // Deep Emerald
-            text: "text-emerald-400",
-            border: "border-emerald-500/20"
+            // Solid (Light)
+            container: "bg-white border-slate-100 text-slate-900 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]",
+            text: "text-slate-700",
+            button: "bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm"
         }
     };
 
@@ -46,10 +49,10 @@ const Tooltip = ({ description, buttonText, className, x, y, parallaxFactor, var
             }}
             className={`absolute z-20 ${className}`}
         >
-            <div className={`${style.bg} ${style.border} border backdrop-blur-md rounded-[1.4rem] p-6 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] min-w-[240px] pointer-events-auto flex flex-col gap-4 text-left transition-transform hover:scale-[1.02]`}>
-                <p className="text-sm text-white/90 leading-relaxed font-medium">{description}</p>
+            <div className={`border rounded-[1.4rem] p-6 min-w-[240px] pointer-events-auto flex flex-col gap-4 text-left transition-transform hover:scale-[1.02] ${style.container}`}>
+                <p className={`text-sm leading-relaxed font-medium ${style.text}`}>{description}</p>
                 <button
-                    className={`px-0 py-0 text-sm font-bold transition-opacity hover:opacity-80 self-end ${style.text}`}
+                    className={`px-4 py-2 text-xs font-bold transition-all rounded-full self-end ${style.button}`}
                 >
                     {buttonText}
                 </button>
