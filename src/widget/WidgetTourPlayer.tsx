@@ -104,6 +104,8 @@ export function WidgetTourPlayer() {
         }
     };
 
+    const [isHovered, setIsHovered] = useState(false);
+
     return (
         <div className="contents pointer-events-auto" style={{ fontFamily: theme.fontFamily }}>
             {/* Spotlight Overlay */}
@@ -212,12 +214,17 @@ export function WidgetTourPlayer() {
                 <div className="flex justify-end">
                     <button
                         onClick={handleNext}
+                        onMouseEnter={() => setIsHovered(true)}
+                        onMouseLeave={() => setIsHovered(false)}
                         className={cn(
-                            "group flex items-center justify-center font-bold shadow-sm active:scale-95 transition-all text-sm",
-                            theme.tooltipStyle === 'solid' ? "hover:brightness-110" : "hover:bg-black/[0.13]"
+                            "group flex items-center justify-center font-bold shadow-sm active:scale-95 transition-all text-sm outline-none",
+                            theme.tooltipStyle === 'solid' ? "hover:brightness-110" : ""
                         )}
                         style={{
-                            backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor : 'rgba(0,0,0,0.1)',
+                            backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor :
+                                (theme.tooltipStyle === 'glass' && theme.darkMode ?
+                                    (isHovered ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)') :
+                                    (isHovered ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.1)')),
                             color: (theme.darkMode && theme.tooltipStyle === 'glass') ? '#1e293b' : 'white',
                             borderRadius: `${theme.borderRadius}px`,
                             padding: `${theme.paddingV}px ${theme.paddingH}px`,

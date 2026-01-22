@@ -143,6 +143,8 @@ export default function SettingsPage() {
         );
     };
 
+    const [isHovered, setIsHovered] = useState(false);
+
     return (
         <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Customization Controls - Half Width (capped at 50% on md+) */}
@@ -329,7 +331,7 @@ export default function SettingsPage() {
                 <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-widest ml-1">Live Preview</h4>
 
                 <div
-                    className="relative p-8 rounded-3xl border border-border shadow-md transition-colors duration-500 bg-slate-600"
+                    className="relative p-8 rounded-3xl border border-border shadow-md transition-colors duration-500 bg-slate-400"
                 >
                     {/* Background Pattern for Preview Contrast */}
                     <div className="absolute inset-0 opacity-70 pointer-events-none rounded-3xl overflow-hidden">
@@ -374,12 +376,17 @@ export default function SettingsPage() {
 
                         <div className="flex justify-end">
                             <button
+                                onMouseEnter={() => setIsHovered(true)}
+                                onMouseLeave={() => setIsHovered(false)}
                                 className={cn(
-                                    "text-sm font-bold shadow-sm active:scale-95 transition-all",
-                                    theme.tooltipStyle === 'solid' ? "hover:brightness-110" : "hover:bg-black/[0.13]"
+                                    "text-sm font-bold shadow-sm active:scale-95 transition-all outline-none",
+                                    theme.tooltipStyle === 'solid' ? "hover:brightness-110" : ""
                                 )}
                                 style={{
-                                    backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor : 'rgba(0,0,0,0.1)',
+                                    backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor :
+                                        (theme.tooltipStyle === 'glass' && theme.darkMode ?
+                                            (isHovered ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)') :
+                                            (isHovered ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.1)')),
                                     color: (theme.darkMode && theme.tooltipStyle === 'glass') ? '#1e293b' : 'white',
                                     borderRadius: `${theme.borderRadius}px`,
                                     padding: `${theme.paddingV}px ${theme.paddingH}px`
