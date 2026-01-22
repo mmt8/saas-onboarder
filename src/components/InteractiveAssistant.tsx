@@ -43,7 +43,7 @@ export function InteractiveAssistant() {
                                 <Sparkles className="w-4 h-4 text-primary" />
                                 <span className="font-bold text-white">AI Assistant</span>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-6 w-6 text-gray-400 hover:text-white">
+                            <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-6 w-6 text-gray-400">
                                 <X className="w-4 h-4" />
                             </Button>
                         </div>
@@ -69,7 +69,7 @@ export function InteractiveAssistant() {
                                 placeholder="Ask a question..."
                                 className="flex-1 bg-transparent text-sm text-white placeholder:text-gray-500 focus:outline-none"
                             />
-                            <Button size="sm" onClick={handleSend} className="h-8 w-8 rounded-full bg-primary">
+                            <Button size="sm" onClick={handleSend} className="h-8 w-8 rounded-full">
                                 <Send className="w-4 h-4" />
                             </Button>
                         </div>
@@ -79,7 +79,7 @@ export function InteractiveAssistant() {
 
             <Button
                 onClick={() => setIsOpen(!isOpen)}
-                className="h-14 w-14 rounded-full shadow-2xl bg-gradient-to-r from-secondary to-primary hover:scale-105 transition-transform"
+                className="h-14 w-14 rounded-full shadow-2xl bg-gradient-to-r from-secondary to-primary"
             >
                 {isOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
             </Button>

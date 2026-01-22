@@ -30,8 +30,10 @@ export function Navbar() {
         }
     }, [mobileMenuOpen]);
 
+    if (user) return null;
+
     return (
-        <>
+        <>{/* Existing Navbar structure */}
             <header
                 className={cn(
                     "fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-300",
@@ -62,43 +64,21 @@ export function Navbar() {
                 <div className="flex items-center gap-3 z-50 relative">
                     {/* Desktop Actions */}
                     <div className="hidden md:flex items-center gap-3">
-                        {user ? (
-                            <>
-                                <Link href="/dashboard">
-                                    <Button variant="ghost" className="rounded-full text-muted-foreground hover:text-foreground">
-                                        Dashboard
-                                    </Button>
-                                </Link>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => signOut()}
-                                    className="rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
-                                >
-                                    <LogOut className="w-5 h-5" />
-                                </Button>
-                            </>
-                        ) : (
-                            <>
-                                <Link href="/login">
-                                    <Button variant="ghost" className="rounded-full font-medium text-base text-foreground/80 hover:text-foreground">
-                                        Sign In
-                                    </Button>
-                                </Link>
-                                <Button asChild className="rounded-full px-8 h-14 font-bold text-base shadow-lg hover:scale-105 transition-transform flex items-center">
-                                    <Link href="/signup">Get Started</Link>
-                                </Button>
-                            </>
-                        )}
+                        <Link href="/login">
+                            <Button variant="ghost" className="font-medium text-base text-foreground/80">
+                                Sign In
+                            </Button>
+                        </Link>
+                        <Button asChild className="px-8 h-14 font-bold text-base shadow-lg flex items-center">
+                            <Link href="/signup">Get Started</Link>
+                        </Button>
                     </div>
 
                     {/* Mobile Actions (Visible on small screens) */}
                     <div className="flex md:hidden items-center gap-3">
-                        {!user && (
-                            <Button asChild size="default" className="rounded-full font-bold text-base px-6">
-                                <Link href="/signup">Get Started</Link>
-                            </Button>
-                        )}
+                        <Button asChild size="default" className="rounded-full font-bold text-base px-6">
+                            <Link href="/signup">Get Started</Link>
+                        </Button>
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             className="w-10 h-10 flex items-center justify-center rounded-full bg-foreground/5 hover:bg-foreground/10 transition-colors backdrop-blur-md"
@@ -131,15 +111,12 @@ export function Navbar() {
                             <div className="h-px bg-border/50 w-full my-4" />
 
                             {user ? (
-                                <>
-                                    <MobileNavLink href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</MobileNavLink>
-                                    <button
-                                        onClick={() => { signOut(); setMobileMenuOpen(false); }}
-                                        className="text-2xl font-bold font-serif text-destructive hover:text-destructive/80 transition-colors py-2"
-                                    >
-                                        Sign Out
-                                    </button>
-                                </>
+                                <button
+                                    onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                                    className="text-2xl font-bold font-serif text-destructive hover:text-destructive/80 transition-colors py-2"
+                                >
+                                    Sign Out
+                                </button>
                             ) : (
                                 <MobileNavLink href="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</MobileNavLink>
                             )}

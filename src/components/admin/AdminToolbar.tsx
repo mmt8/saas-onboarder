@@ -81,7 +81,7 @@ export function AdminToolbar() {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => setIsPaused(!isPaused)}
-                                    className={cn("rounded-full hover:bg-slate-100 text-foreground", isPaused && "text-yellow-500")}
+                                    className={cn("rounded-full text-foreground", isPaused && "text-yellow-500")}
                                 >
                                     {isPaused ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                                 </Button>
@@ -90,14 +90,14 @@ export function AdminToolbar() {
                                     onClick={stopRecording}
                                     variant="destructive"
                                     size="icon"
-                                    className="rounded-full shadow-lg shadow-red-500/20"
+                                    className="rounded-full shadow-red-500/20"
                                 >
                                     <Square className="w-4 h-4 fill-current" />
                                 </Button>
 
                                 <Button
                                     onClick={() => saveTour("New Tour " + new Date().toLocaleTimeString(), window.location.pathname)}
-                                    className="rounded-full px-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 ml-2"
+                                    className="rounded-full px-6 ml-2"
                                 >
                                     <Save className="w-4 h-4 mr-2" />
                                     Finish

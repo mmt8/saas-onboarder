@@ -120,7 +120,7 @@ export default function SignupPage() {
                     <Button
                         type="submit"
                         disabled={localLoading}
-                        className="w-full py-8 text-xl font-bold bg-primary text-primary-foreground rounded-2xl shadow-xl shadow-primary/20 hover:shadow-sm transition-all active:scale-95"
+                        className="w-full py-8 text-xl font-bold rounded-2xl"
                     >
                         {localLoading ? <Loader2 className="w-6 h-6 animate-spin mr-3" /> : null}
                         Create Account

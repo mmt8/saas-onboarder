@@ -52,7 +52,7 @@ export function InstallationTutorialModal({ isOpen, onClose, projectId }: Instal
                         size="icon"
                         variant="ghost"
                         onClick={onClose}
-                        className="rounded-full hover:bg-background/80"
+                        className="rounded-full"
                     >
                         <X className="w-5 h-5" />
                     </Button>
@@ -74,8 +74,9 @@ export function InstallationTutorialModal({ isOpen, onClose, projectId }: Instal
                             </pre>
                             <Button
                                 size="sm"
+                                variant="outline"
                                 onClick={handleCopy}
-                                className="absolute top-4 right-4 bg-background hover:bg-secondary border border-border shadow-sm text-foreground"
+                                className="absolute top-4 right-4 bg-background"
                             >
                                 {copied ? <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-500" /> : <Copy className="w-4 h-4 mr-2" />}
                                 {copied ? 'Copied' : 'Copy Code'}
@@ -103,7 +104,7 @@ export function InstallationTutorialModal({ isOpen, onClose, projectId }: Instal
                 <div className="p-8 bg-secondary/10 flex items-center justify-center border-t border-border">
                     <Button
                         onClick={onClose}
-                        className="rounded-full px-8 py-6 font-bold text-lg shadow-xl shadow-primary/10 transition-transform active:scale-95"
+                        className="rounded-full px-8 py-6 font-bold text-lg"
                     >
                         Got it, I've installed it!
                     </Button>

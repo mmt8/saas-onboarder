@@ -92,7 +92,7 @@ const TourCard = ({ tour, onEdit, onPlay, toggleTourActivation, isLoading, onAct
                     <Button
                         size="icon"
                         variant="ghost"
-                        className="opacity-0 group-hover:opacity-100 h-8 w-8 hover:bg-blue-50 transition-all"
+                        className="opacity-0 group-hover:opacity-100 h-8 w-8"
                         onClick={(e) => {
                             e.stopPropagation();
                             onPlay();
@@ -511,7 +511,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                                         </div>
                                         <div className="p-6">
                                             <Button
-                                                className="w-full h-11 gap-2 bg-[#495BFD] hover:bg-[#3b4fd9] text-white rounded-2xl shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+                                                className="w-full h-11 gap-2"
                                                 onClick={() => {
                                                     setAdminListOpen(false);
                                                     setIsCreateTourDialogOpen(true);

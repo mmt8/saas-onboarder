@@ -34,7 +34,7 @@ export function DeleteTourDialog({ isOpen, onClose, onConfirm, tourTitle }: Dele
                                 <AlertTriangle className="w-5 h-5 text-red-500" />
                                 Delete Tour
                             </h2>
-                            <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-secondary">
+                            <Button variant="ghost" size="icon" onClick={onClose}>
                                 <X className="w-5 h-5 text-muted-foreground" />
                             </Button>
                         </div>

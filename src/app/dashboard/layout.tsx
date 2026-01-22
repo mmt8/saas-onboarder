@@ -259,12 +259,7 @@ export default function DashboardLayout({
                             <div className="w-px h-6 bg-border/60 hidden md:block" />
                             <Button
                                 onClick={handleCreateTour}
-                                className={cn(
-                                    "rounded-full px-6 py-6 shadow-lg transition-all duration-200 font-bold",
-                                    isInstalled
-                                        ? "bg-primary text-primary-foreground shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98]"
-                                        : "bg-primary text-primary-foreground shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98]"
-                                )}
+                                className="px-6 py-6 font-bold"
                             >
                                 {isInstalled ? <Plus className="w-4 h-4 mr-2" /> : <AlertCircle className="w-4 h-4 mr-2" />}
                                 {isInstalled ? "Create New Tour" : "Setup Product Tour"}

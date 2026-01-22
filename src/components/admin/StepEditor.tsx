@@ -69,7 +69,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                 variant="ghost"
                                 onClick={onBack}
                                 disabled={isLoading}
-                                className="h-8 w-8 p-0 rounded-full hover:bg-slate-200 hover:text-slate-700 transition-colors"
+                                className="h-8 w-8 p-0"
                             >
                                 <ArrowLeft className="w-5 h-5" />
                             </Button>
@@ -79,7 +79,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                             variant="ghost"
                             onClick={stopRecording}
                             disabled={isLoading}
-                            className="h-8 w-8 p-0 rounded-full hover:bg-slate-200 hover:text-slate-700 transition-colors"
+                            className="h-8 w-8 p-0"
                         >
                             <X className="w-5 h-5" />
                         </Button>
@@ -87,7 +87,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                             size="sm"
                             onClick={() => saveTour(tourTitle, window.location.pathname)}
                             disabled={isLoading}
-                            className="bg-[#495BFD] hover:bg-[#3b4fd9] text-white h-8 px-4 text-xs rounded-full shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+                            className="h-8 px-4 text-xs shadow-blue-500/20"
                         >
                             {isLoading ? "Saving..." : "Save Tour"}
                         </Button>
@@ -100,7 +100,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                             size="sm"
                             variant="secondary"
                             onClick={handlePlayback}
-                            className="flex-1 h-9 text-xs gap-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 border-none"
+                            className="flex-1 h-9 text-xs gap-2 rounded-xl border-none"
                         >
                             <Play className="w-3.5 h-3.5 fill-current" />
                             Playback
@@ -109,7 +109,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                             size="sm"
                             variant="secondary"
                             onClick={() => setShowDeleteConfirm(true)}
-                            className="flex-1 h-9 text-xs gap-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 border-none"
+                            className="flex-1 h-9 text-xs gap-2 rounded-xl border-none"
                         >
                             <Trash2 className="w-3.5 h-3.5" />
                             Delete
@@ -151,8 +151,9 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                             </Button>
                             <Button
                                 size="sm"
+                                variant="destructive"
                                 onClick={handleDelete}
-                                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                                className="flex-1"
                             >
                                 Delete
                             </Button>
@@ -196,8 +197,8 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                                 variant="ghost"
                                                 size="icon"
                                                 className={cn(
-                                                    "h-7 w-7 rounded-full transition-colors",
-                                                    visibleSelectors[step.id] ? "bg-blue-50 text-blue-600" : "text-muted-foreground hover:bg-slate-100"
+                                                    "h-7 w-7 transition-colors",
+                                                    visibleSelectors[step.id] && "bg-blue-50 text-blue-600"
                                                 )}
                                                 onClick={(e) => { e.stopPropagation(); toggleSelector(step.id); }}
                                             >
@@ -206,7 +207,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-full"
+                                                className="h-7 w-7 text-muted-foreground"
                                                 onClick={(e) => { e.stopPropagation(); deleteStep(step.id); }}
                                             >
                                                 <Trash2 className="w-3.5 h-3.5" />

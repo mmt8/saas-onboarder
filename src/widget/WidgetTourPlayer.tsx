@@ -217,8 +217,8 @@ export function WidgetTourPlayer() {
                         onMouseEnter={() => setIsHovered(true)}
                         onMouseLeave={() => setIsHovered(false)}
                         className={cn(
-                            "group flex items-center justify-center font-bold shadow-sm active:scale-95 transition-all text-sm outline-none",
-                            theme.tooltipStyle === 'solid' ? "hover:brightness-110" : ""
+                            "group flex items-center justify-center font-bold transition-all text-sm outline-none hover:brightness-90 active:brightness-75 active:scale-[0.95] active:shadow-none",
+                            theme.tooltipStyle === 'solid' ? "shadow-sm" : ""
                         )}
                         style={{
                             backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor :

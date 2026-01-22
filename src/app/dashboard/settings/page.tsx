@@ -323,7 +323,7 @@ export default function SettingsPage() {
                     <Button
                         onClick={handleSaveSettings}
                         disabled={isLoading}
-                        className="px-8 h-11 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/20 hover:shadow-sm transition-all active:scale-95"
+                        className="px-8 h-11 text-sm font-bold"
                     >
                         {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                         Save Settings
@@ -351,7 +351,7 @@ export default function SettingsPage() {
                                     }
                                 }
                             }}
-                            className="rounded-full px-6 font-bold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors"
+                            className="rounded-full px-6 font-bold text-rose-600 hover:bg-rose-50 transition-colors"
                         >
                             Delete Project
                         </Button>

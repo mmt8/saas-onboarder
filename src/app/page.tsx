@@ -42,13 +42,13 @@ export default function Home() {
             <HeroVisual />
 
             <div className="flex flex-col sm:flex-row items-center gap-6 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300 w-full justify-center z-40 relative -mt-24">
-              <Button size="lg" className="rounded-full px-12 h-16 text-xl shadow-2xl hover:scale-105 transition-all bg-primary hover:bg-primary/90 w-full sm:w-auto border-4 border-white/10" asChild>
+              <Button size="lg" className="rounded-full px-12 h-16 text-xl shadow-2xl w-full sm:w-auto border-4 border-white/10" asChild>
                 <Link href="/signup">
                   Get Started for Free
                   <ArrowRight className="ml-2 w-6 h-6" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="rounded-full px-12 h-16 text-xl hover:bg-white/10 border-2 w-full sm:w-auto backdrop-blur-md bg-white/5 border-white/20" asChild>
+              <Button size="lg" variant="outline" className="rounded-full px-12 h-16 text-xl border-2 w-full sm:w-auto backdrop-blur-md bg-white/5 border-white/20" asChild>
                 <Link href="/demo">Interactive Demo</Link>
               </Button>
             </div>
@@ -194,7 +194,7 @@ export default function Home() {
               Join thousands of product managers building better onboarding experiences.
             </p>
             <div className="flex justify-center pt-4">
-              <Button size="lg" className="rounded-full px-12 h-16 text-xl shadow-2xl hover:scale-105 transition-transform" asChild>
+              <Button size="lg" className="rounded-full px-12 h-16 text-xl shadow-2xl" asChild>
                 <Link href="/signup">
                   Get Started for Free
                 </Link>

@@ -78,7 +78,7 @@ export function CreateProjectDialog({ isOpen, onClose }: CreateProjectDialogProp
                 <Button
                     type="submit"
                     disabled={localLoading || !name}
-                    className="w-full py-10 text-2xl font-bold bg-primary text-primary-foreground rounded-2xl shadow-2xl shadow-primary/20 hover:shadow-sm transition-all active:scale-95 group"
+                    className="w-full py-10 text-2xl font-bold rounded-2xl group"
                 >
                     {localLoading ? <Loader2 className="w-6 h-6 animate-spin mr-3" /> : null}
                     Create Project
