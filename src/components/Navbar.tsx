@@ -65,11 +65,11 @@ export function Navbar() {
                     {/* Desktop Actions */}
                     <div className="hidden md:flex items-center gap-3">
                         <Link href="/login">
-                            <Button variant="ghost" className="font-medium text-base text-foreground/80">
+                            <Button variant="ghost" className="font-bold text-sm text-muted-foreground hover:text-primary">
                                 Sign In
                             </Button>
                         </Link>
-                        <Button asChild className="px-8 h-14 font-bold text-base shadow-lg flex items-center">
+                        <Button asChild className="px-8 h-14 font-bold text-sm shadow-sm flex items-center">
                             <Link href="/signup">Get Started</Link>
                         </Button>
                     </div>
@@ -132,7 +132,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
     return (
         <Link
             href={href}
-            className="px-6 h-full flex items-center text-base font-semibold text-muted-foreground hover:text-foreground transition-colors hover:bg-foreground/5 rounded-full"
+            className="px-6 py-2 flex items-center text-sm font-bold text-muted-foreground hover:text-primary transition-all hover:bg-primary/10 rounded-full"
         >
             {children}
         </Link>
@@ -144,7 +144,7 @@ function MobileNavLink({ href, children, onClick }: { href: string; children: Re
         <Link
             href={href}
             onClick={onClick}
-            className="text-3xl font-bold font-serif text-foreground hover:text-primary transition-colors py-2"
+            className="text-sm font-bold text-foreground hover:text-primary transition-colors py-2"
         >
             {children}
         </Link>
