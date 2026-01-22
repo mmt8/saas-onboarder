@@ -2,7 +2,7 @@
 
 import { useTourStore } from "@/store/tour-store";
 import { Button } from "@/components/ui/button";
-import { Settings, Loader2 } from "lucide-react";
+import { Settings, Loader2, Layout, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -173,8 +173,18 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
+                <div className="flex items-center gap-4 border-t border-border pt-8 mt-4 pb-2">
+                    <div className="p-3 bg-primary/10 rounded-xl">
+                        <Layout className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                        <h3 className="text-2xl font-bold font-fraunces text-foreground">Styling</h3>
+                        <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Appearance & Components</p>
+                    </div>
+                </div>
+
                 {/* Tooltip Style Section */}
-                <div className="space-y-4 pt-4 border-t border-border">
+                <div className="space-y-4">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Tooltip Style</label>
                     <div className="grid grid-cols-3 gap-3">
                         <div
@@ -232,33 +242,26 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
+                    {/* Theme Mode - Dropdown */}
+                    <div className="space-y-3">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Theme Mode</label>
+                        <select
+                            value={theme.darkMode ? "dark" : "light"}
+                            onChange={(e) => setTheme({ ...theme, darkMode: e.target.value === "dark" })}
+                            className="w-full bg-secondary/20 border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-foreground appearance-none cursor-pointer"
+                        >
+                            <option value="light">Light Mode</option>
+                            <option value="dark">Dark Mode</option>
+                        </select>
+                    </div>
+
                     {/* Font Family - Use Custom FontPicker */}
-                    <div className="space-y-3 col-span-2">
+                    <div className="space-y-3">
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Font Family</label>
                         <FontPicker
                             value={theme.fontFamily}
                             onChange={(val) => setTheme({ ...theme, fontFamily: val })}
                         />
-                    </div>
-
-                    {/* Dark Mode - Always available for Solid, specialized for Glass */}
-                    <div className="space-y-3">
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Theme Mode</label>
-                        <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-xl border border-border/50">
-                            <span className="text-sm font-medium text-foreground">Dark Theme</span>
-                            <div
-                                onClick={() => setTheme({ ...theme, darkMode: !theme.darkMode })}
-                                className={cn(
-                                    "w-12 h-6 rounded-full transition-colors cursor-pointer relative",
-                                    theme.darkMode ? "bg-primary" : "bg-slate-300"
-                                )}
-                            >
-                                <div className={cn(
-                                    "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
-                                    theme.darkMode ? "left-7" : "left-1"
-                                )} />
-                            </div>
-                        </div>
                     </div>
 
                     {/* Primary Color - Hidden for Color/Glass as they use Playground behavior */}
@@ -284,7 +287,7 @@ export default function SettingsPage() {
 
                     {/* Border Radius */}
                     <div className="space-y-3">
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Radius (px)</label>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Radius</label>
                         <input
                             type="number"
                             value={theme.borderRadius}
@@ -295,7 +298,7 @@ export default function SettingsPage() {
 
                     {/* Padding Vertical */}
                     <div className="space-y-3">
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Padding V (px)</label>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Padding V</label>
                         <input
                             type="number"
                             value={theme.paddingV}
@@ -306,7 +309,7 @@ export default function SettingsPage() {
 
                     {/* Padding Horizontal */}
                     <div className="space-y-3">
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Padding H (px)</label>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Padding H</label>
                         <input
                             type="number"
                             value={theme.paddingH}
@@ -316,14 +319,45 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                <Button
-                    onClick={handleSaveSettings}
-                    disabled={isLoading}
-                    className="w-full py-8 text-xl font-bold bg-primary text-primary-foreground rounded-2xl shadow-xl shadow-primary/20 hover:shadow-sm transition-all active:scale-95"
-                >
-                    {isLoading ? <Loader2 className="w-6 h-6 animate-spin mr-3" /> : null}
-                    Save Project Settings
-                </Button>
+                <div className="flex justify-end pt-4">
+                    <Button
+                        onClick={handleSaveSettings}
+                        disabled={isLoading}
+                        className="px-8 h-11 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/20 hover:shadow-sm transition-all active:scale-95"
+                    >
+                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                        Save Settings
+                    </Button>
+                </div>
+
+                {/* Dangerous Zone */}
+                <div className="pt-10 mt-10 border-t border-border space-y-4">
+                    <div className="flex items-center gap-2 text-rose-500">
+                        <X className="w-5 h-5" />
+                        <h4 className="font-bold text-sm uppercase tracking-widest">Danger Zone</h4>
+                    </div>
+                    <div className="p-6 bg-rose-50 border border-rose-100 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div>
+                            <p className="font-bold text-rose-900">Delete Project</p>
+                            <p className="text-sm text-rose-600">This will permanently remove all tours and project data. This action cannot be undone.</p>
+                        </div>
+                        <Button
+                            variant="destructive"
+                            onClick={async () => {
+                                if (confirm("Are you sure you want to delete this project? This action is irreversible.")) {
+                                    const { deleteProject } = useTourStore.getState();
+                                    if (currentProjectId) {
+                                        await deleteProject(currentProjectId);
+                                        window.location.href = '/dashboard';
+                                    }
+                                }
+                            }}
+                            className="rounded-full px-6 font-bold"
+                        >
+                            Delete Project
+                        </Button>
+                    </div>
+                </div>
             </div>
 
             {/* Compact Right Side Preview - Just slightly bigger than tooltip */}

@@ -103,6 +103,7 @@ interface TourState {
     checkAuth: () => Promise<void>;
     resetPassword: (email: string) => Promise<{ error: any }>;
     updatePassword: (password: string) => Promise<{ error: any }>;
+    deleteProject: (id: string) => Promise<void>;
 }
 
 export const useTourStore = create<TourState>()(
@@ -569,6 +570,30 @@ export const useTourStore = create<TourState>()(
                     console.error('Error toggling tour activation:', error);
                     // Rollback on error
                     set({ tours });
+                }
+            },
+
+            deleteProject: async (id: string) => {
+                set({ isLoading: true });
+                try {
+                    const { error } = await supabase
+                        .from('projects')
+                        .delete()
+                        .eq('id', id);
+
+                    if (error) throw error;
+
+                    set((state) => ({
+                        projects: state.projects.filter(p => p.id !== id),
+                        currentProjectId: state.currentProjectId === id ? null : state.currentProjectId
+                    }));
+
+                    toast.success('Project deleted successfully');
+                } catch (error) {
+                    console.error('Error deleting project:', error);
+                    toast.error('Failed to delete project');
+                } finally {
+                    set({ isLoading: false });
                 }
             },
         }),
