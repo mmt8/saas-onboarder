@@ -33,7 +33,7 @@ function ConnectionStatus({ lastSeenAt, onCheck, isChecking }: { lastSeenAt?: Da
     const status = getStatus();
 
     return (
-        <div className="flex items-center gap-2 px-3 py-1 bg-accent/50 rounded-full border border-border/50 group transition-all hover:bg-accent h-7">
+        <div className="flex items-center gap-2 px-3 py-1 bg-accent/50 rounded-full border border-border group transition-all hover:bg-accent h-7">
             <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse shrink-0", status.color)} />
             <p className={cn("text-[10px] font-black uppercase tracking-[0.15em] leading-none", status.text)}>
                 {status.label}
@@ -190,7 +190,7 @@ export default function DashboardLayout({
     };
 
     return (
-        <div className="min-h-screen bg-background pt-2 px-8 pb-8">
+        <div className="min-h-screen bg-background pt-7 px-8 pb-8">
             <div className="max-w-6xl mx-auto space-y-8">
                 <div className="flex flex-col gap-8">
                     {/* New Header Section */}
@@ -218,9 +218,9 @@ export default function DashboardLayout({
                         </div>
                     </div>
 
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-2 pl-4 bg-card/40 border border-border/50 rounded-[2rem] backdrop-blur-xl shadow-sm">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-2 pl-4 bg-card/40 border border-border rounded-[2rem] backdrop-blur-xl shadow-sm">
                         <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 bg-background/50 p-1.5 rounded-2xl border border-border/50">
+                            <div className="flex items-center gap-2 bg-background/50 p-1.5 rounded-2xl border border-border">
                                 <div className="relative flex items-center">
                                     <select
                                         value={currentProjectId || ""}
@@ -263,7 +263,7 @@ export default function DashboardLayout({
                                     "rounded-full px-6 py-6 shadow-lg transition-all duration-200 font-bold",
                                     isInstalled
                                         ? "bg-primary text-primary-foreground shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98]"
-                                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                                        : "bg-primary text-primary-foreground shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98]"
                                 )}
                             >
                                 {isInstalled ? <Plus className="w-4 h-4 mr-2" /> : <AlertCircle className="w-4 h-4 mr-2" />}

@@ -330,19 +330,18 @@ export default function SettingsPage() {
                     </Button>
                 </div>
 
-                {/* Dangerous Zone */}
                 <div className="pt-10 mt-10 border-t border-border space-y-4">
                     <div className="flex items-center gap-2 text-rose-500">
                         <X className="w-5 h-5" />
                         <h4 className="font-bold text-sm uppercase tracking-widest">Danger Zone</h4>
                     </div>
-                    <div className="p-6 bg-rose-50 border border-rose-100 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="p-6 border border-border rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div>
-                            <p className="font-bold text-rose-900">Delete Project</p>
-                            <p className="text-sm text-rose-600">This will permanently remove all tours and project data. This action cannot be undone.</p>
+                            <p className="font-bold text-foreground">Delete Project</p>
+                            <p className="text-sm text-muted-foreground">This will permanently remove all tours and project data. This action cannot be undone.</p>
                         </div>
                         <Button
-                            variant="destructive"
+                            variant="ghost"
                             onClick={async () => {
                                 if (confirm("Are you sure you want to delete this project? This action is irreversible.")) {
                                     const { deleteProject } = useTourStore.getState();
@@ -352,7 +351,7 @@ export default function SettingsPage() {
                                     }
                                 }
                             }}
-                            className="rounded-full px-6 font-bold"
+                            className="rounded-full px-6 font-bold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors"
                         >
                             Delete Project
                         </Button>
