@@ -37,6 +37,8 @@ export type Project = {
         borderRadius: string;
         paddingV: string;
         paddingH: string;
+        tooltipStyle: 'solid' | 'color' | 'glass';
+        tooltipColor: string;
     };
     lastSeenAt?: Date;
     createdAt: Date;
@@ -144,7 +146,9 @@ export const useTourStore = create<TourState>()(
                             primaryColor: '#495BFD',
                             borderRadius: '12',
                             paddingV: p.theme_settings?.paddingV ?? '10',
-                            paddingH: p.theme_settings?.paddingH ?? '20'
+                            paddingH: p.theme_settings?.paddingH ?? '20',
+                            tooltipStyle: p.theme_settings?.tooltipStyle ?? 'solid',
+                            tooltipColor: p.theme_settings?.tooltipColor ?? '#495BFD'
                         },
                         lastSeenAt: p.last_seen_at ? new Date(p.last_seen_at) : undefined,
                         createdAt: new Date(p.created_at)
