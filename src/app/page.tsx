@@ -24,7 +24,7 @@ export default function Home() {
 
           <div className="max-w-7xl mx-auto px-6 relative z-10 text-center flex flex-col items-center">
             <h1 className="text-5xl md:text-8xl font-bold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 font-serif max-w-4xl leading-[1.1] z-30 relative pt-12">
-              Interactive product tours <br />
+              Product tours <br />
               <span className="text-[#E65221]">that drive adoption.</span>
             </h1>
 
