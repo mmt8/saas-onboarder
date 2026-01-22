@@ -94,7 +94,7 @@ interface TourState {
     toggleTourActivation: (tourId: string) => Promise<void>;
 
     // Auth Actions
-    signUp: (email: string, password: string) => Promise<{ error: any }>;
+    signUp: (email: string, password: string) => Promise<{ data?: any; error: any }>;
     signIn: (email: string, password: string) => Promise<{ error: any }>;
     signInWithGoogle: () => Promise<{ error: any }>;
     signOut: () => Promise<void>;
