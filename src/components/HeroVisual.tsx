@@ -123,10 +123,9 @@ export function HeroVisual() {
                 />
             </motion.div>
 
-            {/* Tooltips (Foreground Layer) */}
-
+            {/* Tooltips (Desktop-only Parallax) */}
             {/* 1. Yellow Tooltip - Rectangle */}
-            <motion.div style={{ x: toolX1, y: toolY1 }} className="absolute z-20 left-[15%] top-[25%] pointer-events-none">
+            <motion.div style={{ x: toolX1, y: toolY1 }} className="absolute z-20 left-[15%] top-[25%] pointer-events-none hidden md:block">
                 <Tooltip
                     x="0" y="0" parallaxFactor={1.5}
                     description="Sync your bank accounts to track cash flow automatically."
@@ -136,7 +135,7 @@ export function HeroVisual() {
             </motion.div>
 
             {/* 2. Fuchsia Tooltip - Rounded Rect */}
-            <motion.div style={{ x: toolX2, y: toolY2 }} className="absolute z-20 right-[20%] top-[15%] pointer-events-none">
+            <motion.div style={{ x: toolX2, y: toolY2 }} className="absolute z-20 right-[20%] top-[15%] pointer-events-none hidden md:block">
                 <Tooltip
                     x="0" y="0" parallaxFactor={1.8}
                     description="Visualize your monthly revenue trends and forecast growth."
@@ -145,8 +144,8 @@ export function HeroVisual() {
                 />
             </motion.div>
 
-            {/* 4. Green Tooltip - Rounded (4px) - Moved Left by ~80px (right 10% -> 25%) */}
-            <motion.div style={{ x: toolX4, y: toolY4 }} className="absolute z-20 right-[25%] bottom-[35%] pointer-events-none">
+            {/* 4. Green Tooltip - Rounded */}
+            <motion.div style={{ x: toolX4, y: toolY4 }} className="absolute z-20 right-[25%] bottom-[35%] pointer-events-none hidden md:block">
                 <Tooltip
                     x="0" y="0" parallaxFactor={2.0}
                     description="Set up custom alerts for large transactions."
@@ -154,6 +153,17 @@ export function HeroVisual() {
                     variant="emerald"
                 />
             </motion.div>
+
+            {/* Mobile Feature Highlight (Visible ONLY on mobile, replaces floating tooltips) */}
+            <div className="md:hidden mt-12 flex justify-center">
+                <Tooltip
+                    x="0" y="0" parallaxFactor={0}
+                    description="Autogenerate interactive product tours in seconds and skyrocket your activation rates."
+                    buttonText="Learn More"
+                    variant="yellow"
+                    className="relative"
+                />
+            </div>
 
             {/* Ambient Background Glows */}
             <motion.div style={{ x: useTransform(bgX, (val) => val * -1.5), y: useTransform(bgY, (val) => val * -1.5) }} className="absolute -z-10 -top-20 -left-20 w-80 h-80 bg-[#E65221]/20 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />

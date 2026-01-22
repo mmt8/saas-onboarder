@@ -12,7 +12,7 @@ export default function Home() {
     <div className="min-h-screen bg-background flex flex-col font-sans selection:bg-primary/20">
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative pt-20 pb-20 overflow-hidden">
+        <section className="relative pt-12 md:pt-20 pb-20 overflow-hidden">
           {/* Top Orange Gradient */}
           <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80 pointer-events-none">
             <div
@@ -23,19 +23,19 @@ export default function Home() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#E65221]/20 via-background to-background pointer-events-none" />
 
           <div className="max-w-7xl mx-auto px-6 relative z-10 text-center flex flex-col items-center">
-            <h1 className="text-6xl md:text-8xl font-bold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 font-serif max-w-4xl leading-[1.1] z-30 relative pt-12">
+            <h1 className="text-5xl md:text-8xl font-bold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 font-serif max-w-4xl leading-[1.1] z-30 relative pt-12">
               Onboard users <br />
               <span className="text-[#E65221]">at warp speed.</span>
             </h1>
 
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 leading-relaxed font-medium z-30 relative">
+            <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 leading-relaxed font-medium z-30 relative">
               Cure writer's block forever. Autogenerate interactive product tours in seconds and skyrocket your activation rates.
             </p>
 
             {/* Parallax Hero Visual */}
             <HeroVisual />
 
-            <div className="flex flex-col sm:flex-row items-center gap-6 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300 w-full justify-center z-40 relative -mt-24">
+            <div className="flex flex-col sm:flex-row items-center gap-6 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300 w-full justify-center z-40 relative md:-mt-24 mt-8">
               <Button size="lg" className="rounded-full px-12 h-16 text-xl shadow-2xl w-full sm:w-auto border-4 border-white/10" asChild>
                 <Link href="/signup">
                   Get Started for Free
