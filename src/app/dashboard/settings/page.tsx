@@ -2,7 +2,7 @@
 
 import { useTourStore } from "@/store/tour-store";
 import { Button } from "@/components/ui/button";
-import { Settings, Loader2, Layout, X } from "lucide-react";
+import { Settings, Loader2, Layout, X, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -245,14 +245,17 @@ export default function SettingsPage() {
                     {/* Theme Mode - Dropdown */}
                     <div className="space-y-3">
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Theme Mode</label>
-                        <select
-                            value={theme.darkMode ? "dark" : "light"}
-                            onChange={(e) => setTheme({ ...theme, darkMode: e.target.value === "dark" })}
-                            className="w-full bg-secondary/20 border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-foreground appearance-none cursor-pointer"
-                        >
-                            <option value="light">Light Mode</option>
-                            <option value="dark">Dark Mode</option>
-                        </select>
+                        <div className="relative">
+                            <select
+                                value={theme.darkMode ? "dark" : "light"}
+                                onChange={(e) => setTheme({ ...theme, darkMode: e.target.value === "dark" })}
+                                className="w-full bg-secondary/20 border border-border rounded-xl px-4 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-foreground appearance-none cursor-pointer"
+                            >
+                                <option value="light">Light Mode</option>
+                                <option value="dark">Dark Mode</option>
+                            </select>
+                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                        </div>
                     </div>
 
                     {/* Font Family - Use Custom FontPicker */}

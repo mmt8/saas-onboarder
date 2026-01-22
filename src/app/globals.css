@@ -92,3 +92,16 @@ body {
   border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
 }
+
+/* Force numeric input arrows to be always visible */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1 !important;
+  display: block !important;
+  -webkit-appearance: inner-spin-button !important;
+  appearance: inner-spin-button !important;
+}
+
+input[type="number"] {
+  -moz-appearance: number-input;
+}
