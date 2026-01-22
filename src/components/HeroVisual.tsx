@@ -105,12 +105,12 @@ export function HeroVisual() {
     return (
         <div
             ref={containerRef}
-            className="w-full max-w-5xl mx-auto aspect-video relative group mb-20 overflow-hidden md:overflow-visible flex justify-center"
+            className="w-full max-w-5xl mx-auto relative group mb-20 overflow-hidden md:overflow-visible flex justify-start"
         >
-            <div className="w-full h-full min-w-[640px] md:min-w-0 md:w-full relative shrink-0">
+            <div className="w-full aspect-video min-w-[640px] md:min-w-0 md:w-full relative shrink-0">
                 {/* Dashboard Background */}
                 <motion.div
-                    className="w-full h-full relative z-0 rounded-[1.75rem] overflow-hidden border border-black/5 shadow-2xl"
+                    className="w-full h-full relative z-0 rounded-[1.75rem] overflow-hidden border border-black/5 shadow-2xl bg-background"
                 >
                     <Image
                         src="/hero-dashboard.png"
@@ -139,7 +139,7 @@ export function HeroVisual() {
                 {/* 2. Fuchsia Tooltip - Pinned to region */}
                 <motion.div
                     style={{ x: toolX2, y: toolY2 }}
-                    className="absolute z-20 right-[5%] md:right-[20%] top-[10%] md:top-[15%] pointer-events-none scale-90 md:scale-100 origin-top-right"
+                    className="absolute z-20 right-[20%] top-[15%] pointer-events-none scale-90 md:scale-100 origin-top-right"
                 >
                     <Tooltip
                         x="0" y="0" parallaxFactor={1.8}
@@ -152,7 +152,7 @@ export function HeroVisual() {
                 {/* 4. Green Tooltip - Pinned to region */}
                 <motion.div
                     style={{ x: toolX4, y: toolY4 }}
-                    className="absolute z-20 right-[10%] md:right-[25%] bottom-[15%] md:bottom-[35%] pointer-events-none scale-90 md:scale-100 origin-bottom-right"
+                    className="absolute z-20 right-[25%] bottom-[35%] pointer-events-none scale-90 md:scale-100 origin-bottom-right"
                 >
                     <Tooltip
                         x="0" y="0" parallaxFactor={2.0}
