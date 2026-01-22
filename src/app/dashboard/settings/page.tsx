@@ -308,35 +308,29 @@ export default function SettingsPage() {
                 <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-widest ml-1">Live Preview</h4>
 
                 <div
-                    className={cn(
-                        "relative p-8 rounded-3xl border border-border shadow-md transition-colors duration-500",
-                        // Force a dark background for Glass preview to show transparency, otherwise respect theme
-                        (theme.tooltipStyle === 'glass' || theme.darkMode) ? "bg-[#0f172a]" : "bg-slate-50"
-                    )}
+                    className="relative p-8 rounded-3xl border border-border shadow-md transition-colors duration-500 bg-[#0f172a]"
                 >
-                    {/* Background Pattern for Glass Effect Visibility */}
-                    {(theme.tooltipStyle === 'glass') && (
-                        <div className="absolute inset-0 opacity-40 pointer-events-none rounded-3xl overflow-hidden">
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,#a78bfa,transparent)]" />
-                            <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] animate-spin-slower" style={{ background: 'conic-gradient(from 0deg, transparent 0 340deg, #fff 360deg)', opacity: 0.1 }} />
-                            <div
-                                className="absolute inset-0"
-                                style={{
-                                    backgroundImage: `
-                                        radial-gradient(at 27% 37%, hsla(215, 98%, 61%, 1) 0px, transparent 50%),
-                                        radial-gradient(at 97% 21%, hsla(125, 98%, 72%, 1) 0px, transparent 50%),
-                                        radial-gradient(at 52% 99%, hsla(354, 98%, 61%, 1) 0px, transparent 50%),
-                                        radial-gradient(at 10% 29%, hsla(256, 96%, 67%, 1) 0px, transparent 50%),
-                                        radial-gradient(at 97% 96%, hsla(38, 60%, 74%, 1) 0px, transparent 50%),
-                                        radial-gradient(at 33% 50%, hsla(222, 67%, 73%, 1) 0px, transparent 50%),
-                                        radial-gradient(at 79% 53%, hsla(343, 68%, 79%, 1) 0px, transparent 50%)
-                                    `,
-                                    filter: 'blur(40px)',
-                                    opacity: 0.6
-                                }}
-                            />
-                        </div>
-                    )}
+                    {/* Background Pattern for Preview Contrast */}
+                    <div className="absolute inset-0 opacity-40 pointer-events-none rounded-3xl overflow-hidden">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,#a78bfa,transparent)]" />
+                        <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] animate-spin-slower" style={{ background: 'conic-gradient(from 0deg, transparent 0 340deg, #fff 360deg)', opacity: 0.1 }} />
+                        <div
+                            className="absolute inset-0"
+                            style={{
+                                backgroundImage: `
+                                    radial-gradient(at 27% 37%, hsla(215, 98%, 61%, 1) 0px, transparent 50%),
+                                    radial-gradient(at 97% 21%, hsla(125, 98%, 72%, 1) 0px, transparent 50%),
+                                    radial-gradient(at 52% 99%, hsla(354, 98%, 61%, 1) 0px, transparent 50%),
+                                    radial-gradient(at 10% 29%, hsla(256, 96%, 67%, 1) 0px, transparent 50%),
+                                    radial-gradient(at 97% 96%, hsla(38, 60%, 74%, 1) 0px, transparent 50%),
+                                    radial-gradient(at 33% 50%, hsla(222, 67%, 73%, 1) 0px, transparent 50%),
+                                    radial-gradient(at 79% 53%, hsla(343, 68%, 79%, 1) 0px, transparent 50%)
+                                `,
+                                filter: 'blur(40px)',
+                                opacity: 0.6
+                            }}
+                        />
+                    </div>
 
                     {/* Mock Tooltip */}
                     <div
