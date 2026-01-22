@@ -126,8 +126,8 @@ export function HeroVisual() {
 
                 {/* Tooltips (Desktop-only Parallax & Responsive Mobile Placement) */}
 
-                {/* 1. Yellow Tooltip - Hidden on mobile if it overflows too much */}
-                <motion.div style={{ x: toolX1, y: toolY1 }} className="absolute z-20 left-[15%] top-[25%] pointer-events-none hidden md:block">
+                {/* 1. Yellow Tooltip - Visible on mobile as we're anchored left */}
+                <motion.div style={{ x: toolX1, y: toolY1 }} className="absolute z-20 left-[15%] top-[25%] pointer-events-none">
                     <Tooltip
                         x="0" y="0" parallaxFactor={1.5}
                         description="Sync your bank accounts to track cash flow automatically."
@@ -165,7 +165,7 @@ export function HeroVisual() {
 
             {/* Ambient Background Glows */}
             <motion.div style={{ x: useTransform(bgX, (val) => val * -1.5), y: useTransform(bgY, (val) => val * -1.5) }} className="absolute -z-10 -top-20 -left-20 w-80 h-80 bg-[#E65221]/20 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
-            <motion.div style={{ x: useTransform(bgX, (val) => val * 1.5), y: useTransform(bgY, (val) => val * 1.5) }} className="absolute -z-10 -bottom-20 -right-20 w-80 h-80 bg-fuchsia-500/20 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
+            <motion.div style={{ x: useTransform(bgX, (val) => val * 1.5), y: useTransform(bgY, (val) => val * 1.5) }} className="absolute -z-10 -bottom-20 -right-20 w-80 h-80 bg-fuchsia-500/20 rounded-full blur-[100px] pointer-events-none mix-blend-screen hidden md:block" />
         </div>
     );
 }
