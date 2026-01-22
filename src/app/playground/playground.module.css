@@ -1,0 +1,117 @@
+.container {
+    height: 100vh;
+    width: 100%;
+    /* The trick relies on fixed background attachment */
+    background: url('/hero-dashboard.png') no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: white;
+}
+
+.glassTooltip {
+    width: 300px;
+    /* Small tooltip size */
+    position: relative;
+    background: inherit;
+    /* Inherits the fixed url(...) from container */
+    border-radius: 16px;
+    overflow: hidden;
+
+    /* Box shadow: updated from user snippet */
+    box-shadow:
+        0 15px 24.5px 0px rgba(0, 0, 0, 0.24),
+        0 7px 10.5px 0px rgba(0, 0, 0, 0.15);
+
+    z-index: 1;
+}
+
+/* The dark tint overlay + border simulation */
+.glassTooltip::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+
+    /* Updated to match user's request: rgba(40, 40, 40, 0.2) */
+    background-color: rgba(40, 40, 40, 0.2);
+
+    /* "Border 1 or 2 px, light from top... gradient from white to dark" 
+       Enhanced to emphasize top-light/bottom-dark effect */
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.8),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.3),
+        inset 1px 0 0 rgba(255, 255, 255, 0.15),
+        inset -1px 0 0 rgba(255, 255, 255, 0.15);
+
+    border-radius: 16px;
+}
+
+/* The Blurred Background Pseudo-element */
+.glassTooltip::before {
+    content: '';
+    position: absolute;
+    /* Inherit the same fixed background */
+    background: inherit;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* Margin needs to be negative to blur "outside" edges inside the container, 
+       but for specific "inner glow" look from the user's snippet: */
+    box-shadow: inset 0 0 200px rgba(255, 255, 255, 0.1);
+    filter: blur(15px);
+    margin: -20px;
+    /* Compensate for blur edge fading */
+    z-index: -2;
+}
+
+.content {
+    padding: 28px 28px 16px 28px;
+    position: relative;
+    z-index: 10;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.counter {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.text {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    opacity: 1;
+    text-shadow: 0 1px 2px #00000060;
+}
+
+.buttonContainer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 6.4px;
+}
+
+.nextButton {
+    background: rgba(0, 0, 0, 0.1);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 16px;
+    transition: background 0.2s ease;
+}
+
+.nextButton:hover {
+    background: rgba(0, 0, 0, 0.13);
+}
