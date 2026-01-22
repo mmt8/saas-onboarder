@@ -242,21 +242,23 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
-                    {/* Theme Mode - Dropdown */}
-                    <div className="space-y-3">
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Theme Mode</label>
-                        <div className="relative">
-                            <select
-                                value={theme.darkMode ? "dark" : "light"}
-                                onChange={(e) => setTheme({ ...theme, darkMode: e.target.value === "dark" })}
-                                className="w-full bg-secondary/20 border border-border rounded-xl px-4 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-foreground appearance-none cursor-pointer"
-                            >
-                                <option value="light">Light Mode</option>
-                                <option value="dark">Dark Mode</option>
-                            </select>
-                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    {/* Theme Mode - Dropdown (Hidden for Full Color) */}
+                    {theme.tooltipStyle !== 'color' && (
+                        <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Theme Mode</label>
+                            <div className="relative">
+                                <select
+                                    value={theme.darkMode ? "dark" : "light"}
+                                    onChange={(e) => setTheme({ ...theme, darkMode: e.target.value === "dark" })}
+                                    className="w-full bg-secondary/20 border border-border rounded-xl px-4 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-foreground appearance-none cursor-pointer"
+                                >
+                                    <option value="light">Light Mode</option>
+                                    <option value="dark">Dark Mode</option>
+                                </select>
+                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Font Family - Use Custom FontPicker */}
                     <div className="space-y-3">
