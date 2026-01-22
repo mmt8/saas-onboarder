@@ -109,7 +109,7 @@ export function HeroVisual() {
         >
             {/* Dashboard Background */}
             <motion.div
-                className="w-full h-full relative z-0 rounded-[2.5rem] overflow-hidden border border-black/5 shadow-2xl"
+                className="w-full h-full relative z-0 rounded-[1.75rem] overflow-hidden border border-black/5 shadow-2xl"
             >
                 <Image
                     src="/hero-dashboard.png"
