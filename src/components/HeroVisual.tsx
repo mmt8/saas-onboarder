@@ -72,21 +72,21 @@ export function HeroVisual() {
     const smoothX = useSpring(mouseX, springConfig);
     const smoothY = useSpring(mouseY, springConfig);
 
-    // Moves the background less
-    const bgX = useTransform(smoothX, [-300, 300], [-15, 15]);
-    const bgY = useTransform(smoothY, [-300, 300], [-15, 15]);
+    // Moves the background less - Increased for more "float"
+    const bgX = useTransform(smoothX, [-300, 300], [-45, 45]);
+    const bgY = useTransform(smoothY, [-300, 300], [-45, 45]);
 
-    // Moves tooltips more
-    const toolX1 = useTransform(smoothX, [-300, 300], [-50, 50]);
-    const toolY1 = useTransform(smoothY, [-300, 300], [-50, 50]);
+    // Moves tooltips more - Significantly increased distance
+    const toolX1 = useTransform(smoothX, [-300, 300], [-100, 100]);
+    const toolY1 = useTransform(smoothY, [-300, 300], [-100, 100]);
 
-    const toolX2 = useTransform(smoothX, [-300, 300], [40, -40]);
-    const toolY2 = useTransform(smoothY, [-300, 300], [40, -40]);
+    const toolX2 = useTransform(smoothX, [-300, 300], [80, -80]);
+    const toolY2 = useTransform(smoothY, [-300, 300], [80, -80]);
 
     // Removed Tooltip 3 (Blue)
 
-    const toolX4 = useTransform(smoothX, [-300, 300], [20, -20]);
-    const toolY4 = useTransform(smoothY, [-300, 300], [-40, 40]);
+    const toolX4 = useTransform(smoothX, [-300, 300], [40, -40]);
+    const toolY4 = useTransform(smoothY, [-300, 300], [-80, 80]);
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
