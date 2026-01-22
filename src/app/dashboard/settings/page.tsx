@@ -360,12 +360,15 @@ export default function SettingsPage() {
             </div>
 
             {/* Compact Right Side Preview - Just slightly bigger than tooltip */}
-            <div className="sticky top-8 space-y-4 flex-1">
-                <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-widest ml-1">Live Preview</h4>
-
+            <div className="sticky top-0 space-y-4 flex-1 h-full min-h-[600px]">
                 <div
-                    className="relative p-8 rounded-3xl border border-border shadow-md transition-colors duration-500 bg-slate-400"
+                    className="relative p-12 rounded-3xl border border-border shadow-md transition-colors duration-500 bg-slate-400 min-h-[550px] flex flex-col items-center justify-center overflow-hidden"
                 >
+                    {/* Floating Label Inside */}
+                    <h4 className="absolute top-8 left-10 text-xs font-bold text-white uppercase tracking-[0.3em] z-20">
+                        Live Preview
+                    </h4>
+
                     {/* Background Pattern for Preview Contrast */}
                     <div className="absolute inset-0 opacity-70 pointer-events-none rounded-3xl overflow-hidden">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,#a78bfa,transparent)]" />
