@@ -212,7 +212,10 @@ export function WidgetTourPlayer() {
                 <div className="flex justify-end">
                     <button
                         onClick={handleNext}
-                        className="group flex items-center justify-center font-bold shadow-sm hover:brightness-110 active:scale-95 transition-all"
+                        className={cn(
+                            "group flex items-center justify-center font-bold shadow-sm active:scale-95 transition-all text-sm",
+                            theme.tooltipStyle === 'solid' ? "hover:brightness-110" : "hover:bg-black/[0.13]"
+                        )}
                         style={{
                             backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor : 'rgba(0,0,0,0.1)',
                             color: (theme.darkMode && theme.tooltipStyle === 'glass') ? '#1e293b' : 'white',

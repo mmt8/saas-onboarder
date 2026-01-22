@@ -329,7 +329,7 @@ export default function SettingsPage() {
                 <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-widest ml-1">Live Preview</h4>
 
                 <div
-                    className="relative p-8 rounded-3xl border border-border shadow-md transition-colors duration-500 bg-slate-800"
+                    className="relative p-8 rounded-3xl border border-border shadow-md transition-colors duration-500 bg-slate-600"
                 >
                     {/* Background Pattern for Preview Contrast */}
                     <div className="absolute inset-0 opacity-70 pointer-events-none rounded-3xl overflow-hidden">
@@ -374,7 +374,10 @@ export default function SettingsPage() {
 
                         <div className="flex justify-end">
                             <button
-                                className="text-sm font-bold shadow-sm hover:brightness-110 active:scale-95 transition-all"
+                                className={cn(
+                                    "text-sm font-bold shadow-sm active:scale-95 transition-all",
+                                    theme.tooltipStyle === 'solid' ? "hover:brightness-110" : "hover:bg-black/[0.13]"
+                                )}
                                 style={{
                                     backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor : 'rgba(0,0,0,0.1)',
                                     color: (theme.darkMode && theme.tooltipStyle === 'glass') ? '#1e293b' : 'white',
