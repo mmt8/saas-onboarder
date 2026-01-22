@@ -8,32 +8,32 @@ import { Zap, Layout, Settings, MousePointerClick } from "lucide-react";
 const features = [
     {
         id: "smart-detect",
-        title: "Smart Element Detection",
-        description: "Our engine automatically highlights the elements you click on. No manual cropping or positioning required. It just understands your UI.",
+        title: "Smart element detection",
+        description: "Click an element and we lock onto it, no manual positioning.",
         icon: <Zap className="w-5 h-5" />,
         image: "/features/smart-detect.png", // Placeholder
         color: "bg-blue-500"
     },
     {
         id: "responsive",
-        title: "Responsive Player",
-        description: "Tours look perfect on any device. Whether your user is on a desktop or mobile, the experience adapts automatically.",
+        title: "Responsive on desktop + mobile",
+        description: "One tour experience that adapts to every screen size.",
         icon: <Layout className="w-5 h-5" />,
         image: "/features/responsive.png", // Placeholder
         color: "bg-indigo-500"
     },
     {
         id: "visual-editor",
-        title: "Visual Editor",
-        description: "Drag, drop, and style your steps in real-time. What you see is exactly what your users will get.",
+        title: "Edit in real time",
+        description: "Design, copy, and layout—instantly previewed.",
         icon: <MousePointerClick className="w-5 h-5" />,
         image: "/features/editor.png", // Placeholder
         color: "bg-purple-500"
     },
     {
         id: "customization",
-        title: "Deep Customization",
-        description: "Match your brand guidelines perfectly. Custom CSS, fonts, and colors are all supported out of the box.",
+        title: "Match your brand",
+        description: "Fonts, colors, styling—plus custom CSS when you need it.",
         icon: <Settings className="w-5 h-5" />,
         image: "/features/custom.png", // Placeholder
         color: "bg-pink-500"
@@ -73,8 +73,8 @@ export function FeatureTabs() {
     return (
         <div className="w-full max-w-7xl mx-auto px-6 py-24">
             <h2 className="text-3xl md:text-5xl font-bold font-serif mb-12 text-foreground px-1 lg:hidden">
-                Precision control <br />
-                <span className="text-[#E65221]">without the friction.</span>
+                Beautiful product tours <br />
+                <span className="text-[#E65221]">without pixel-pushing.</span>
             </h2>
 
             {/* Mobile: Expanded Stack View */}
@@ -105,8 +105,8 @@ export function FeatureTabs() {
                 {/* Left Side: Tabs */}
                 <div className="flex flex-col gap-4">
                     <h2 className="text-5xl font-bold font-serif mb-8 text-foreground px-1">
-                        Precision control <br />
-                        <span className="text-[#E65221]">without the friction.</span>
+                        Beautiful product tours <br />
+                        <span className="text-[#E65221]">without pixel-pushing.</span>
                     </h2>
 
                     <div className="flex flex-col gap-2">

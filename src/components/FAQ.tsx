@@ -27,6 +27,14 @@ const faqs = [
     {
         question: "Is there a free trial?",
         answer: "Yes, you can build and test unlimited tours for free in development. You only pay when you're ready to publish to your production site."
+    },
+    {
+        question: "How long until my first tour is live?",
+        answer: "Typically under 5 minutes. Our AI understands your UI instantly, allowing you to generate a draft and publish it almost immediately."
+    },
+    {
+        question: "Will this slow down my app?",
+        answer: "No. Our lightweight script loads asynchronously and is optimized for peak performance, ensuring zero impact on your user experience."
     }
 ];
 

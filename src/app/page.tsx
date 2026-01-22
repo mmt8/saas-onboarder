@@ -24,12 +24,12 @@ export default function Home() {
 
           <div className="max-w-7xl mx-auto px-6 relative z-10 text-center flex flex-col items-center">
             <h1 className="text-5xl md:text-8xl font-bold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 font-serif max-w-4xl leading-[1.1] z-30 relative pt-12">
-              Onboard users <br />
-              <span className="text-[#E65221]">at warp speed.</span>
+              Interactive product tours <br />
+              <span className="text-[#E65221]">that drive adoption.</span>
             </h1>
 
             <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 leading-relaxed font-medium z-30 relative">
-              Cure writer's block forever. Autogenerate interactive product tours in seconds and skyrocket your activation rates.
+              Auto generate on-brand product tours from your UI in seconds.
             </p>
 
             {/* Parallax Hero Visual */}
@@ -38,7 +38,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center gap-6 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300 w-full justify-center z-40 relative md:-mt-24 mt-8">
               <Button size="lg" className="rounded-full px-12 h-16 text-xl shadow-2xl w-full sm:w-auto border-4 border-white/10" asChild>
                 <Link href="/signup">
-                  Get Started for Free
+                  Create your first tour (free)
                   <ArrowRight className="ml-2 w-6 h-6" />
                 </Link>
               </Button>
@@ -46,7 +46,7 @@ export default function Home() {
 
             {/* Social Proof Placeholder */}
             <div className="mt-24 py-12 border-t border-border/20 w-full max-w-2xl mx-auto opacity-80">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-8">Trusted by innovative product teams</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-8">Trusted by product teams obsessed with activation.</p>
               <div className="flex justify-between items-center grayscale opacity-30 gap-8">
                 <div className="h-6 w-24 bg-foreground/20 rounded" />
                 <div className="h-6 w-24 bg-foreground/20 rounded" />
@@ -61,24 +61,23 @@ export default function Home() {
         <section className="py-24" id="features">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 font-serif">Everything you need to activate.</h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Powerful tools designed to make your product adoption curve vertical.
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 font-serif">Ghost-Writer for Your UX.</h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                You build the product; we’ll explain it. Our AI writes the copy and picks the elements so you don't have to think for product adoption.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-6 h-auto md:h-[600px]">
 
-              {/* Large Card: Autogeneration */}
+              {/* Large Card: AI Draft */}
               <div className="md:col-span-2 md:row-span-2 group relative overflow-hidden rounded-[2.5rem] bg-secondary border border-border/50 p-10 hover:shadow-2xl transition-all duration-500">
                 <div className="relative z-10 h-full flex flex-col">
                   <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 text-primary">
                     <Zap className="w-7 h-7" />
                   </div>
-                  <h3 className="text-3xl font-bold mb-4 font-serif">Autogenerate & Edit</h3>
+                  <h3 className="text-3xl font-bold mb-4 font-serif">AI Draft</h3>
                   <p className="text-muted-foreground text-lg leading-relaxed max-w-md">
-                    Staring at a blank page is painful. Let our engine generate the initial tour for you based on your UI.
-                    Simply tweak, polish, and publish. It's like having a growth hacker in your pocket.
+                    AI tour drafts automatically from your UI. Get a strong first version instantly, then tweak the wording and flow if needed.
                   </p>
 
                   {/* Visual Placeholder for Editor UI */}
@@ -99,25 +98,14 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
 
-              {/* Smaller Card: No Code */}
-              <div className="group relative overflow-hidden rounded-[2.5rem] bg-white border border-border/50 p-8 hover:shadow-xl transition-all duration-300">
+              {/* Card: No Code */}
+              <div className="group relative overflow-hidden rounded-[2.5rem] bg-white border border-border/50 p-8 hover:shadow-xl transition-all duration-300 md:row-span-2">
                 <div className="w-12 h-12 rounded-2xl bg-accent flex items-center justify-center mb-4">
                   <MousePointerClick className="w-6 h-6" />
                 </div>
                 <h3 className="text-xl font-bold mb-2 font-serif">No-Code Visual Editor</h3>
                 <p className="text-muted-foreground">
                   Point and click to attach steps to any element. CSS selectors are handled automatically.
-                </p>
-              </div>
-
-              {/* Smaller Card: Analytics */}
-              <div className="group relative overflow-hidden rounded-[2.5rem] bg-white border border-border/50 p-8 hover:shadow-xl transition-all duration-300">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center mb-4 text-blue-500">
-                  <BarChart3 className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 font-serif">Deep Analytics</h3>
-                <p className="text-muted-foreground">
-                  Identify exactly where users drop off. Optimize your funnel with data-backed decisions.
                 </p>
               </div>
 
@@ -130,8 +118,63 @@ export default function Home() {
           <FeatureTabs />
         </section>
 
+        {/* Use Cases Section */}
+        <section className="py-20 border-y border-border/10 bg-secondary/30 relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-12">
+              <div className="max-w-md">
+                <h2 className="text-3xl font-bold font-serif mb-4">Contextual Relevance.</h2>
+                <p className="text-muted-foreground text-lg">
+                  Deliver the right guidance at the right time throughout the entire customer lifecycle.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3 justify-center md:justify-end">
+                {["Onboarding", "Feature adoption", "Release announcements", "Self-serve guidance"].map((useCase) => (
+                  <Badge key={useCase} variant="secondary" className="py-2 px-6 rounded-full text-base border border-primary/10 bg-background shadow-sm">
+                    {useCase}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Social Proof Wall */}
-        <SocialProofWall />
+        <div className="py-24 bg-background">
+          <div className="max-w-7xl mx-auto px-6 text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold font-serif">Enabling SaaS teams crush churn.</h2>
+          </div>
+          <SocialProofWall />
+        </div>
+
+        {/* How It Works Section */}
+        <section className="py-32 bg-background relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <div className="text-center mb-20">
+              <h2 className="text-4xl md:text-5xl font-bold font-serif mb-6">Clarity in 3 simple steps.</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+              {/* Connector line for desktop */}
+              <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-border -translate-y-1/2 -z-10" />
+
+              <Step
+                number="1"
+                title="Generate a draft"
+                description="Point our AI to any page in your product. It analyzes the UI and generates a contextual tour draft in seconds."
+              />
+              <Step
+                number="2"
+                title="Edit visually"
+                description="Use our intuitive no-code editor to tweak the copy, style, and flow. Brand it to match your product perfectly."
+              />
+              <Step
+                number="3"
+                title="Publish + measure"
+                description="Deploy with a single line of code. Track activation rates and identify exactly where users need more help."
+              />
+            </div>
+          </div>
+        </section>
 
         {/* FAQ Section */}
         <FAQ />
@@ -180,9 +223,12 @@ export default function Home() {
         {/* Bottom CTA */}
         <section className="py-32 text-center px-6">
           <div className="max-w-3xl mx-auto space-y-8">
-            <h2 className="text-5xl font-bold font-serif tracking-tight">Ready to activate your users?</h2>
+            <h2 className="text-4xl md:text-6xl font-bold font-serif tracking-tight leading-tight">
+              Stop building tours manually. <br />
+              <span className="text-[#E65221]">Let the AI do it for you.</span>
+            </h2>
             <p className="text-xl text-muted-foreground">
-              Join thousands of product managers building better onboarding experiences.
+              Empower your users, reduce support tickets, and crush churn with interactive guides.
             </p>
             <div className="flex justify-center pt-4">
               <Button size="lg" className="rounded-full px-12 h-16 text-xl shadow-2xl" asChild>
@@ -237,6 +283,20 @@ export default function Home() {
           © {new Date().getFullYear()} Product Tour. All rights reserved.
         </div>
       </footer>
+    </div>
+  );
+}
+
+function Step({ number, title, description }: { number: string, title: string, description: string }) {
+  return (
+    <div className="bg-background border border-border/50 p-8 rounded-[2.5rem] relative z-10 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow">
+      <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-primary/20">
+        {number}
+      </div>
+      <h3 className="text-2xl font-bold mb-4 font-serif">{title}</h3>
+      <p className="text-muted-foreground leading-relaxed">
+        {description}
+      </p>
     </div>
   );
 }
