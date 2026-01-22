@@ -105,61 +105,63 @@ export function HeroVisual() {
     return (
         <div
             ref={containerRef}
-            className="w-full max-w-5xl mx-auto aspect-video relative group mb-20 overflow-hidden md:overflow-visible"
+            className="w-full max-w-5xl mx-auto aspect-video relative group mb-20 overflow-hidden md:overflow-visible flex justify-center"
         >
-            {/* Dashboard Background */}
-            <motion.div
-                className="w-full h-full relative z-0 rounded-[1.75rem] overflow-hidden border border-black/5 shadow-2xl"
-            >
-                <Image
-                    src="/hero-dashboard.png"
-                    alt="Financial Dashboard"
-                    fill
-                    priority
-                    unoptimized
-                    quality={100}
-                    className="object-cover md:object-fill object-[70%_top] scale-[2] md:scale-100 transition-transform duration-500"
-                    sizes="(max-width: 768px) 100vw, 1200px"
-                />
-            </motion.div>
+            <div className="w-full h-full min-w-[640px] md:min-w-0 md:w-full relative shrink-0">
+                {/* Dashboard Background */}
+                <motion.div
+                    className="w-full h-full relative z-0 rounded-[1.75rem] overflow-hidden border border-black/5 shadow-2xl"
+                >
+                    <Image
+                        src="/hero-dashboard.png"
+                        alt="Financial Dashboard"
+                        fill
+                        priority
+                        unoptimized
+                        quality={100}
+                        className="object-cover md:object-fill"
+                        sizes="(max-width: 768px) 100vw, 1200px"
+                    />
+                </motion.div>
 
-            {/* Tooltips (Desktop-only Parallax & Responsive Mobile Placement) */}
+                {/* Tooltips (Desktop-only Parallax & Responsive Mobile Placement) */}
 
-            {/* 1. Yellow Tooltip - Hidden on mobile as it's too far left for the crop */}
-            <motion.div style={{ x: toolX1, y: toolY1 }} className="absolute z-20 left-[15%] top-[25%] pointer-events-none hidden md:block">
-                <Tooltip
-                    x="0" y="0" parallaxFactor={1.5}
-                    description="Sync your bank accounts to track cash flow automatically."
-                    buttonText="Next"
-                    variant="yellow"
-                />
-            </motion.div>
+                {/* 1. Yellow Tooltip - Hidden on mobile if it overflows too much */}
+                <motion.div style={{ x: toolX1, y: toolY1 }} className="absolute z-20 left-[15%] top-[25%] pointer-events-none hidden md:block">
+                    <Tooltip
+                        x="0" y="0" parallaxFactor={1.5}
+                        description="Sync your bank accounts to track cash flow automatically."
+                        buttonText="Next"
+                        variant="yellow"
+                    />
+                </motion.div>
 
-            {/* 2. Fuchsia Tooltip - Visible on mobile (repositioned for crop) */}
-            <motion.div
-                style={{ x: toolX2, y: toolY2 }}
-                className="absolute z-20 right-[5%] md:right-[20%] top-[10%] md:top-[15%] pointer-events-none scale-90 md:scale-100 origin-top-right"
-            >
-                <Tooltip
-                    x="0" y="0" parallaxFactor={1.8}
-                    description="Visualize your monthly revenue trends and forecast growth."
-                    buttonText="Finish"
-                    variant="fuchsia"
-                />
-            </motion.div>
+                {/* 2. Fuchsia Tooltip - Pinned to region */}
+                <motion.div
+                    style={{ x: toolX2, y: toolY2 }}
+                    className="absolute z-20 right-[5%] md:right-[20%] top-[10%] md:top-[15%] pointer-events-none scale-90 md:scale-100 origin-top-right"
+                >
+                    <Tooltip
+                        x="0" y="0" parallaxFactor={1.8}
+                        description="Visualize your monthly revenue trends and forecast growth."
+                        buttonText="Finish"
+                        variant="fuchsia"
+                    />
+                </motion.div>
 
-            {/* 4. Green Tooltip - Visible on mobile (repositioned for crop) */}
-            <motion.div
-                style={{ x: toolX4, y: toolY4 }}
-                className="absolute z-20 right-[10%] md:right-[25%] bottom-[15%] md:bottom-[35%] pointer-events-none scale-90 md:scale-100 origin-bottom-right"
-            >
-                <Tooltip
-                    x="0" y="0" parallaxFactor={2.0}
-                    description="Set up custom alerts for large transactions."
-                    buttonText="Next"
-                    variant="emerald"
-                />
-            </motion.div>
+                {/* 4. Green Tooltip - Pinned to region */}
+                <motion.div
+                    style={{ x: toolX4, y: toolY4 }}
+                    className="absolute z-20 right-[10%] md:right-[25%] bottom-[15%] md:bottom-[35%] pointer-events-none scale-90 md:scale-100 origin-bottom-right"
+                >
+                    <Tooltip
+                        x="0" y="0" parallaxFactor={2.0}
+                        description="Set up custom alerts for large transactions."
+                        buttonText="Next"
+                        variant="emerald"
+                    />
+                </motion.div>
+            </div>
 
             {/* Ambient Background Glows */}
             <motion.div style={{ x: useTransform(bgX, (val) => val * -1.5), y: useTransform(bgY, (val) => val * -1.5) }} className="absolute -z-10 -top-20 -left-20 w-80 h-80 bg-[#E65221]/20 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
