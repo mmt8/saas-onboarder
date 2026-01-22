@@ -25,7 +25,7 @@ const features = [
     {
         id: "visual-editor",
         title: "Edit in real time",
-        description: "Design, copy, and layout—instantly previewed.",
+        description: "Design, copy, and layout, instantly previewed.",
         icon: <MousePointerClick className="w-5 h-5" />,
         image: "/features/editor.png", // Placeholder
         color: "bg-purple-500"
@@ -33,7 +33,7 @@ const features = [
     {
         id: "customization",
         title: "Match your brand",
-        description: "Fonts, colors, styling—plus custom CSS when you need it.",
+        description: "Fonts, colors, styling, plus custom CSS when you need it.",
         icon: <Settings className="w-5 h-5" />,
         image: "/features/custom.png", // Placeholder
         color: "bg-pink-500"
