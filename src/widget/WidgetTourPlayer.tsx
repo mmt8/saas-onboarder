@@ -217,7 +217,7 @@ export function WidgetTourPlayer() {
                         onMouseEnter={() => setIsHovered(true)}
                         onMouseLeave={() => setIsHovered(false)}
                         className={cn(
-                            "group flex items-center justify-center font-bold transition-all text-sm outline-none hover:brightness-90 active:brightness-75 active:scale-[0.95] active:shadow-none",
+                            "group flex items-center justify-center font-bold transition-all text-sm outline-none hover:bg-black/5 active:bg-black/10 active:scale-[0.985] active:shadow-none [backface-visibility:hidden] transform-gpu",
                             theme.tooltipStyle === 'solid' ? "shadow-sm" : ""
                         )}
                         style={{
@@ -228,7 +228,8 @@ export function WidgetTourPlayer() {
                             color: (theme.darkMode && theme.tooltipStyle === 'glass') ? '#1e293b' : 'white',
                             borderRadius: `${theme.borderRadius}px`,
                             padding: `${theme.paddingV}px ${theme.paddingH}px`,
-                            fontSize: '0.9rem'
+                            fontSize: '0.9rem',
+                            fontFamily: theme.fontFamily
                         }}
                     >
                         {isLastStep ? 'Finish' : 'Next'}

@@ -412,8 +412,8 @@ export default function SettingsPage() {
                                 onMouseEnter={() => setIsHovered(true)}
                                 onMouseLeave={() => setIsHovered(false)}
                                 className={cn(
-                                    "text-sm font-bold shadow-sm active:scale-95 transition-all outline-none",
-                                    theme.tooltipStyle === 'solid' ? "hover:brightness-110" : ""
+                                    "text-sm font-bold shadow-sm active:scale-[0.985] transition-all outline-none hover:bg-black/5 active:bg-black/10 [backface-visibility:hidden] transform-gpu",
+                                    theme.tooltipStyle === 'solid' ? "" : ""
                                 )}
                                 style={{
                                     backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor :
@@ -422,7 +422,8 @@ export default function SettingsPage() {
                                             (isHovered ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.1)')),
                                     color: (theme.darkMode && theme.tooltipStyle === 'glass') ? '#1e293b' : 'white',
                                     borderRadius: `${theme.borderRadius}px`,
-                                    padding: `${theme.paddingV}px ${theme.paddingH}px`
+                                    padding: `${theme.paddingV}px ${theme.paddingH}px`,
+                                    fontFamily: theme.fontFamily
                                 }}
                             >
                                 Next Step
