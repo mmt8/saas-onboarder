@@ -61,7 +61,7 @@ export default function Home() {
         <section className="py-24" id="features">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 font-serif"><span className="text-[#E65221]">Ghost-Writer</span> for Your UX.</h2>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 font-serif"><span className="text-[#E65221]">Ghost-Writer</span> for your product walkthroughs.</h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                 You build the product; we’ll explain it. Our AI writes the copy and picks the elements so you don't have to think for product adoption.
               </p>
