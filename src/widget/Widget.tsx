@@ -5,7 +5,7 @@ import { StepEditor } from '@/components/admin/StepEditor';
 import { RecordingOverlay } from '@/components/admin/RecordingOverlay';
 import { WidgetTourPlayer } from './WidgetTourPlayer';
 import { Button } from '@/components/ui/button';
-import { Play, Plus, X, HelpCircle, Layout } from 'lucide-react';
+import { Play, Plus, X, HelpCircle, Layout, ExternalLink } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import { CreateTourDialog } from '@/components/admin/CreateTourDialog';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -397,7 +397,17 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                                     <div className="flex flex-col h-[600px]">
                                         <div className="p-6 pb-2 space-y-4">
                                             <div className="flex items-center justify-between">
-                                                <h3 className="font-bold text-xl text-slate-900 font-sans tracking-tight">Tours</h3>
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className="font-bold text-xl text-slate-900 font-sans tracking-tight">Tours</h3>
+                                                    <a
+                                                        href="/dashboard"
+                                                        target="_blank"
+                                                        className="flex items-center gap-1.5 text-[10px] font-bold text-[#495BFD] hover:text-[#3749d0] transition-colors bg-[#495BFD]/5 px-2 py-1 rounded-full uppercase tracking-wider group/link"
+                                                    >
+                                                        Dashboard
+                                                        <ExternalLink className="w-3 h-3 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
+                                                    </a>
+                                                </div>
                                                 <button
                                                     onClick={() => setAdminListOpen(false)}
                                                     className="bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors group"

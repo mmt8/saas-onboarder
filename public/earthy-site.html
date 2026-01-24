@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earthy Site - GuideMark Multi-Project Test</title>
+    <style>
+        body {
+            font-family: Georgia, serif;
+            padding: 60px;
+            line-height: 1.8;
+            background-color: #FDFBF7;
+            /* Soft paper cream */
+            color: #3E2723;
+            /* Dark espresso brown */
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            border-bottom: 2px solid #D7C49E;
+            padding-bottom: 30px;
+            margin-bottom: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #8D6E63;
+            letter-spacing: -0.5px;
+        }
+
+        .hero {
+            background: #EFEBE9;
+            padding: 60px;
+            border-radius: 32px;
+            text-align: center;
+            margin-bottom: 50px;
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.02);
+            border: 1px solid #D7C49E;
+        }
+
+        h1 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            color: #5D4037;
+        }
+
+        .btn {
+            background: #8D6E63;
+            /* Muted earthy brown */
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: Georgia, serif;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #6D4C41;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(109, 76, 65, 0.2);
+        }
+
+        .section {
+            display: grid;
+            grid-template-cols: 1fr 1fr;
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid #E0E0E0;
+            transition: border-color 0.3s;
+        }
+
+        .card:hover {
+            border-color: #8D6E63;
+        }
+
+        .card h2 {
+            color: #8D6E63;
+            margin-top: 0;
+        }
+
+        /* GuideMark specific debug styles */
+        .tour-target-box {
+            padding: 10px;
+            border: 2px dashed #D7C49E;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">Earthy Workspace</div>
+            <nav>
+                <a href="#" style="color: #8D6E63; font-weight: bold; text-decoration: none;">Dashboard</a>
+            </nav>
+        </header>
+
+        <div class="hero">
+            <h1 id="earthy-hero-title">Welcome to the New Site</h1>
+            <p>This page acts as a completely separate project for testing GuideMark's multi-project capabilities.</p>
+            <div style="margin-top: 30px;">
+                <button class="btn" id="earthy-cta-1">Explore Workspace</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="card" id="earthy-card-1">
+                <div class="tour-target-box">Step 1</div>
+                <h2>Project Tools</h2>
+                <p>Manage your resources with our intuitive earthy interface.</p>
+            </div>
+            <div class="card" id="earthy-card-2">
+                <div class="tour-target-box">Step 2</div>
+                <h2>Collaboration</h2>
+                <p>Teamwork made simple with natural themes and smooth interactions.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- GuideMark Embed -->
+    <!-- REPLACE data-project-id with your NEW project ID from the GuideMark dashboard -->
+    <script id="guidemark-embed" src="./embed.js" data-project-id="9621ba03-8fd8-48c3-9fcd-c029ac94df69" async>
+    </script>
+</body>
+
+</html>

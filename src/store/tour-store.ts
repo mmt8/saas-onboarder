@@ -37,7 +37,7 @@ export type Project = {
         borderRadius: string;
         paddingV: string;
         paddingH: string;
-        tooltipStyle: 'solid' | 'color' | 'glass';
+        tooltipStyle: 'solid' | 'color' | 'glass' | 'auto';
         tooltipColor: string;
     };
     lastSeenAt?: Date;
@@ -58,6 +58,7 @@ interface TourState {
     recordedSteps: Step[];
     editingTourId: string | null;
     voiceTranscript: string;
+    recordingTourTitle: string;
     interimVoiceTranscript: string;
     language: string;
 
@@ -71,6 +72,7 @@ interface TourState {
     createProject: (name: string, domain?: string) => Promise<{ data: any, error: any }>;
     updateProjectSettings: (id: string, updates: {
         name?: string,
+        domain?: string,
         showLauncher?: boolean,
         launcherText?: string,
         themeSettings?: Project['themeSettings']
@@ -81,7 +83,7 @@ interface TourState {
     setInterimVoiceTranscript: (transcript: string) => void;
     addVoiceTranscript: (transcript: string) => void;
     clearVoiceTranscript: () => void;
-    startRecording: (mode: 'manual' | 'auto' | 'voice') => void;
+    startRecording: (mode: 'manual' | 'auto' | 'voice', title?: string) => void;
     stopRecording: () => void;
     editTour: (tour: Tour) => void;
     addStep: (step: Omit<Step, 'id' | 'order'>) => void;
@@ -120,6 +122,7 @@ export const useTourStore = create<TourState>()(
             recordedSteps: [],
             editingTourId: null,
             voiceTranscript: '',
+            recordingTourTitle: '',
             interimVoiceTranscript: '',
             language: 'en-US',
             user: null,
@@ -141,11 +144,11 @@ export const useTourStore = create<TourState>()(
                         domain: p.domain,
                         showLauncher: p.show_launcher ?? true,
                         launcherText: p.launcher_text ?? 'Product Tours',
-                        themeSettings: p.theme_settings ?? {
-                            fontFamily: 'Inter',
-                            darkMode: false,
-                            primaryColor: '#495BFD',
-                            borderRadius: '12',
+                        themeSettings: {
+                            fontFamily: p.theme_settings?.fontFamily ?? 'Inter',
+                            darkMode: p.theme_settings?.darkMode ?? false,
+                            primaryColor: p.theme_settings?.primaryColor ?? '#495BFD',
+                            borderRadius: p.theme_settings?.borderRadius ?? '12',
                             paddingV: p.theme_settings?.paddingV ?? '10',
                             paddingH: p.theme_settings?.paddingH ?? '20',
                             tooltipStyle: p.theme_settings?.tooltipStyle ?? 'solid',
@@ -202,6 +205,7 @@ export const useTourStore = create<TourState>()(
                         .from('projects')
                         .update({
                             name: updates.name,
+                            domain: updates.domain,
                             show_launcher: updates.showLauncher,
                             launcher_text: updates.launcherText,
                             theme_settings: updates.themeSettings
@@ -319,9 +323,26 @@ export const useTourStore = create<TourState>()(
 
             clearVoiceTranscript: () => set({ voiceTranscript: '', interimVoiceTranscript: '' }),
 
-            startRecording: (mode) => set({ status: 'recording', isRecording: true, creationMode: mode, recordedSteps: [], editingTourId: null, voiceTranscript: '', interimVoiceTranscript: '' }),
+            startRecording: (mode, title = '') => set({
+                status: 'recording',
+                isRecording: true,
+                creationMode: mode,
+                recordedSteps: [],
+                editingTourId: null,
+                voiceTranscript: '',
+                interimVoiceTranscript: '',
+                recordingTourTitle: title
+            }),
 
-            stopRecording: () => set({ status: 'idle', isRecording: false, creationMode: null, editingTourId: null, voiceTranscript: '', interimVoiceTranscript: '' }),
+            stopRecording: () => set({
+                status: 'idle',
+                isRecording: false,
+                creationMode: null,
+                editingTourId: null,
+                voiceTranscript: '',
+                interimVoiceTranscript: '',
+                recordingTourTitle: ''
+            }),
 
             editTour: (tour) => set({
                 status: 'recording',
@@ -387,6 +408,11 @@ export const useTourStore = create<TourState>()(
 
                 if (!currentProjectId) {
                     console.error("Cannot save tour: No project selected");
+                    return;
+                }
+
+                if (!title || title.trim().length < 3) {
+                    toast.error("Please give your tour a name (min 3 chars)");
                     return;
                 }
 

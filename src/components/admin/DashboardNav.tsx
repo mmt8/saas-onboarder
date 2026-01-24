@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 const tabs = [
     { label: "Tours", href: "/dashboard" },
     { label: "Installation", href: "/dashboard/installation" },
-    { label: "Settings", href: "/dashboard/settings" },
+    { label: "Configure project", href: "/dashboard/settings" },
 ];
 
 export function DashboardNav() {

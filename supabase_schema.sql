@@ -53,8 +53,8 @@ ALTER TABLE steps ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public projects are viewable by everyone" ON projects;
 DROP POLICY IF EXISTS "Everyone can update projects" ON projects;
 
-CREATE POLICY "Users can only view their own projects" ON projects
-    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Projects are viewable by everyone" ON projects
+    FOR SELECT USING (true);
 
 CREATE POLICY "Users can only insert their own projects" ON projects
     FOR INSERT WITH CHECK (auth.uid() = user_id);

@@ -11,6 +11,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
     }
 }
 
-export const supabase = (supabaseUrl && supabaseAnonKey)
+const isConfigured = supabaseUrl && supabaseAnonKey &&
+    supabaseUrl !== 'undefined' &&
+    supabaseAnonKey !== 'undefined';
+
+if (!isConfigured) {
+    console.warn('Product Tour: Supabase is NOT configured. Check environment variables.');
+}
+
+export const supabase = isConfigured
     ? createBrowserClient(supabaseUrl, supabaseAnonKey)
     : null as any;

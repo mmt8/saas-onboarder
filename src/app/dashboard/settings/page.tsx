@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { FontPicker } from "@/components/admin/FontPicker";
 import { getGoogleFontUrls } from "@/lib/fonts";
+import { detectBranding, DetectedBranding } from "@/widget/utils/branding-detector";
+import { Sparkles, AlertCircle } from "lucide-react";
 
 export default function SettingsPage() {
     const {
@@ -20,6 +22,9 @@ export default function SettingsPage() {
     const currentProject = projects.find(p => p.id === currentProjectId);
 
     const [projectName, setProjectName] = useState("");
+    const [projectDomain, setProjectDomain] = useState("");
+    const [autoBranding, setAutoBranding] = useState<DetectedBranding | null>(null);
+    const [detectionFailed, setDetectionFailed] = useState(false);
     const [theme, setTheme] = useState({
         fontFamily: 'Inter',
         darkMode: false,
@@ -27,7 +32,7 @@ export default function SettingsPage() {
         borderRadius: '12',
         paddingV: '10',
         paddingH: '20',
-        tooltipStyle: 'solid' as 'solid' | 'color' | 'glass',
+        tooltipStyle: 'solid' as 'solid' | 'color' | 'glass' | 'auto',
         tooltipColor: '#495BFD'
     });
 
@@ -46,9 +51,28 @@ export default function SettingsPage() {
         }
     }, [theme.fontFamily]);
 
+    // Handle Auto Detection Preview
+    useEffect(() => {
+        if (theme.tooltipStyle === 'auto') {
+            const result = detectBranding();
+            if (result) {
+                setAutoBranding(result);
+                setDetectionFailed(false);
+            } else {
+                setDetectionFailed(true);
+                // Fallback to Solid after a delay if detection failed
+                toast.error("Auto-detection failed. Falling back to Solid style.");
+                setTheme(prev => ({ ...prev, tooltipStyle: 'solid' }));
+            }
+        } else {
+            setDetectionFailed(false);
+        }
+    }, [theme.tooltipStyle]);
+
     useEffect(() => {
         if (currentProject) {
             setProjectName(currentProject.name);
+            setProjectDomain(currentProject.domain || "");
             if (currentProject.themeSettings) {
                 // @ts-ignore - Supabase types might lag behind
                 setTheme({
@@ -65,6 +89,7 @@ export default function SettingsPage() {
         if (currentProjectId) {
             await updateProjectSettings(currentProjectId, {
                 name: projectName,
+                domain: projectDomain,
                 themeSettings: theme
             });
             toast.success("Settings saved successfully!");
@@ -113,13 +138,16 @@ export default function SettingsPage() {
             };
         }
 
-        if (theme.tooltipStyle === 'color') {
+        if (theme.tooltipStyle === 'auto') {
+            const font = autoBranding?.fontFamily || theme.fontFamily;
             return {
                 ...baseStyle,
-                backgroundColor: theme.tooltipColor,
-                color: '#fff',
+                fontFamily: font,
+                backgroundColor: autoBranding?.primaryColor || '#495BFD',
+                color: autoBranding?.textColor === 'black' ? '#1a1a1a' : '#fff',
                 border: 'none',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                borderRadius: `${autoBranding?.borderRadius || theme.borderRadius}px`
             };
         }
 
@@ -128,6 +156,9 @@ export default function SettingsPage() {
     };
 
     const getPreviewClassNames = () => {
+        if (theme.tooltipStyle === 'auto') {
+            return "w-full max-w-[320px] p-6 animate-in zoom-in duration-300 relative z-10 mx-auto";
+        }
         if (theme.tooltipStyle === 'glass') {
             return "w-full max-w-[320px] p-6 rounded-2xl animate-in zoom-in duration-300 relative z-10 mx-auto";
         }
@@ -170,6 +201,18 @@ export default function SettingsPage() {
                             className="w-full bg-secondary/20 border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-foreground"
                             placeholder="e.g. My Website"
                         />
+                    </div>
+
+                    <div className="space-y-3">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Project Domain / Home URL</label>
+                        <input
+                            type="text"
+                            value={projectDomain}
+                            onChange={(e) => setProjectDomain(e.target.value)}
+                            className="w-full bg-secondary/20 border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-foreground"
+                            placeholder="e.g. http://localhost:3000/earthy-site.html"
+                        />
+                        <p className="text-[10px] text-muted-foreground ml-1">The URL where the widget is installed. This is where you'll be redirected when creating new tours.</p>
                     </div>
                 </div>
 
@@ -217,7 +260,32 @@ export default function SettingsPage() {
                             <div className="w-full h-8 rounded-lg shadow-sm bg-black/20 backdrop-blur-sm border border-white/20" />
                             <span className="text-xs font-bold">Glass</span>
                         </div>
+                        <div
+                            onClick={() => !detectionFailed && setTheme({ ...theme, tooltipStyle: 'auto' })}
+                            className={cn(
+                                "cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all hover:bg-secondary/10 relative",
+                                theme.tooltipStyle === 'auto' ? "border-primary bg-primary/5" : "border-border bg-card",
+                                detectionFailed && "opacity-50 cursor-not-allowed grayscale"
+                            )}
+                        >
+                            <div className="w-full h-8 rounded-lg shadow-sm bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                                <Sparkles className="w-4 h-4 text-white" />
+                            </div>
+                            <span className="text-xs font-bold">Auto</span>
+                            {detectionFailed && (
+                                <div className="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full shadow-lg" title="Detection failed">
+                                    <AlertCircle className="w-3 h-3" />
+                                </div>
+                            )}
+                        </div>
                     </div>
+
+                    {detectionFailed && (
+                        <p className="text-[10px] text-rose-500 font-medium px-2 flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
+                            <AlertCircle className="w-3 h-3" />
+                            Branding detection unavailable for this environment.
+                        </p>
+                    )}
 
                     {/* Conditional Color Picker for 'Full Color' */}
                     {theme.tooltipStyle === 'color' && (
@@ -303,7 +371,7 @@ export default function SettingsPage() {
 
                     {/* Padding Vertical */}
                     <div className="space-y-3">
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Padding V</label>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Height</label>
                         <input
                             type="number"
                             value={theme.paddingV}
@@ -314,7 +382,7 @@ export default function SettingsPage() {
 
                     {/* Padding Horizontal */}
                     <div className="space-y-3">
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Padding H</label>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Width</label>
                         <input
                             type="number"
                             value={theme.paddingH}

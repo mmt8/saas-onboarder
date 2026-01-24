@@ -16,9 +16,13 @@ interface StepEditorProps {
 }
 
 export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorProps) {
-    const { recordedSteps, updateStep, deleteStep, reorderSteps, isRecording, saveTour, stopRecording, isLoading, editingTourId, deleteTour, setTour, setStatus, tours } = useTourStore();
-    const [tourTitle, setTourTitle] = useState("New Tour");
+    const { recordedSteps, updateStep, deleteStep, reorderSteps, isRecording, saveTour, stopRecording, isLoading, editingTourId, deleteTour, setTour, setStatus, tours, recordingTourTitle } = useTourStore();
+    const [tourTitle, setTourTitle] = useState(
+        recordingTourTitle !== '' ? recordingTourTitle :
+            (editingTourId ? (tours.find(t => t.id === editingTourId)?.title || "") : "")
+    );
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [titleError, setTitleError] = useState(false);
     const [visibleSelectors, setVisibleSelectors] = useState<Record<string, boolean>>({});
 
     if (!isRecording) return null;
@@ -83,14 +87,32 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                         >
                             <X className="w-5 h-5" />
                         </Button>
-                        <Button
-                            size="sm"
-                            onClick={() => saveTour(tourTitle, window.location.pathname)}
-                            disabled={isLoading}
-                            className="h-8 px-4 text-xs shadow-blue-500/20"
-                        >
-                            {isLoading ? "Saving..." : "Save Tour"}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            {titleError && (
+                                <span className="text-[10px] text-destructive font-bold uppercase tracking-tight whitespace-nowrap animate-pulse">
+                                    please give a name
+                                </span>
+                            )}
+                            <Button
+                                size="sm"
+                                onClick={() => {
+                                    if (tourTitle.trim().length < 3) {
+                                        setTitleError(true);
+                                        toast.error("Please give your tour a name (min 3 chars)");
+                                        return;
+                                    }
+                                    setTitleError(false);
+                                    saveTour(tourTitle, window.location.pathname);
+                                }}
+                                disabled={isLoading}
+                                className={cn(
+                                    "h-8 px-4 text-xs shadow-blue-500/20 transition-all active:scale-95",
+                                    titleError && "bg-destructive hover:bg-destructive/90 shadow-destructive/20"
+                                )}
+                            >
+                                {isLoading ? "Saving..." : "Save Tour"}
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
@@ -118,14 +140,27 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                 )}
 
                 <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Tour Title</label>
+                    <label className="text-xs text-muted-foreground font-medium uppercase tracking-wide flex items-center gap-1">
+                        Tour Title
+                        <span className="text-destructive font-bold">*</span>
+                    </label>
                     <input
                         type="text"
                         value={tourTitle}
-                        onChange={(e) => setTourTitle(e.target.value)}
-                        className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#495BFD] focus:ring-4 focus:ring-blue-500/5 transition-all"
-                        placeholder="Enter tour title..."
+                        onChange={(e) => {
+                            setTourTitle(e.target.value);
+                            if (e.target.value.trim().length >= 3) setTitleError(false);
+                        }}
+                        className={cn(
+                            "w-full bg-slate-100 border rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none transition-all",
+                            titleError ? "border-destructive ring-4 ring-destructive/10" :
+                                (tourTitle.trim().length < 3 && tourTitle.length > 0 ? "border-amber-200 focus:border-amber-400 focus:ring-amber-500/5" : "border-slate-200 focus:border-[#495BFD] focus:ring-blue-500/5")
+                        )}
+                        placeholder="Name your tour..."
                     />
+                    {titleError && (
+                        <p className="text-[10px] text-destructive font-bold uppercase tracking-wider ml-1">Title is required</p>
+                    )}
                 </div>
                 <div className="text-xs text-muted-foreground flex justify-between">
                     <span>Steps: {recordedSteps.length}</span>

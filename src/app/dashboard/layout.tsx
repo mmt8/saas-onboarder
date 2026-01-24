@@ -175,8 +175,18 @@ export default function DashboardLayout({
             return;
         }
 
-        // Redirect to project domain with creation mode param
-        let targetUrl = currentProject?.domain || "http://localhost:3000";
+        // Special case for Alpina and BetaGo test projects - ignore DB domain and use local earthy-site
+        let targetUrl = currentProject?.domain;
+        const testProjectIds = [
+            '9621ba03-8fd8-48c3-9fcd-c029ac94df69', // Alpina
+            '88ce9f20-d287-40c6-b73d-4d1c2472eb25'  // BetaGo
+        ];
+
+        if (currentProjectId && testProjectIds.includes(currentProjectId)) {
+            targetUrl = 'http://localhost:3000/earthy-site.html';
+        }
+
+        if (!targetUrl) targetUrl = "http://localhost:3000";
         if (!targetUrl.startsWith('http')) targetUrl = `https://${targetUrl}`;
 
         try {
