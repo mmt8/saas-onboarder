@@ -38633,6 +38633,19 @@ ${suffix}`;
     const hasAutoStartedOnPage = reactExports.useRef({});
     reactExports.useEffect(() => {
       const params = new URLSearchParams(window.location.search);
+      const playTourId = params.get("playTour");
+      if (playTourId && tours.length > 0 && status === "idle") {
+        const tour = tours.find((t) => t.id === playTourId);
+        if (tour) {
+          console.log("Widget: Auto-playing tour from URL param", tour.title);
+          setTour(tour);
+          setStatus("playing");
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete("playTour");
+          window.history.replaceState({}, "", newUrl.toString());
+          return;
+        }
+      }
       if (params.get("createTour") === "true") {
         setIsCreateTourDialogOpen(true);
         const newUrl = new URL(window.location.href);
@@ -38640,7 +38653,7 @@ ${suffix}`;
         newUrl.searchParams.set("projectId", projectId);
         window.history.replaceState({}, "", newUrl.toString());
       }
-    }, [projectId]);
+    }, [projectId, tours, status, setTour, setStatus]);
     reactExports.useEffect(() => {
       if (showAdminPanel) {
         localStorage.setItem("producttour-admin-mode", "true");
