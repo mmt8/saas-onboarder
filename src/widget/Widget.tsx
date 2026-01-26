@@ -400,7 +400,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                                                 <div className="flex items-center gap-2">
                                                     <h3 className="font-bold text-xl text-slate-900 font-sans tracking-tight">Tours</h3>
                                                     <a
-                                                        href="/dashboard"
+                                                        href="https://producttour.app/dashboard"
                                                         target="_blank"
                                                         className="flex items-center gap-1.5 text-[10px] font-bold text-[#495BFD] hover:text-[#3749d0] transition-colors bg-[#495BFD]/5 px-2 py-1 rounded-full uppercase tracking-wider group/link"
                                                     >

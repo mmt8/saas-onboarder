@@ -122,12 +122,12 @@ export function TourPlayer() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 key={currentStep.id}
                 className={cn(
-                    "fixed z-[50] p-6 shadow-2xl max-w-sm transition-all duration-300 overflow-hidden",
+                    "fixed z-[50] p-6 max-w-sm transition-all duration-300 overflow-hidden",
                     isGlass
-                        ? "bg-[rgba(15,15,15,0.4)] backdrop-blur-[40px] saturate-[180%] border border-white/5 text-white"
+                        ? "bg-[rgba(15,15,15,0.8)] backdrop-blur-[40px] saturate-[180%] border border-white/5 text-white"
                         : theme?.tooltipStyle === 'color'
                             ? "border-none text-white shadow-xl"
-                            : "bg-white dark:bg-gray-900 border border-white/10 text-gray-700 dark:text-gray-200"
+                            : "bg-white dark:bg-gray-900 border border-white/10 text-gray-700 dark:text-gray-200 shadow-2xl"
                 )}
                 style={{
                     left: (() => {
@@ -145,6 +145,7 @@ export function TourPlayer() {
                     borderRadius: `${theme?.borderRadius || '20'}px`,
                     ...(isGlass ? {
                         boxShadow: '0 30px 60px -20px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.05)',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
                     } : {
                         backgroundColor: theme?.tooltipStyle === 'color' ? theme.tooltipColor : undefined
                     })
