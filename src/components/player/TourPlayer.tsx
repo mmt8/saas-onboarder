@@ -124,7 +124,7 @@ export function TourPlayer() {
                 className={cn(
                     "fixed z-[50] p-6 max-w-sm transition-all duration-300 overflow-hidden",
                     isGlass
-                        ? "bg-[rgba(15,15,15,0.8)] backdrop-blur-[40px] saturate-[180%] border border-white/5 text-white"
+                        ? "bg-[rgba(15,15,15,0.4)] backdrop-blur-[40px] saturate-[180%] border border-white/5 text-white"
                         : theme?.tooltipStyle === 'color'
                             ? "border-none text-white shadow-xl"
                             : "bg-white dark:bg-gray-900 border border-white/10 text-gray-700 dark:text-gray-200 shadow-2xl"

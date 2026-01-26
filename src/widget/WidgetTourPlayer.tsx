@@ -185,7 +185,7 @@ export function WidgetTourPlayer() {
                 className={cn(
                     "absolute z-20 p-6 border max-w-sm transition-all duration-300 pointer-events-auto overflow-hidden",
                     theme.tooltipStyle === 'glass'
-                        ? "bg-[rgba(15,15,15,0.8)] backdrop-blur-[40px] saturate-[180%] border-white/5 text-white"
+                        ? "bg-[rgba(15,15,15,0.4)] backdrop-blur-[40px] saturate-[180%] border-white/5 text-white"
                         : (theme.tooltipStyle === 'auto' || theme.tooltipStyle === 'color')
                             ? "border-none shadow-2xl"
                             : (theme.darkMode ? "bg-[#1e293b] border-slate-700 text-white shadow-2xl" : "bg-white border-slate-100 text-slate-900 shadow-2xl")
