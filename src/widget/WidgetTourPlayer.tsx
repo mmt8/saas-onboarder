@@ -185,7 +185,7 @@ export function WidgetTourPlayer() {
                 className={cn(
                     "absolute z-20 p-6 border max-w-sm transition-all duration-300 pointer-events-auto overflow-hidden",
                     theme.tooltipStyle === 'glass'
-                        ? "backdrop-blur-[40px] saturate-[180%] border-white/5 text-white"
+                        ? "border-white/5 text-white"
                         : (theme.tooltipStyle === 'auto' || theme.tooltipStyle === 'color')
                             ? "border-none shadow-2xl"
                             : (theme.darkMode ? "bg-[#1e293b] border-slate-700 text-white shadow-2xl" : "bg-white border-slate-100 text-slate-900 shadow-2xl")
@@ -206,11 +206,10 @@ export function WidgetTourPlayer() {
                     borderRadius: `${theme.borderRadius}px`,
                     ...((theme.tooltipStyle === 'color' || theme.tooltipStyle === 'auto') ? { backgroundColor: theme.tooltipColor, color: theme.textColor, border: 'none' } : {}),
                     ...(theme.tooltipStyle === 'glass' ? {
-                        backgroundColor: 'rgba(28, 28, 30, 0.8)',
-                        boxShadow: `
-                            0 30px 60px -20px rgba(0, 0, 0, 0.9),
-                            inset 0 1px 1px rgba(255, 255, 255, 0.05)
-                        `,
+                        backgroundColor: 'rgba(15, 15, 15, 0.8)',
+                        backdropFilter: 'blur(40px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                        boxShadow: '0 30px 60px -20px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.05)',
                         borderTop: '1px solid rgba(255, 255, 255, 0.1)'
                     } : {}),
                     fontFamily: theme.fontFamily
