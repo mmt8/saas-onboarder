@@ -103,7 +103,7 @@ export default function SettingsPage() {
         if (theme.tooltipStyle === 'glass') {
             return {
                 ...baseStyle,
-                background: 'rgba(15, 15, 15, 0.4)',
+                background: 'rgba(15, 15, 15, 0.8)',
                 backdropFilter: 'blur(40px) saturate(180%)',
                 WebkitBackdropFilter: 'blur(40px) saturate(180%)',
                 boxShadow: `
