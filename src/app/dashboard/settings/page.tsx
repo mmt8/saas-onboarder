@@ -29,7 +29,7 @@ export default function SettingsPage() {
         fontFamily: 'Inter',
         darkMode: false,
         primaryColor: '#495BFD',
-        borderRadius: '12',
+        borderRadius: '20',
         paddingV: '10',
         paddingH: '20',
         tooltipStyle: 'solid' as 'solid' | 'color' | 'glass' | 'auto',
@@ -101,40 +101,19 @@ export default function SettingsPage() {
         const baseStyle = { fontFamily: theme.fontFamily };
 
         if (theme.tooltipStyle === 'glass') {
-            if (theme.darkMode) {
-                // Dark Glass (Light background, dark text)
-                return {
-                    ...baseStyle,
-                    background: 'rgba(255, 255, 255, 0.4)',
-                    backdropFilter: 'blur(15px)',
-                    WebkitBackdropFilter: 'blur(15px)',
-                    boxShadow: `
-                        inset 0 2px 0 rgba(255, 255, 255, 0.8),
-                        inset 0 -2px 0 rgba(0, 0, 0, 0.1),
-                        0 15px 24.5px 0px rgba(0, 0, 0, 0.1),
-                        0 7px 10.5px 0px rgba(0, 0, 0, 0.05)
-                    `,
-                    color: '#1e293b',
-                    border: 'none',
-                };
-            }
-            // Standard Glass (Darker background, light text)
             return {
                 ...baseStyle,
-                background: 'rgba(40, 40, 40, 0.2)',
-                backdropFilter: 'blur(15px)',
-                WebkitBackdropFilter: 'blur(15px)',
+                background: 'rgba(15, 15, 15, 0.4)',
+                backdropFilter: 'blur(40px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
                 boxShadow: `
-                    inset 0 2px 0 rgba(255, 255, 255, 0.8),
-                    inset 0 -2px 0 rgba(0, 0, 0, 0.3),
-                    inset 1px 0 0 rgba(255, 255, 255, 0.15),
-                    inset -1px 0 0 rgba(255, 255, 255, 0.15),
-                    0 15px 24.5px 0px rgba(0, 0, 0, 0.24),
-                    0 7px 10.5px 0px rgba(0, 0, 0, 0.15)
+                    0 30px 60px -20px rgba(0, 0, 0, 0.9),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.05)
                 `,
                 color: 'white',
-                border: 'none',
-                textShadow: '0 1px 2px rgba(0,0,0,0.4)'
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                lineHeight: '1.5',
+                borderRadius: `${theme.borderRadius}px`
             };
         }
 
@@ -147,12 +126,26 @@ export default function SettingsPage() {
                 color: autoBranding?.textColor === 'black' ? '#1a1a1a' : '#fff',
                 border: 'none',
                 boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                borderRadius: `${autoBranding?.borderRadius || theme.borderRadius}px`
+                borderRadius: `${theme.borderRadius}px`
+            };
+        }
+
+        if (theme.tooltipStyle === 'color') {
+            return {
+                ...baseStyle,
+                backgroundColor: theme.tooltipColor,
+                color: 'white',
+                border: 'none',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                borderRadius: `${theme.borderRadius}px`
             };
         }
 
         // Solid (Default)
-        return baseStyle;
+        return {
+            ...baseStyle,
+            borderRadius: `${theme.borderRadius}px`
+        };
     };
 
     const getPreviewClassNames = () => {
@@ -160,14 +153,14 @@ export default function SettingsPage() {
             return "w-full max-w-[320px] p-6 animate-in zoom-in duration-300 relative z-10 mx-auto";
         }
         if (theme.tooltipStyle === 'glass') {
-            return "w-full max-w-[320px] p-6 rounded-2xl animate-in zoom-in duration-300 relative z-10 mx-auto";
+            return "w-full max-w-[320px] p-6 animate-in zoom-in duration-300 relative z-10 mx-auto overflow-hidden";
         }
         if (theme.tooltipStyle === 'color') {
-            return "w-full max-w-[320px] p-6 rounded-2xl animate-in zoom-in duration-300 relative z-10 mx-auto";
+            return "w-full max-w-[320px] p-6 shadow-xl animate-in zoom-in duration-300 relative z-10 mx-auto overflow-hidden";
         }
         // Solid
         return cn(
-            "w-full max-w-[320px] p-6 rounded-2xl shadow-2xl border animate-in zoom-in duration-300 relative z-10 mx-auto",
+            "w-full max-w-[320px] p-6 shadow-2xl border animate-in zoom-in duration-300 relative z-10 mx-auto overflow-hidden",
             theme.darkMode
                 ? "bg-[#1e293b] border-slate-700 text-white"
                 : "bg-white border-slate-100 text-slate-900"
@@ -310,8 +303,8 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
-                    {/* Theme Mode - Dropdown (Hidden for Full Color) */}
-                    {theme.tooltipStyle !== 'color' && (
+                    {/* Theme Mode - Hidden for Color/Glass as they use Playground behavior */}
+                    {theme.tooltipStyle !== 'color' && theme.tooltipStyle !== 'glass' && (
                         <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Theme Mode</label>
                             <div className="relative">
@@ -469,36 +462,41 @@ export default function SettingsPage() {
                         className={getPreviewClassNames()}
                         style={getPreviewStyle()}
                     >
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className="flex items-center justify-center w-6 h-6 rounded-full text-white text-[10px] font-bold"
-                                style={{
-                                    backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor : 'rgba(0,0,0,0.15)',
-                                }}>1</span>
-                            <span className={cn("text-xs font-medium",
-                                theme.tooltipStyle === 'solid' ? (theme.darkMode ? "opacity-60" : "opacity-40") : (theme.darkMode && theme.tooltipStyle === 'glass' ? "text-slate-500" : "text-white/60")
-                            )}>of 3</span>
+                        <div className="flex items-start justify-end -mr-2 -mt-2 mb-2">
+                            <div className={cn("h-6 w-6 rounded-full flex items-center justify-center",
+                                theme.tooltipStyle === 'glass' ? "hover:bg-white/10 text-white" : "hover:bg-black/5 text-muted-foreground"
+                            )}>
+                                <X className="w-4 h-4" />
+                            </div>
                         </div>
 
                         <p className="text-sm mb-6 leading-relaxed">
                             This is how your product tours will look to users with your current branding.
                         </p>
 
-                        <div className="flex justify-end">
+                        <div className="flex justify-end items-center gap-4">
+                            <span className={cn("text-[10px] font-bold uppercase tracking-widest",
+                                theme.tooltipStyle === 'glass' ? "text-white/40" : "text-muted-foreground/40"
+                            )}>
+                                1 of 3
+                            </span>
                             <button
                                 onMouseEnter={() => setIsHovered(true)}
                                 onMouseLeave={() => setIsHovered(false)}
                                 className={cn(
-                                    "text-sm font-bold shadow-sm active:scale-[0.985] transition-all outline-none hover:bg-black/5 active:bg-black/10 [backface-visibility:hidden] transform-gpu",
-                                    theme.tooltipStyle === 'solid' ? "" : ""
+                                    "text-sm font-bold shadow-sm active:scale-[0.985] transition-all outline-none active:bg-black/10 [backface-visibility:hidden] transform-gpu",
+                                    theme.tooltipStyle === 'glass' ? "hover:bg-white/10" : "hover:bg-black/5"
                                 )}
                                 style={{
                                     backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor :
-                                        (theme.tooltipStyle === 'glass' && theme.darkMode ?
-                                            (isHovered ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)') :
+                                        (theme.tooltipStyle === 'glass' ?
+                                            (isHovered ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)') :
                                             (isHovered ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.1)')),
-                                    color: (theme.darkMode && theme.tooltipStyle === 'glass') ? '#1e293b' : 'white',
+                                    color: 'white',
                                     borderRadius: `${theme.borderRadius}px`,
                                     padding: `${theme.paddingV}px ${theme.paddingH}px`,
+                                    fontSize: theme.tooltipStyle === 'glass' ? '0.8rem' : '0.9rem',
+                                    border: theme.tooltipStyle === 'glass' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
                                     fontFamily: theme.fontFamily
                                 }}
                             >

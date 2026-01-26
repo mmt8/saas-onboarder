@@ -41,7 +41,7 @@ export function WidgetTourPlayer() {
         fontFamily: isAuto ? (detectedBranding?.fontFamily || 'Inter, sans-serif') : (currentProject?.themeSettings?.fontFamily ?? 'Inter, sans-serif'),
         darkMode: isAuto ? false : (currentProject?.themeSettings?.darkMode ?? false),
         primaryColor: isAuto ? (detectedBranding?.primaryColor || '#495BFD') : (currentProject?.themeSettings?.primaryColor ?? '#495BFD'),
-        borderRadius: isAuto ? (detectedBranding?.borderRadius || '12') : (currentProject?.themeSettings?.borderRadius ?? '12'),
+        borderRadius: currentProject?.themeSettings?.borderRadius ?? '20',
         paddingV: currentProject?.themeSettings?.paddingV ?? '10',
         paddingH: currentProject?.themeSettings?.paddingH ?? '20',
         tooltipStyle: currentProject?.themeSettings?.tooltipStyle ?? ('solid' as const),
@@ -183,56 +183,42 @@ export function WidgetTourPlayer() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 key={currentStep.id}
                 className={cn(
-                    "absolute z-20 p-6 rounded-2xl shadow-2xl border max-w-sm transition-all duration-300 pointer-events-auto",
+                    "absolute z-20 p-6 shadow-2xl border max-w-sm transition-all duration-300 pointer-events-auto overflow-hidden",
                     theme.tooltipStyle === 'glass'
-                        ? (theme.darkMode ? "bg-white/40 backdrop-blur-md border-white/20 text-slate-900" : "bg-[#282828]/20 backdrop-blur-[15px] border-none text-white")
+                        ? "bg-[rgba(15,15,15,0.4)] backdrop-blur-[40px] saturate-[180%] border-white/5 text-white"
                         : (theme.tooltipStyle === 'auto' || theme.tooltipStyle === 'color')
                             ? "border-none"
                             : (theme.darkMode ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-100 text-slate-900")
                 )}
                 style={{
-                    left: Math.min(window.innerWidth - 360, Math.max(20, targetRect.left)),
-                    top: targetRect.bottom + 40 > window.innerHeight - 200
-                        ? targetRect.top - 220
-                        : targetRect.bottom + 20,
+                    left: (() => {
+                        const marginX = window.innerWidth * 0.01;
+                        const tooltipWidth = 384; // max-w-sm
+                        return Math.min(window.innerWidth - tooltipWidth - marginX, Math.max(marginX, targetRect.left));
+                    })(),
+                    top: (() => {
+                        const marginY = window.innerHeight * 0.01;
+                        const potentialTop = targetRect.bottom + 40 > window.innerHeight - 250
+                            ? targetRect.top - 240
+                            : targetRect.bottom + 20;
+                        return Math.min(window.innerHeight - 250, Math.max(marginY, potentialTop));
+                    })(),
+                    borderRadius: `${theme.borderRadius}px`,
                     ...((theme.tooltipStyle === 'color' || theme.tooltipStyle === 'auto') ? { backgroundColor: theme.tooltipColor, color: theme.textColor, border: 'none' } : {}),
-                    ...(theme.tooltipStyle === 'glass' && !theme.darkMode ? {
+                    ...(theme.tooltipStyle === 'glass' ? {
                         boxShadow: `
-                            inset 0 2px 0 rgba(255, 255, 255, 0.8),
-                            inset 0 -2px 0 rgba(0, 0, 0, 0.3),
-                            inset 1px 0 0 rgba(255, 255, 255, 0.15),
-                            inset -1px 0 0 rgba(255, 255, 255, 0.15),
-                            0 15px 24.5px rgba(0, 0, 0, 0.24),
-                            0 7px 10.5px rgba(0, 0, 0, 0.15)
+                            0 30px 60px -20px rgba(0, 0, 0, 0.9),
+                            inset 0 1px 1px rgba(255, 255, 255, 0.05)
                         `,
-                        textShadow: '0 1px 2px rgba(0,0,0,0.38)'
                     } : {}),
                     fontFamily: theme.fontFamily
                 }}
             >
-                <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <span
-                            className="flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold"
-                            style={{
-                                backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor : 'rgba(0,0,0,0.15)',
-                                color: (theme.tooltipStyle === 'auto' || theme.tooltipStyle === 'color') ? theme.textColor : 'white'
-                            }}
-                        >
-                            {currentStepIndex + 1}
-                        </span>
-                        <span className={cn("text-xs font-medium",
-                            theme.tooltipStyle === 'solid' ? (theme.darkMode ? "text-slate-400" : "text-gray-400") :
-                                (theme.tooltipStyle === 'glass' ? (theme.darkMode ? "text-slate-500" : "text-white/60") :
-                                    (theme.textColor === 'white' ? "text-white/60" : "text-black/40"))
-                        )}>
-                            of {currentTour.steps.length}
-                        </span>
-                    </div>
+                <div className="flex items-start justify-end -mr-2 -mt-2 mb-2">
                     <button
                         className={cn(
-                            "h-6 w-6 -mr-2 -mt-2 rounded-full flex items-center justify-center transition-colors",
-                            (theme.darkMode || (theme.tooltipStyle === 'glass' && theme.darkMode)) ? "hover:bg-black/5" : "hover:bg-white/10"
+                            "h-6 w-6 rounded-full flex items-center justify-center transition-colors",
+                            (theme.darkMode || theme.tooltipStyle === 'glass') ? "hover:bg-black/5" : "hover:bg-white/10"
                         )}
                         style={{ color: (theme.tooltipStyle === 'auto' || theme.tooltipStyle === 'color') ? theme.textColor : 'inherit' }}
                         onClick={() => setStatus('idle')}
@@ -241,34 +227,40 @@ export function WidgetTourPlayer() {
                     </button>
                 </div>
 
-                <p className={cn("mb-6 leading-relaxed text-sm",
+                <p className={cn("mb-4 leading-relaxed text-sm",
                     theme.tooltipStyle === 'solid' ? (theme.darkMode ? "text-slate-200" : "text-gray-700") :
-                        (theme.tooltipStyle === 'glass' ? (theme.darkMode ? "text-slate-800" : "text-white") :
+                        (theme.tooltipStyle === 'glass' ? "text-white" :
                             (theme.textColor === 'white' ? "text-white" : "text-black"))
-                )}>
+                )}
+                    style={{ lineHeight: theme.tooltipStyle === 'glass' ? '1.5' : 'inherit' }}
+                >
                     {currentStep.content || "Click on this element to proceed."}
                 </p>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end items-center gap-4 mt-3">
+                    <span className={cn("text-[10px] font-bold uppercase tracking-widest",
+                        theme.tooltipStyle === 'glass' ? "text-white/40" : "text-muted-foreground/40"
+                    )}>
+                        {currentStepIndex + 1} of {currentTour.steps.length}
+                    </span>
                     <button
                         onClick={handleNext}
                         onMouseEnter={() => setIsHovered(true)}
                         onMouseLeave={() => setIsHovered(false)}
                         className={cn(
-                            "group flex items-center justify-center font-bold transition-all text-sm outline-none hover:bg-black/5 active:bg-black/10 active:scale-[0.985] active:shadow-none [backface-visibility:hidden] transform-gpu",
-                            theme.tooltipStyle === 'solid' ? "shadow-sm" : ""
+                            "group flex items-center justify-center font-bold transition-all text-sm outline-none active:bg-black/10 active:scale-[0.985] [backface-visibility:hidden] transform-gpu",
+                            theme.tooltipStyle === 'solid' ? "shadow-sm hover:opacity-90" : "hover:bg-white/10"
                         )}
                         style={{
                             backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor :
-                                (theme.tooltipStyle === 'glass' && theme.darkMode ?
-                                    (isHovered ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)') :
+                                (theme.tooltipStyle === 'glass' ?
+                                    (isHovered ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)') :
                                     (isHovered ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.1)')),
-                            color: theme.tooltipStyle === 'glass' ?
-                                ((theme.darkMode && theme.tooltipStyle === 'glass') ? '#1e293b' : 'white') :
-                                theme.textColor,
+                            color: theme.tooltipStyle === 'glass' ? 'white' : theme.textColor,
                             borderRadius: `${theme.borderRadius}px`,
                             padding: `${theme.paddingV}px ${theme.paddingH}px`,
-                            fontSize: '0.9rem',
+                            fontSize: theme.tooltipStyle === 'glass' ? '0.8rem' : '0.9rem',
+                            border: theme.tooltipStyle === 'glass' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
                             fontFamily: theme.fontFamily
                         }}
                     >

@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { useTourStore } from "@/store/tour-store";
 import { Button } from "@/components/ui/button";
-import { X, GripVertical, Trash2, Loader2, Play, ArrowLeft, Code } from "lucide-react";
+import { X, GripVertical, Trash2, Loader2, Play, ArrowLeft, Code, Sparkles } from "lucide-react";
 import { Reorder, AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -16,7 +16,23 @@ interface StepEditorProps {
 }
 
 export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorProps) {
-    const { recordedSteps, updateStep, deleteStep, reorderSteps, isRecording, saveTour, stopRecording, isLoading, editingTourId, deleteTour, setTour, setStatus, tours, recordingTourTitle } = useTourStore();
+    const {
+        recordedSteps,
+        updateStep,
+        deleteStep,
+        reorderSteps,
+        isRecording,
+        saveTour,
+        stopRecording,
+        isLoading,
+        editingTourId,
+        deleteTour,
+        setTour,
+        setStatus,
+        tours,
+        recordingTourTitle,
+        improveStepAI
+    } = useTourStore();
     const [tourTitle, setTourTitle] = useState(
         recordingTourTitle !== '' ? recordingTourTitle :
             (editingTourId ? (tours.find(t => t.id === editingTourId)?.title || "") : "")
@@ -251,17 +267,27 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                     </div>
 
                                     {/* Bottom Row: Input */}
-                                    <textarea
-                                        value={step.content}
-                                        onChange={(e) => updateStep(step.id, { content: e.target.value })}
-                                        onPointerDown={(e) => e.stopPropagation()}
-                                        onPointerDownCapture={(e) => e.stopPropagation()}
-                                        onMouseDown={(e) => e.stopPropagation()}
-                                        onMouseDownCapture={(e) => e.stopPropagation()}
-                                        className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#495BFD] focus:ring-4 focus:ring-blue-500/5 transition-all resize-none placeholder:text-muted-foreground/50"
-                                        rows={2}
-                                        placeholder="What should the user do?"
-                                    />
+                                    <div className="relative group/input">
+                                        <textarea
+                                            value={step.content}
+                                            onChange={(e) => updateStep(step.id, { content: e.target.value })}
+                                            onPointerDown={(e) => e.stopPropagation()}
+                                            onPointerDownCapture={(e) => e.stopPropagation()}
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            onMouseDownCapture={(e) => e.stopPropagation()}
+                                            className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#495BFD] focus:ring-4 focus:ring-blue-500/5 transition-all resize-none placeholder:text-muted-foreground/50 pr-10"
+                                            rows={2}
+                                            placeholder="What should the user do?"
+                                        />
+                                        <button
+                                            onClick={() => improveStepAI(step.id)}
+                                            disabled={isLoading}
+                                            className="absolute right-2 bottom-2 p-1.5 rounded-lg bg-white/80 hover:bg-white text-primary hover:text-primary/80 shadow-sm border border-slate-200 opacity-0 group-hover/input:opacity-100 disabled:opacity-50 transition-all hover:scale-110"
+                                            title="Improve with AI"
+                                        >
+                                            {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                                        </button>
+                                    </div>
 
                                     {/* Expandable Selector View */}
                                     <AnimatePresence>

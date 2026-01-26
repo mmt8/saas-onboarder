@@ -105,6 +105,8 @@ interface TourState {
     checkAuth: () => Promise<void>;
     resetPassword: (email: string) => Promise<{ error: any }>;
     updatePassword: (password: string) => Promise<{ error: any }>;
+    generateAISteps: () => Promise<void>;
+    improveStepAI: (stepId: string) => Promise<void>;
     deleteProject: (id: string) => Promise<void>;
 }
 
@@ -596,6 +598,54 @@ export const useTourStore = create<TourState>()(
                     console.error('Error toggling tour activation:', error);
                     // Rollback on error
                     set({ tours });
+                }
+            },
+
+            generateAISteps: async () => {
+                const { generateTourWithAI } = await import('@/lib/auto-tour-generator');
+                set({ isLoading: true });
+                try {
+                    const generatedSteps = await generateTourWithAI();
+                    const stepsWithIds = generatedSteps.map((step, index) => ({
+                        ...step,
+                        id: crypto.randomUUID(),
+                        order: index
+                    }));
+                    set({ recordedSteps: stepsWithIds });
+                    toast.success("AI Ghost-Writer generated your tour draft!");
+                } catch (error: any) {
+                    console.error('Error generating AI tour:', error);
+                    toast.error("AI Generation failed. Falling back to heuristic scan.");
+                    // Fallback to heuristic
+                    const { generateTourHeuristic } = await import('@/lib/auto-tour-generator');
+                    const fallbackSteps = generateTourHeuristic();
+                    const stepsWithIds = fallbackSteps.map((step, index) => ({
+                        ...step,
+                        id: crypto.randomUUID(),
+                        order: index
+                    }));
+                    set({ recordedSteps: stepsWithIds });
+                } finally {
+                    set({ isLoading: false });
+                }
+            },
+
+            improveStepAI: async (stepId: string) => {
+                const step = get().recordedSteps.find(s => s.id === stepId);
+                if (!step) return;
+
+                const { improveContentWithAI } = await import('@/lib/ai-service');
+                set({ isLoading: true });
+                try {
+                    const targetLabel = step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ') || 'element';
+                    const improved = await improveContentWithAI(targetLabel, step.content);
+                    get().updateStep(stepId, { content: improved });
+                    toast.success("AI Ghost-Writer polished your copy!");
+                } catch (error: any) {
+                    console.error('Error improving content with AI:', error);
+                    toast.error("AI Improvement failed.");
+                } finally {
+                    set({ isLoading: false });
                 }
             },
 

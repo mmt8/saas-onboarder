@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, MousePointer2, Sparkles, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTourStore } from "@/store/tour-store";
-import { generateTourFromPage } from "@/lib/auto-tour-generator";
 
 interface CreateTourDialogProps {
     isOpen: boolean;
@@ -13,33 +12,22 @@ interface CreateTourDialogProps {
 }
 
 export function CreateTourDialog({ isOpen, onClose }: CreateTourDialogProps) {
-    const { startRecording, setSteps, setLanguage } = useTourStore();
+    const { startRecording, generateAISteps, isLoading } = useTourStore();
 
     const [tourName, setTourName] = useState("");
     const isNameValid = tourName.trim().length >= 3;
 
-    const handleModeSelect = (mode: 'manual' | 'auto') => {
-        if (!isNameValid) return;
+    const handleModeSelect = async (mode: 'manual' | 'auto') => {
+        if (!isNameValid || isLoading) return;
 
         if (mode === 'manual') {
             startRecording('manual', tourName.trim());
             onClose();
         } else if (mode === 'auto') {
             startRecording('auto', tourName.trim());
-
-            // Small delay to allow UI to settle/close dialog before scanning
-            setTimeout(() => {
-                const generatedSteps = generateTourFromPage();
-                // Add IDs and order to generated steps
-                const stepsWithIds = generatedSteps.map((step, index) => ({
-                    ...step,
-                    id: crypto.randomUUID(),
-                    order: index
-                }));
-                setSteps(stepsWithIds);
-            }, 500);
-
             onClose();
+            // Trigger AI generation in the background/state
+            await generateAISteps();
         }
     };
 

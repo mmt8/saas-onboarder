@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Gabarito, Fraunces } from "next/font/google"; // Import fonts
+import { Gabarito, Fraunces, Inter } from "next/font/google"; // Import fonts
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { AdminToolbar } from "@/components/admin/AdminToolbar";
@@ -20,6 +20,11 @@ const fraunces = Fraunces({
   variable: "--font-serif",
 });
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://producttour.app'),
   title: "Product Tour",
@@ -33,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={cn("font-sans antialiased", gabarito.variable, fraunces.variable)} suppressHydrationWarning>
+      <body className={cn("font-sans antialiased", gabarito.variable, fraunces.variable, inter.variable)} suppressHydrationWarning>
         <AuthProvider>
           <Navbar />
           <AdminToolbar />

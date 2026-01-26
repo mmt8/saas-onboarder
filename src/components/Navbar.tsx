@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useTourStore } from "@/store/tour-store";
-import { LogOut, Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { LogOut, Menu, X, LayoutDashboard } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 
 export function Navbar() {
     const { user, signOut } = useTourStore();
+    const pathname = usePathname();
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -30,10 +32,11 @@ export function Navbar() {
         }
     }, [mobileMenuOpen]);
 
-    if (user) return null;
+    // Only hide navbar on dashboard routes
+    if (user && pathname?.startsWith('/dashboard')) return null;
 
     return (
-        <>{/* Existing Navbar structure */}
+        <>
             <header
                 className={cn(
                     "fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-300",
@@ -64,21 +67,41 @@ export function Navbar() {
                 <div className="flex items-center gap-3 z-50 relative">
                     {/* Desktop Actions */}
                     <div className="hidden md:flex items-center gap-3">
-                        <Link href="/login">
-                            <Button variant="ghost" className="h-14 rounded-full font-bold text-[15px] text-muted-foreground hover:text-primary">
-                                Sign In
+                        {user ? (
+                            <Button asChild className="px-8 h-14 font-bold text-[15px] shadow-sm flex items-center gap-2 rounded-full">
+                                <Link href="/dashboard">
+                                    <LayoutDashboard className="w-4 h-4" />
+                                    Dashboard
+                                </Link>
                             </Button>
-                        </Link>
-                        <Button asChild className="px-8 h-14 font-bold text-[15px] shadow-sm flex items-center">
-                            <Link href="/signup">Get Started</Link>
-                        </Button>
+                        ) : (
+                            <>
+                                <Link href="/login">
+                                    <Button variant="ghost" className="h-14 rounded-full font-bold text-[15px] text-muted-foreground hover:text-primary">
+                                        Sign In
+                                    </Button>
+                                </Link>
+                                <Button asChild className="px-8 h-14 font-bold text-[15px] shadow-sm flex items-center rounded-full">
+                                    <Link href="/signup">Get Started</Link>
+                                </Button>
+                            </>
+                        )}
                     </div>
 
                     {/* Mobile Actions (Visible on small screens) */}
                     <div className="flex md:hidden items-center gap-3">
-                        <Button asChild size="default" className="rounded-full font-bold text-base px-6">
-                            <Link href="/signup">Get Started</Link>
-                        </Button>
+                        {user ? (
+                            <Button asChild size="default" className="rounded-full font-bold text-base px-6 gap-2">
+                                <Link href="/dashboard">
+                                    <LayoutDashboard className="w-4 h-4" />
+                                    Dashboard
+                                </Link>
+                            </Button>
+                        ) : (
+                            <Button asChild size="default" className="rounded-full font-bold text-base px-6">
+                                <Link href="/signup">Get Started</Link>
+                            </Button>
+                        )}
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             className="w-10 h-10 flex items-center justify-center rounded-full bg-foreground/5 hover:bg-foreground/10 transition-colors backdrop-blur-md"
@@ -111,12 +134,18 @@ export function Navbar() {
                             <div className="h-px bg-border/50 w-full my-4" />
 
                             {user ? (
-                                <button
-                                    onClick={() => { signOut(); setMobileMenuOpen(false); }}
-                                    className="text-2xl font-bold font-serif text-destructive hover:text-destructive/80 transition-colors py-2"
-                                >
-                                    Sign Out
-                                </button>
+                                <div className="flex flex-col gap-4">
+                                    <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-bold font-serif text-foreground hover:text-primary transition-colors py-2 flex items-center justify-center gap-2">
+                                        <LayoutDashboard className="w-6 h-6" />
+                                        Dashboard
+                                    </Link>
+                                    <button
+                                        onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                                        className="text-2xl font-bold font-serif text-destructive hover:text-destructive/80 transition-colors py-2"
+                                    >
+                                        Sign Out
+                                    </button>
+                                </div>
                             ) : (
                                 <MobileNavLink href="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</MobileNavLink>
                             )}

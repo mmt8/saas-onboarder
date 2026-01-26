@@ -7,9 +7,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export function TourPlayer() {
-    const { currentTour, status, setStatus, tours, setTour } = useTourStore();
+    const { currentTour, status, setStatus, tours, setTour, projects, currentProjectId } = useTourStore();
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
     const searchParams = useSearchParams();
@@ -100,6 +101,10 @@ export function TourPlayer() {
         }
     };
 
+    const currentProject = projects.find(p => p.id === (currentTour?.project_id || currentProjectId));
+    const theme = currentProject?.themeSettings;
+    const isGlass = theme?.tooltipStyle === 'glass';
+
     return (
         <>
             {/* Overlay */}
@@ -116,37 +121,65 @@ export function TourPlayer() {
                 initial={{ opacity: 0, y: 20, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 key={currentStep.id}
-                className="fixed z-[50] bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-2xl border border-white/10 max-w-sm"
+                className={cn(
+                    "fixed z-[50] p-6 shadow-2xl max-w-sm transition-all duration-300 overflow-hidden",
+                    isGlass
+                        ? "bg-[rgba(15,15,15,0.4)] backdrop-blur-[40px] saturate-[180%] border border-white/5 text-white"
+                        : theme?.tooltipStyle === 'color'
+                            ? "border-none text-white shadow-xl"
+                            : "bg-white dark:bg-gray-900 border border-white/10 text-gray-700 dark:text-gray-200"
+                )}
                 style={{
-                    left: Math.min(window.innerWidth - 340, Math.max(20, targetRect.left)),
-                    top: targetRect.bottom + 20 > window.innerHeight - 200
-                        ? targetRect.top - 200
-                        : targetRect.bottom + 20
+                    left: (() => {
+                        const marginX = window.innerWidth * 0.01;
+                        const tooltipWidth = 384; // max-w-sm
+                        return Math.min(window.innerWidth - tooltipWidth - marginX, Math.max(marginX, targetRect.left));
+                    })(),
+                    top: (() => {
+                        const marginY = window.innerHeight * 0.01;
+                        const potentialTop = targetRect.bottom + 20 > window.innerHeight - 250
+                            ? targetRect.top - 220
+                            : targetRect.bottom + 20;
+                        return Math.min(window.innerHeight - 250, Math.max(marginY, potentialTop));
+                    })(),
+                    borderRadius: `${theme?.borderRadius || '20'}px`,
+                    ...(isGlass ? {
+                        boxShadow: '0 30px 60px -20px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.05)',
+                    } : {
+                        backgroundColor: theme?.tooltipStyle === 'color' ? theme.tooltipColor : undefined
+                    })
                 }}
             >
-                <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-[10px] font-bold">
-                            {currentStepIndex + 1}
-                        </span>
-                        <span className="text-xs text-gray-400 font-medium">of {currentTour.steps.length}</span>
-                    </div>
+                <div className="flex items-start justify-end -mr-2 -mt-2 mb-2">
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 -mr-2 -mt-2"
+                        className={cn("h-6 w-6", isGlass ? "hover:bg-white/10 text-white" : "")}
                         onClick={() => setStatus('idle')}
                     >
                         <X className="w-4 h-4" />
                     </Button>
                 </div>
 
-                <p className="text-gray-700 dark:text-gray-200 mb-6 leading-relaxed">
+                <p className={cn("mb-4 leading-relaxed text-sm", (isGlass || theme?.tooltipStyle === 'color') ? "text-white" : "")}
+                    style={{ lineHeight: isGlass ? '1.5' : 'inherit' }}>
                     {currentStep.content || "Click on this element to proceed."}
                 </p>
 
-                <div className="flex justify-end">
-                    <Button onClick={handleNext} className="group">
+                <div className="flex justify-end items-center gap-4 mt-3">
+                    <span className={cn("text-[10px] font-bold uppercase tracking-widest",
+                        isGlass ? "text-white/40" : "text-gray-400"
+                    )}>
+                        {currentStepIndex + 1} of {currentTour.steps.length}
+                    </span>
+                    <Button
+                        onClick={handleNext}
+                        className={cn("group font-bold transition-all",
+                            isGlass ? "bg-[rgba(0,0,0,0.08)] border border-white/10 text-white hover:bg-white/10 rounded-full py-2 px-6 h-auto text-xs" :
+                                theme?.tooltipStyle === 'color' ? "bg-white/10 hover:bg-white/20 text-white border-white/10" : ""
+                        )}
+                        variant={(isGlass || theme?.tooltipStyle === 'color') ? "outline" : "default"}
+                    >
                         {isLastStep ? 'Finish' : 'Next'}
                         <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                     </Button>
