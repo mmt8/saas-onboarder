@@ -103,12 +103,12 @@ export default function SettingsPage() {
         if (theme.tooltipStyle === 'glass') {
             return {
                 ...baseStyle,
-                background: 'rgba(15, 15, 15, 0.8)',
+                background: 'rgba(15, 15, 15, 0.4)',
                 backdropFilter: 'blur(40px) saturate(180%)',
                 WebkitBackdropFilter: 'blur(40px) saturate(180%)',
                 boxShadow: '0 30px 60px -20px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.05)',
                 color: 'white',
-                border: '1px solid rgba(255, 255, 255, 0.05)',
+                border: '1px solid #ffffff1a',
                 borderTop: '1px solid rgba(255, 255, 255, 0.1)',
                 lineHeight: '1.5',
                 borderRadius: `${theme.borderRadius}px`
