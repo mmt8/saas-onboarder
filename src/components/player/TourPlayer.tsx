@@ -124,7 +124,7 @@ export function TourPlayer() {
                 className={cn(
                     "fixed z-[50] p-6 max-w-sm transition-all duration-300 overflow-hidden",
                     isGlass
-                        ? "bg-[rgba(15,15,15,0.8)] backdrop-blur-[40px] saturate-[180%] border border-white/5 text-white"
+                        ? "backdrop-blur-[40px] saturate-[180%] border border-white/5 text-white"
                         : theme?.tooltipStyle === 'color'
                             ? "border-none text-white shadow-xl"
                             : "bg-white dark:bg-gray-900 border border-white/10 text-gray-700 dark:text-gray-200 shadow-2xl"
@@ -144,6 +144,7 @@ export function TourPlayer() {
                     })(),
                     borderRadius: `${theme?.borderRadius || '20'}px`,
                     ...(isGlass ? {
+                        backgroundColor: 'rgba(28, 28, 30, 0.8)',
                         boxShadow: '0 30px 60px -20px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.05)',
                         borderTop: '1px solid rgba(255, 255, 255, 0.1)'
                     } : {
