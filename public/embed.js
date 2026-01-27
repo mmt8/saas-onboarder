@@ -37705,7 +37705,7 @@ ${suffix}`;
               className: "w-full flex items-center justify-between bg-white border-solid border border-slate-300 hover:border-blue-400/50 rounded-lg px-3 h-9 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/10 transition-all shadow-sm",
               children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center gap-2 truncate", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate", children: (currentTour == null ? void 0 : currentTour.playBehavior) === "weekly" ? "Weekly (2x max)" : (currentTour == null ? void 0 : currentTour.playBehavior) === "monthly_thrice" ? "Monthly (3x max)" : "Show once" }) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "w-3 h-3 text-slate-400 shrink-0 ml-2" })
+                /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "w-3 h-3 text-slate-400 shrink-0 ml-2 mr-1" })
               ]
             }
           ),
@@ -38473,7 +38473,7 @@ ${suffix}`;
                       tour.playBehavior === "weekly" && "Weekly (2x max)",
                       tour.playBehavior === "monthly_thrice" && "Monthly (3x max)"
                     ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "w-3 h-3 text-slate-400" })
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "w-3 h-3 text-slate-400 mr-1" })
                   ]
                 }
               ),

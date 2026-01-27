@@ -119,7 +119,7 @@ const TourCard = ({ tour, onEdit, onPlay, onDelete, toggleTourActivation, update
                             {tour.playBehavior === 'weekly' && 'Weekly (2x max)'}
                             {tour.playBehavior === 'monthly_thrice' && 'Monthly (3x max)'}
                         </span>
-                        <ChevronDown className="w-3 h-3 text-slate-400" />
+                        <ChevronDown className="w-3 h-3 text-slate-400 mr-1" />
                     </button>
 
                     {isDropdownOpen && (

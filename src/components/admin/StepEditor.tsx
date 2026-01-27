@@ -146,7 +146,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                             'Show once'}
                                 </span>
                             </div>
-                            <ChevronDown className="w-3 h-3 text-slate-400 shrink-0 ml-2" />
+                            <ChevronDown className="w-3 h-3 text-slate-400 shrink-0 ml-2 mr-1" />
                         </button>
 
                         {/* Dropdown Menu */}
