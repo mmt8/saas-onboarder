@@ -2,7 +2,7 @@
 
 import { useTourStore, Tour } from "@/store/tour-store";
 import { Button } from "@/components/ui/button";
-import { Play, Trash2, Clock, Edit, Globe, Plus, Zap } from "lucide-react";
+import { Play, Trash2, Clock, Edit, Globe, Plus, Zap, ChevronDown, Check } from "lucide-react";
 import { useState } from "react";
 import { DeleteTourDialog } from "@/components/admin/DeleteTourDialog";
 import { useRouter } from "next/navigation";
@@ -44,6 +44,7 @@ export default function ToursPage() {
     } = useTourStore();
 
     const [deletingTour, setDeletingTour] = useState<Tour | null>(null);
+    const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
     const handlePlay = (tour: Tour) => {
         if (tour.pageUrl && tour.pageUrl !== window.location.pathname) {
@@ -123,15 +124,65 @@ export default function ToursPage() {
                                     <Zap className="w-3.5 h-3.5 text-[#E65221]" />
                                     <span>Delivery Control</span>
                                 </div>
-                                <select
-                                    value={tour.playBehavior}
-                                    onChange={(e) => updateTourBehavior(tour.id, e.target.value as any)}
-                                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer hover:border-primary/50 transition-colors"
-                                >
-                                    <option value="first_time">Show once (first visit)</option>
-                                    <option value="weekly">Weekly (2x max)</option>
-                                    <option value="monthly_thrice">Monthly (once a month, 3x max)</option>
-                                </select>
+                                <div className="relative">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenDropdownId(openDropdownId === tour.id ? null : tour.id);
+                                        }}
+                                        className="w-full flex items-center justify-between bg-background border border-border rounded-lg px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer hover:border-primary/50 transition-colors"
+                                    >
+                                        <span className="truncate">
+                                            {tour.playBehavior === 'first_time' && 'Show once (first visit)'}
+                                            {tour.playBehavior === 'weekly' && 'Weekly (2x max)'}
+                                            {tour.playBehavior === 'monthly_thrice' && 'Monthly (once a month, 3x max)'}
+                                        </span>
+                                        <ChevronDown className="w-4 h-4 text-muted-foreground mr-1" />
+                                    </button>
+
+                                    {openDropdownId === tour.id && (
+                                        <>
+                                            <div
+                                                className="fixed inset-0 z-10"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOpenDropdownId(null);
+                                                }}
+                                            />
+                                            <div className="absolute top-full left-0 right-0 mt-1 bg-popover text-popover-foreground rounded-lg shadow-md border border-border z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                                <div className="p-1">
+                                                    {[
+                                                        { value: 'first_time', label: 'Show once (first visit)' },
+                                                        { value: 'weekly', label: 'Weekly (2x max)' },
+                                                        { value: 'monthly_thrice', label: 'Monthly (once a month, 3x max)' }
+                                                    ].map((option) => (
+                                                        <div
+                                                            key={option.value}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                updateTourBehavior(tour.id, option.value as any);
+                                                                setOpenDropdownId(null);
+                                                            }}
+                                                            className={cn(
+                                                                "relative flex items-center h-9 px-8 text-sm font-medium rounded-md select-none cursor-pointer transition-colors",
+                                                                tour.playBehavior === option.value
+                                                                    ? "bg-primary/10 text-primary"
+                                                                    : "hover:bg-accent hover:text-accent-foreground"
+                                                            )}
+                                                        >
+                                                            <span className="truncate">{option.label}</span>
+                                                            {tour.playBehavior === option.value && (
+                                                                <div className="absolute left-2.5 flex items-center justify-center">
+                                                                    <Check className="w-4 h-4 text-primary" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                                 <p className="mt-2 text-[10px] text-muted-foreground leading-tight italic">
                                     {tour.playBehavior === 'first_time' && "Guides the user once and then stays hidden."}
                                     {tour.playBehavior === 'weekly' && "Reminds users once a week. Shown up to 2 times total."}
