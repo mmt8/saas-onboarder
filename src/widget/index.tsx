@@ -5,14 +5,14 @@ import { Widget } from './Widget';
 import styles from '@/app/globals.css?inline';
 
 (function () {
-    console.log('Product Tour Widget Loading...');
+    console.log('Guidemark Widget Loading...');
     const script = document.currentScript || document.querySelector('script[data-project-id]');
     const projectId = script?.getAttribute('data-project-id');
     const autoStart = script?.getAttribute('data-auto-start') !== 'false'; // defaults to true
     const showAdminPanel = script?.getAttribute('data-admin-panel') !== 'false'; // defaults to true
 
     if (!projectId) {
-        console.error('Product Tour: No project ID found');
+        console.error('Guidemark: No project ID found');
         return;
     }
 

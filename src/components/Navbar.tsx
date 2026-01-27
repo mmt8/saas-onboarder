@@ -46,8 +46,8 @@ export function Navbar() {
                 {/* 1. Left: Logo (Standalone) */}
                 <div className="flex items-center z-50 relative">
                     <Link href="/" className="flex items-center gap-0.5 group">
-                        <img src="/logo.svg" alt="Product Tour Logo" className="w-9 h-9 transition-transform group-hover:scale-105" />
-                        <span className="font-serif font-bold text-2xl tracking-tight text-foreground hidden md:block ml-1">Product Tour</span>
+                        <img src="/logo.svg" alt="Guidemark Logo" className="w-9 h-9 transition-transform group-hover:scale-105" />
+                        <span className="font-serif font-bold text-2xl tracking-tight text-foreground hidden md:block ml-1">Guidemark</span>
                     </Link>
                 </div>
 
@@ -59,7 +59,9 @@ export function Navbar() {
                     )}
                 >
                     <NavLink href="/#features">Features</NavLink>
-                    <NavLink href="/pricing">Pricing</NavLink>
+                    <Link href="/pricing" className="px-6 py-2 flex items-center text-[15px] font-bold text-primary transition-all hover:bg-primary/10 rounded-full">
+                        Pricing
+                    </Link>
                     <NavLink href="/resources">Resources</NavLink>
                 </nav>
 

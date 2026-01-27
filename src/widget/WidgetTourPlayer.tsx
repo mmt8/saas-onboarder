@@ -17,12 +17,6 @@ export function WidgetTourPlayer() {
     const projectIdForTheme = currentTour?.project_id || currentProjectId;
     const currentProject = projects.find(p => p.id === projectIdForTheme);
 
-    useEffect(() => {
-        if (currentProject?.themeSettings?.tooltipStyle === 'auto') {
-            const branding = detectBranding();
-            setDetectedBranding(branding);
-        }
-    }, [currentProject]);
 
     useEffect(() => {
         console.log('WidgetTourPlayer: Theme Lookup', {
@@ -35,18 +29,16 @@ export function WidgetTourPlayer() {
         });
     }, [currentTour, currentProjectId, projects, currentProject, detectedBranding]);
 
-    const isAuto = currentProject?.themeSettings?.tooltipStyle === 'auto';
-
     const theme = {
-        fontFamily: isAuto ? (detectedBranding?.fontFamily || 'Inter, sans-serif') : (currentProject?.themeSettings?.fontFamily ?? 'Inter, sans-serif'),
-        darkMode: isAuto ? false : (currentProject?.themeSettings?.darkMode ?? false),
-        primaryColor: isAuto ? (detectedBranding?.primaryColor || '#495BFD') : (currentProject?.themeSettings?.primaryColor ?? '#495BFD'),
+        fontFamily: currentProject?.themeSettings?.fontFamily ?? 'Inter, sans-serif',
+        darkMode: currentProject?.themeSettings?.darkMode ?? false,
+        primaryColor: currentProject?.themeSettings?.primaryColor ?? '#495BFD',
         borderRadius: currentProject?.themeSettings?.borderRadius ?? '20',
         paddingV: currentProject?.themeSettings?.paddingV ?? '10',
         paddingH: currentProject?.themeSettings?.paddingH ?? '20',
         tooltipStyle: currentProject?.themeSettings?.tooltipStyle ?? ('solid' as const),
-        tooltipColor: isAuto ? (detectedBranding?.primaryColor || '#495BFD') : (currentProject?.themeSettings?.tooltipColor ?? '#495BFD'),
-        textColor: isAuto ? (detectedBranding?.textColor || 'white') : 'white'
+        tooltipColor: currentProject?.themeSettings?.tooltipColor ?? '#495BFD',
+        textColor: 'white'
     };
 
     // Auto-start tour from URL param
@@ -110,6 +102,30 @@ export function WidgetTourPlayer() {
 
     const handleNext = () => {
         if (isLastStep) {
+            // Record play stats for behavior enforcement
+            if (currentTour) {
+                const storageKey = `producttour-seen-${currentTour.id}`;
+                const existingData = localStorage.getItem(storageKey);
+                let stats = { lastPlayedAt: 0, playCount: 0 };
+
+                if (existingData) {
+                    try {
+                        const parsed = JSON.parse(existingData);
+                        if (typeof parsed === 'object') {
+                            stats = { ...stats, ...parsed };
+                        }
+                    } catch (e) {
+                        // Fallback for old boolean values
+                        if (existingData === 'true') stats.playCount = 1;
+                    }
+                }
+
+                stats.lastPlayedAt = Date.now();
+                stats.playCount += 1;
+                localStorage.setItem(storageKey, JSON.stringify(stats));
+                console.log('WidgetTourPlayer: Recorded stats for', currentTour.title, stats);
+            }
+
             setStatus('idle');
             setCurrentStepIndex(0);
         } else {

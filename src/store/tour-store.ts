@@ -20,6 +20,7 @@ export type Tour = {
     steps: Step[];
     pageUrl: string;
     isActive: boolean;
+    playBehavior: 'first_time' | 'weekly' | 'monthly_thrice';
     createdAt: Date;
     updatedAt: Date;
 };
@@ -54,12 +55,10 @@ interface TourState {
     status: TourStatus;
     isRecording: boolean;
     isLoading: boolean;
-    creationMode: 'manual' | 'auto' | 'voice' | null;
+    creationMode: 'manual' | null;
     recordedSteps: Step[];
     editingTourId: string | null;
-    voiceTranscript: string;
     recordingTourTitle: string;
-    interimVoiceTranscript: string;
     language: string;
 
     // Auth State
@@ -79,11 +78,7 @@ interface TourState {
     }) => Promise<void>;
     pingProject: (id: string | null) => Promise<void>;
     fetchTours: () => Promise<void>;
-    setLanguage: (lang: string) => void;
-    setInterimVoiceTranscript: (transcript: string) => void;
-    addVoiceTranscript: (transcript: string) => void;
-    clearVoiceTranscript: () => void;
-    startRecording: (mode: 'manual' | 'auto' | 'voice', title?: string) => void;
+    startRecording: (mode: 'manual', title?: string) => void;
     stopRecording: () => void;
     editTour: (tour: Tour) => void;
     addStep: (step: Omit<Step, 'id' | 'order'>) => void;
@@ -96,6 +91,7 @@ interface TourState {
     setTour: (tour: Tour) => void;
     setStatus: (status: TourStatus) => void;
     toggleTourActivation: (tourId: string) => Promise<void>;
+    updateTourBehavior: (tourId: string, behavior: Tour['playBehavior']) => Promise<void>;
 
     // Auth Actions
     signUp: (email: string, password: string) => Promise<{ data?: any; error: any }>;
@@ -105,8 +101,6 @@ interface TourState {
     checkAuth: () => Promise<void>;
     resetPassword: (email: string) => Promise<{ error: any }>;
     updatePassword: (password: string) => Promise<{ error: any }>;
-    generateAISteps: () => Promise<void>;
-    improveStepAI: (stepId: string) => Promise<void>;
     deleteProject: (id: string) => Promise<void>;
 }
 
@@ -123,9 +117,7 @@ export const useTourStore = create<TourState>()(
             creationMode: null,
             recordedSteps: [],
             editingTourId: null,
-            voiceTranscript: '',
             recordingTourTitle: '',
-            interimVoiceTranscript: '',
             language: 'en-US',
             user: null,
             isAuthLoading: true,
@@ -235,7 +227,7 @@ export const useTourStore = create<TourState>()(
 
                     if (error) {
                         if (error.code === 'PGRST202') {
-                            console.warn('Product Tour: Database function "ping_project" not found. Please run the provided SQL migration.');
+                            console.warn('Guidemark: Database function "ping_project" not found. Please run the provided SQL migration.');
                         } else {
                             console.error('Ping error details:', error);
                         }
@@ -271,6 +263,7 @@ export const useTourStore = create<TourState>()(
                         description: t.description,
                         pageUrl: t.page_url,
                         isActive: t.is_active || false,
+                        playBehavior: t.play_behavior || 'first_time',
                         createdAt: new Date(t.created_at),
                         updatedAt: new Date(t.updated_at),
                         steps: (t.steps || [])
@@ -293,46 +286,12 @@ export const useTourStore = create<TourState>()(
                 }
             },
 
-            setLanguage: (lang) => set({ language: lang }),
-
-            setInterimVoiceTranscript: (transcript) => set({ interimVoiceTranscript: transcript }),
-
-            addVoiceTranscript: (transcript) => set((state) => {
-                const { recordedSteps, isRecording, creationMode } = state;
-
-                if (isRecording && creationMode === 'voice' && recordedSteps.length > 0) {
-                    const lastStep = recordedSteps[recordedSteps.length - 1];
-                    let newContent = lastStep.content;
-                    if (!newContent) {
-                        newContent = transcript;
-                    } else {
-                        newContent = (newContent + " " + transcript).trim();
-                    }
-
-                    const newSteps = [...recordedSteps];
-                    newSteps[newSteps.length - 1] = {
-                        ...lastStep,
-                        content: newContent
-                    };
-
-                    return { recordedSteps: newSteps, voiceTranscript: '' };
-                }
-
-                return {
-                    voiceTranscript: (state.voiceTranscript + " " + transcript).trim()
-                };
-            }),
-
-            clearVoiceTranscript: () => set({ voiceTranscript: '', interimVoiceTranscript: '' }),
-
             startRecording: (mode, title = '') => set({
                 status: 'recording',
                 isRecording: true,
                 creationMode: mode,
                 recordedSteps: [],
                 editingTourId: null,
-                voiceTranscript: '',
-                interimVoiceTranscript: '',
                 recordingTourTitle: title
             }),
 
@@ -341,8 +300,6 @@ export const useTourStore = create<TourState>()(
                 isRecording: false,
                 creationMode: null,
                 editingTourId: null,
-                voiceTranscript: '',
-                interimVoiceTranscript: '',
                 recordingTourTitle: ''
             }),
 
@@ -433,6 +390,8 @@ export const useTourStore = create<TourState>()(
                             .update({
                                 title,
                                 page_url: normalizedPageUrl,
+                                is_active: tours.find(t => t.id === editingTourId)?.isActive ?? true,
+                                play_behavior: tours.find(t => t.id === editingTourId)?.playBehavior ?? 'first_time',
                                 updated_at: new Date().toISOString()
                             })
                             .eq('id', editingTourId);
@@ -453,7 +412,9 @@ export const useTourStore = create<TourState>()(
                             .insert({
                                 project_id: currentProjectId,
                                 title,
-                                page_url: normalizedPageUrl
+                                page_url: normalizedPageUrl,
+                                is_active: true,
+                                play_behavior: 'first_time'
                             })
                             .select()
                             .single();
@@ -601,53 +562,33 @@ export const useTourStore = create<TourState>()(
                 }
             },
 
-            generateAISteps: async () => {
-                const { generateTourWithAI } = await import('@/lib/auto-tour-generator');
-                set({ isLoading: true });
+            updateTourBehavior: async (tourId, behavior) => {
+                const { tours } = get();
+                const tour = tours.find(t => t.id === tourId);
+                if (!tour) return;
+
+                // Optimistic update
+                set({
+                    tours: tours.map(t =>
+                        t.id === tourId ? { ...t, playBehavior: behavior } : t
+                    )
+                });
+
                 try {
-                    const generatedSteps = await generateTourWithAI();
-                    const stepsWithIds = generatedSteps.map((step, index) => ({
-                        ...step,
-                        id: crypto.randomUUID(),
-                        order: index
-                    }));
-                    set({ recordedSteps: stepsWithIds });
-                    toast.success("AI Ghost-Writer generated your tour draft!");
-                } catch (error: any) {
-                    console.error('Error generating AI tour:', error);
-                    toast.error("AI Generation failed. Falling back to heuristic scan.");
-                    // Fallback to heuristic
-                    const { generateTourHeuristic } = await import('@/lib/auto-tour-generator');
-                    const fallbackSteps = generateTourHeuristic();
-                    const stepsWithIds = fallbackSteps.map((step, index) => ({
-                        ...step,
-                        id: crypto.randomUUID(),
-                        order: index
-                    }));
-                    set({ recordedSteps: stepsWithIds });
-                } finally {
-                    set({ isLoading: false });
+                    const { error } = await supabase
+                        .from('tours')
+                        .update({ play_behavior: behavior })
+                        .eq('id', tourId);
+
+                    if (error) throw error;
+                } catch (error) {
+                    console.error('Error updating tour behavior:', error);
+                    // Rollback
+                    set({ tours });
+                    toast.error("Failed to update frequency setting");
                 }
             },
 
-            improveStepAI: async (stepId: string) => {
-                const step = get().recordedSteps.find(s => s.id === stepId);
-                if (!step) return;
-
-                const { improveContentWithAI } = await import('@/lib/ai-service');
-                set({ isLoading: true });
-                try {
-                    const targetLabel = step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ') || 'element';
-                    const improved = await improveContentWithAI(targetLabel, step.content);
-                    get().updateStep(stepId, { content: improved });
-                    toast.success("AI Ghost-Writer polished your copy!");
-                } catch (error: any) {
-                    console.error('Error improving content with AI:', error);
-                    toast.error("AI Improvement failed.");
-                } finally {
-                    set({ isLoading: false });
-                }
-            },
 
             deleteProject: async (id: string) => {
                 set({ isLoading: true });

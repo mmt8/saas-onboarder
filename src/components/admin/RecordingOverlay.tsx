@@ -6,7 +6,7 @@ import { getUniqueSelector } from "@/lib/dom-utils";
 import { AnimatePresence, motion } from "framer-motion";
 
 export function RecordingOverlay() {
-    const { isRecording, addStep, creationMode, voiceTranscript, interimVoiceTranscript, clearVoiceTranscript } = useTourStore();
+    const { isRecording, addStep } = useTourStore();
     const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
     const [clickPosition, setClickPosition] = useState<{ x: number; y: number } | null>(null);
 
@@ -63,18 +63,12 @@ export function RecordingOverlay() {
 
             const selector = getUniqueSelector(interactive);
 
-            let content = "";
-            if (creationMode === 'voice' && (voiceTranscript || interimVoiceTranscript)) {
-                content = (voiceTranscript + " " + interimVoiceTranscript).trim();
-                clearVoiceTranscript();
-            }
-
             setClickPosition({ x: e.clientX, y: e.clientY });
             setTimeout(() => setClickPosition(null), 1000);
 
             addStep({
                 target: selector,
-                content: content,
+                content: "",
                 action: 'click',
             });
         };
@@ -86,7 +80,7 @@ export function RecordingOverlay() {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('click', handleClick, { capture: true });
         };
-    }, [isRecording, addStep, creationMode, voiceTranscript, interimVoiceTranscript, clearVoiceTranscript]);
+    }, [isRecording, addStep]);
 
     if (!isRecording) return null;
 

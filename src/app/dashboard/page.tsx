@@ -2,7 +2,7 @@
 
 import { useTourStore, Tour } from "@/store/tour-store";
 import { Button } from "@/components/ui/button";
-import { Play, Trash2, Clock, Edit, Globe, Plus } from "lucide-react";
+import { Play, Trash2, Clock, Edit, Globe, Plus, Zap } from "lucide-react";
 import { useState } from "react";
 import { DeleteTourDialog } from "@/components/admin/DeleteTourDialog";
 import { useRouter } from "next/navigation";
@@ -39,7 +39,8 @@ export default function ToursPage() {
         editTour,
         deleteTour,
         isLoading,
-        toggleTourActivation
+        toggleTourActivation,
+        updateTourBehavior
     } = useTourStore();
 
     const [deletingTour, setDeletingTour] = useState<Tour | null>(null);
@@ -115,6 +116,29 @@ export default function ToursPage() {
                                     />
                                 </div>
                             </div>
+
+                            {/* Behavioral Section */}
+                            <div className="bg-secondary/30 rounded-xl p-4 mb-6 border border-border/40">
+                                <div className="flex items-center gap-2 mb-3 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                                    <Zap className="w-3.5 h-3.5 text-[#E65221]" />
+                                    <span>Delivery Control</span>
+                                </div>
+                                <select
+                                    value={tour.playBehavior}
+                                    onChange={(e) => updateTourBehavior(tour.id, e.target.value as any)}
+                                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer hover:border-primary/50 transition-colors"
+                                >
+                                    <option value="first_time">Show once (first visit)</option>
+                                    <option value="weekly">Weekly (2x max)</option>
+                                    <option value="monthly_thrice">Monthly (once a month, 3x max)</option>
+                                </select>
+                                <p className="mt-2 text-[10px] text-muted-foreground leading-tight italic">
+                                    {tour.playBehavior === 'first_time' && "Guides the user once and then stays hidden."}
+                                    {tour.playBehavior === 'weekly' && "Reminds users once a week. Shown up to 2 times total."}
+                                    {tour.playBehavior === 'monthly_thrice' && "Recurring monthly check-in. Shown up to 3 times total."}
+                                </p>
+                            </div>
+
                             <div className="flex items-center gap-2">
                                 <Button
                                     onClick={() => handlePlay(tour)}

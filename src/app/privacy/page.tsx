@@ -18,7 +18,7 @@ export default function PrivacyPage() {
                     <h2 className="text-xl font-bold text-foreground">2. Responsible Party</h2>
                     <p>
                         The party responsible for data processing on this website is:<br />
-                        Product Tour<br />
+                        Guidemark<br />
                         Mariendorfer Damm 1<br />
                         12099 Berlin<br />
                         E-Mail: mehmet@producttour.app

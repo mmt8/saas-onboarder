@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTourStore } from "@/store/tour-store";
 import { Button } from "@/components/ui/button";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Layout } from "lucide-react";
 import { toast } from "sonner";
 import { Modal } from "@/components/ui/modal";
 
@@ -42,7 +42,7 @@ export function CreateProjectDialog({ isOpen, onClose }: CreateProjectDialogProp
         <Modal isOpen={isOpen} onClose={onClose}>
             <div className="mb-8">
                 <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6">
-                    <Sparkles className="w-7 h-7 text-primary" />
+                    <Layout className="w-7 h-7 text-primary" />
                 </div>
                 <h2 className="text-4xl font-bold font-fraunces mb-3">New Project</h2>
                 <p className="text-muted-foreground text-lg leading-relaxed">

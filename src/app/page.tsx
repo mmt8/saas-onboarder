@@ -24,12 +24,12 @@ export default function Home() {
 
           <div className="max-w-7xl mx-auto px-6 relative z-10 text-center flex flex-col items-center">
             <h1 className="text-5xl md:text-8xl font-bold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 font-serif max-w-4xl leading-[1.1] z-30 relative pt-12">
-              AI Product tours <br />
+              High-Fidelity tours <br />
               <span className="text-[#E65221]">that drive adoption.</span>
             </h1>
 
             <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 leading-relaxed font-medium z-30 relative">
-              Auto generate on-brand product tours from your UI in seconds.
+              Record on-brand precision walkthroughs from your UI in seconds.
             </p>
 
             {/* Parallax Hero Visual */}
@@ -61,9 +61,9 @@ export default function Home() {
         <section className="py-24" id="features">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 font-serif"><span className="text-[#E65221]">Ghost-Writer</span> for your product walkthroughs.</h2>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 font-serif">Manual <span className="text-[#E65221]">Precision</span> for your product walkthroughs.</h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                You build the product; we’ll explain it. Our AI writes the copy and picks the elements so you don't have to think for product adoption.
+                No automatic guesswork. You record the path, and we ensure it looks pixel-perfect and on-brand every single time.
               </p>
             </div>
 
@@ -75,9 +75,9 @@ export default function Home() {
                   <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 text-primary">
                     <Zap className="w-7 h-7" />
                   </div>
-                  <h3 className="text-3xl font-bold mb-4 font-serif">AI Draft</h3>
+                  <h3 className="text-3xl font-bold mb-4 font-serif">Pixel Perfect</h3>
                   <p className="text-muted-foreground text-lg leading-relaxed max-w-md">
-                    AI tour drafts automatically from your UI. Get a strong first version instantly, then tweak the wording and flow if needed.
+                    Every step is visually verified. Pick elements with surgical precision and customize every pixel of the guide.
                   </p>
 
                   {/* Visual Placeholder for Editor UI */}
@@ -99,14 +99,21 @@ export default function Home() {
               </div>
 
               {/* Card: No Code */}
-              <div className="group relative overflow-hidden rounded-[2.5rem] bg-white border border-border/50 p-8 hover:shadow-xl transition-all duration-300 md:row-span-2">
-                <div className="w-12 h-12 rounded-2xl bg-accent flex items-center justify-center mb-4">
+              <div className="group relative overflow-hidden rounded-[2.5rem] bg-white border border-border/50 p-8 hover:shadow-xl transition-all duration-300 md:row-span-2 flex flex-col h-full">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 text-primary">
                   <MousePointerClick className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-2 font-serif">No-Code Visual Editor</h3>
-                <p className="text-muted-foreground">
+                <h3 className="text-2xl font-bold mb-3 font-serif">No-Code Visual Editor</h3>
+                <p className="text-muted-foreground mb-8">
                   Point and click to attach steps to any element. CSS selectors are handled automatically.
                 </p>
+                <div className="mt-auto -mx-8 -mb-8 overflow-hidden rounded-b-[2.5rem]">
+                  <img
+                    src="/landing/no-code-editor.png"
+                    alt="No-Code Visual Editor"
+                    className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
               </div>
 
             </div>
@@ -159,8 +166,8 @@ export default function Home() {
 
               <Step
                 number="1"
-                title="Generate a draft"
-                description="Point our AI to any page in your product. It analyzes the UI and generates a contextual tour draft in seconds."
+                title="Record steps"
+                description="Use our precise point-and-click recorder to capture every interaction in your product walkthrough."
               />
               <Step
                 number="2"
@@ -212,9 +219,9 @@ export default function Home() {
                 description="Granular control over who can create, edit, and publish tours."
               />
               <ComingSoonCard
-                icon={<Sparkles />}
-                title="AI Voice Over"
-                description="Turn text steps into human-like audio instructions automatically."
+                icon={<Zap />}
+                title="Performance Analytics"
+                description="Detailed insights into exactly where users drop off in your tours."
               />
             </div>
           </div>
@@ -224,8 +231,8 @@ export default function Home() {
         <section className="py-32 text-center px-6">
           <div className="max-w-3xl mx-auto space-y-8">
             <h2 className="text-4xl md:text-6xl font-bold font-serif tracking-tight leading-tight">
-              Stop building tours manually. <br />
-              <span className="text-[#E65221]">Let the AI do it for you.</span>
+              Stop fighting with tooltip code. <br />
+              <span className="text-[#E65221]">Build guides in minutes.</span>
             </h2>
             <p className="text-xl text-muted-foreground">
               Empower your users, reduce support tickets, and crush churn with interactive guides.
@@ -252,8 +259,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 relative z-10">
           <div className="md:col-span-2 flex flex-col items-start gap-4">
             <div className="flex items-center gap-1.5">
-              <img src="/logo.svg" alt="Product Tour Logo" className="w-8 h-8 opacity-90" />
-              <span className="font-serif font-bold text-xl text-white">Product Tour</span>
+              <img src="/logo.svg" alt="Guidemark Logo" className="w-8 h-8 opacity-90" />
+              <span className="font-serif font-bold text-xl text-white">Guidemark</span>
             </div>
             <p className="text-white/60 mt-2 max-w-sm leading-relaxed">
               The easiest way to create interactive product walkthroughs.
@@ -280,7 +287,7 @@ export default function Home() {
           </div>
         </div>
         <div className="mt-16 pt-8 border-t border-white/10 text-center text-sm text-white/40">
-          © {new Date().getFullYear()} Product Tour. All rights reserved.
+          © {new Date().getFullYear()} Guidemark. All rights reserved.
         </div>
       </footer>
     </div>

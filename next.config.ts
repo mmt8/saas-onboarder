@@ -8,11 +8,7 @@ const nextConfig: NextConfig = {
         destination: '/signup',
         permanent: true,
       },
-      {
-        source: '/pricing',
-        destination: '/#pricing',
-        permanent: false,
-      },
+
       {
         source: '/resources',
         destination: '/',

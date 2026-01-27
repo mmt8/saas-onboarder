@@ -44,7 +44,7 @@ export function InstallationTutorialModal({ isOpen, onClose, projectId }: Instal
                             <Code2 className="w-6 h-6 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold font-fraunces">Install Product Tour</h2>
+                            <h2 className="text-2xl font-bold font-fraunces">Install Guidemark</h2>
                             <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">3-Minute Setup</p>
                         </div>
                     </div>
@@ -64,7 +64,7 @@ export function InstallationTutorialModal({ isOpen, onClose, projectId }: Instal
                             <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 font-bold text-sm">1</div>
                             <div className="space-y-1">
                                 <h3 className="font-bold">Copy your unique embed code</h3>
-                                <p className="text-sm text-muted-foreground">This script connects your website to the Product Tour dashboard.</p>
+                                <p className="text-sm text-muted-foreground">This script connects your website to the Guidemark dashboard.</p>
                             </div>
                         </div>
 

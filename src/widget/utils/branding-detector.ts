@@ -81,7 +81,7 @@ export function detectBranding(): DetectedBranding | null {
             textColor
         };
     } catch (e) {
-        console.warn('Product Tour: Branding detection failed', e);
+        console.warn('Guidemark: Branding detection failed', e);
         return null;
     }
 }

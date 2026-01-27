@@ -5,7 +5,7 @@ import { StepEditor } from '@/components/admin/StepEditor';
 import { RecordingOverlay } from '@/components/admin/RecordingOverlay';
 import { WidgetTourPlayer } from './WidgetTourPlayer';
 import { Button } from '@/components/ui/button';
-import { Play, Plus, X, HelpCircle, Layout, ExternalLink } from 'lucide-react';
+import { Play, Plus, X, HelpCircle, Layout, ExternalLink, Trash2, Zap, Check, ChevronDown } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import { CreateTourDialog } from '@/components/admin/CreateTourDialog';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,9 +36,9 @@ const Switch = ({ checked, onChange, disabled }: { checked: boolean, onChange: (
         )}
     >
         <motion.div
-            animate={{ x: checked ? 12 : 2 }}
+            animate={{ x: checked ? 14 : 3 }}
             initial={false}
-            className="absolute top-0.5 w-3 h-3 bg-white rounded-full shadow-sm"
+            className="absolute top-0.5 left-0 w-3 h-3 bg-white rounded-full shadow-sm"
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
         />
     </button>
@@ -49,21 +49,23 @@ interface TourCardProps {
     onEdit: () => void;
     onPlay: () => void;
     toggleTourActivation: (id: string) => Promise<void>;
+    updateTourBehavior: (id: string, behavior: Tour['playBehavior']) => Promise<void>;
+    onDelete: () => void;
     isLoading?: boolean;
     onActivationChange?: (msg: string) => void;
 }
-const TourCard = ({ tour, onEdit, onPlay, toggleTourActivation, isLoading, onActivationChange }: TourCardProps) => {
+const TourCard = ({ tour, onEdit, onPlay, onDelete, toggleTourActivation, updateTourBehavior, isLoading, onActivationChange }: TourCardProps) => {
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     return (
         <div
             onClick={onEdit}
             className={cn(
-                "group p-4 bg-white rounded-2xl shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-lg hover:scale-[1.02] hover:relative hover:z-10 cursor-pointer transition-all duration-200",
-                !tour.isActive && "opacity-85 grayscale-[0.1]"
+                "group p-4 bg-white rounded-2xl shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:bg-slate-50 transition-colors cursor-pointer"
             )}
             style={{ border: '1px solid #CBD5E1' }}
         >
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-start mb-4">
                 <div className="flex-1 min-w-0 mr-2 space-y-1">
                     <div className="flex items-center gap-2">
                         <div className={cn(
@@ -73,17 +75,11 @@ const TourCard = ({ tour, onEdit, onPlay, toggleTourActivation, isLoading, onAct
                         <div className="font-semibold text-slate-800 truncate">{tour.title}</div>
                     </div>
                     <div className="text-[10px] text-[#495BFD] font-mono truncate px-3.5">{tour.pageUrl || '/'}</div>
-                    <div className="text-[10px] text-slate-500 px-3.5 flex items-center gap-2">
-                        <span>{tour.steps.length} steps</span>
-                        <span>•</span>
-                        <span>{new Date(tour.createdAt).toLocaleDateString()}</span>
-                    </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                     <Switch
                         checked={tour.isActive}
                         onChange={async (newState) => {
-                            console.log('Widget: Toggling tour', tour.id, 'to', newState);
                             await toggleTourActivation(tour.id);
                             onActivationChange?.(newState ? "Tour activated" : "Tour deactivated");
                         }}
@@ -92,14 +88,81 @@ const TourCard = ({ tour, onEdit, onPlay, toggleTourActivation, isLoading, onAct
                     <Button
                         size="icon"
                         variant="ghost"
-                        className="opacity-0 group-hover:opacity-100 h-8 w-8"
+                        className="h-8 w-8 bg-blue-100 hover:bg-blue-200 text-[#495BFD] border-none transition-colors active:scale-100"
                         onClick={(e) => {
                             e.stopPropagation();
                             onPlay();
                         }}
                     >
-                        <Play className="w-4 h-4 text-[#495BFD]" />
+                        <Play className="w-3.5 h-3.5 fill-current" />
                     </Button>
+                </div>
+            </div>
+
+            {/* Behavioral Section */}
+            <div className="bg-slate-50 rounded-xl p-3 mb-1 border border-slate-100">
+                <div className="flex items-center gap-2 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <Zap className="w-3 h-3 text-[#E65221]" />
+                    <span>Delivery</span>
+                </div>
+
+                <div className="relative">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsDropdownOpen(!isDropdownOpen);
+                        }}
+                        className="w-full flex items-center justify-between bg-white border-solid border border-slate-200 hover:border-blue-400/50 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/10 transition-all shadow-sm"
+                    >
+                        <span>
+                            {tour.playBehavior === 'first_time' && 'Show once'}
+                            {tour.playBehavior === 'weekly' && 'Weekly (2x max)'}
+                            {tour.playBehavior === 'monthly_thrice' && 'Monthly (3x max)'}
+                        </span>
+                        <ChevronDown className="w-3 h-3 text-slate-400" />
+                    </button>
+
+                    {isDropdownOpen && (
+                        <>
+                            <div
+                                className="fixed inset-0 z-[2147483646]"
+                                onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(false); }}
+                            />
+                            <div
+                                className="absolute top-full left-0 w-full mt-1 bg-white rounded-lg shadow-xl border border-slate-100 z-[2147483647] overflow-hidden min-w-[200px]"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="p-1">
+                                    {[
+                                        { value: 'first_time', label: 'Show once' },
+                                        { value: 'weekly', label: 'Weekly (2x max)' },
+                                        { value: 'monthly_thrice', label: 'Monthly (3x max)' }
+                                    ].map((item) => (
+                                        <div
+                                            key={item.value}
+                                            onClick={() => {
+                                                updateTourBehavior(tour.id, item.value as any);
+                                                setIsDropdownOpen(false);
+                                            }}
+                                            className={cn(
+                                                "relative flex items-center h-8 px-8 text-[11px] font-bold rounded-md select-none cursor-pointer transition-colors",
+                                                tour.playBehavior === item.value
+                                                    ? "bg-slate-50 text-[#495BFD]"
+                                                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                            )}
+                                        >
+                                            <span>{item.label}</span>
+                                            {tour.playBehavior === item.value && (
+                                                <div className="absolute left-2 flex items-center justify-center">
+                                                    <Check className="w-3 h-3 text-[#495BFD]" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>
@@ -122,6 +185,8 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
         isLoading,
         stopRecording,
         toggleTourActivation,
+        updateTourBehavior,
+        deleteTour,
         pingProject
     } = useTourStore();
 
@@ -142,8 +207,9 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
     const [isAdminListOpen, setAdminListOpen] = useState(false);
     const [isCreateTourDialogOpen, setIsCreateTourDialogOpen] = useState(false);
     const [tourFilter, setTourFilter] = useState<'all' | 'page'>('page');
-    const [currentPath, setCurrentPath] = useState(window.location.pathname);
+    const [currentPath, setCurrentPath] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
     const [feedback, setFeedback] = useState<string | null>(null);
+    const [tourToDelete, setTourToDelete] = useState<Tour | null>(null);
     const prevLoadingRef = useRef(isLoading);
     const prevStatusRef = useRef(status);
     const hasAutoStartedOnPage = useRef<Record<string, boolean>>({});
@@ -261,14 +327,38 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
 
         if (matchingTour) {
             const storageKey = `producttour-seen-${matchingTour.id}`;
-            const hasSeen = localStorage.getItem(storageKey);
+            const storedValue = localStorage.getItem(storageKey);
 
-            if (!hasSeen) {
+            let stats = { lastPlayedAt: 0, playCount: 0 };
+            if (storedValue) {
+                try {
+                    const parsed = JSON.parse(storedValue);
+                    if (typeof parsed === 'object') stats = { ...stats, ...parsed };
+                } catch (e) {
+                    if (storedValue === 'true') stats.playCount = 1;
+                }
+            }
+
+            const now = Date.now();
+            const { playBehavior } = matchingTour;
+            let shouldPlay = false;
+
+            if (playBehavior === 'first_time') {
+                shouldPlay = stats.playCount === 0;
+            } else if (playBehavior === 'weekly') {
+                const oneWeek = 7 * 24 * 60 * 60 * 1000;
+                shouldPlay = stats.playCount === 0 || (stats.playCount < 2 && now - stats.lastPlayedAt > oneWeek);
+            } else if (playBehavior === 'monthly_thrice') {
+                const oneMonth = 30 * 24 * 60 * 60 * 1000;
+                shouldPlay = stats.playCount === 0 || (stats.playCount < 3 && now - stats.lastPlayedAt > oneMonth);
+            }
+
+            if (shouldPlay) {
                 hasAutoStartedOnPage.current[currentPath] = true;
-                console.log('Widget: Auto-starting tour', matchingTour.title, 'for path', currentPath);
+                console.log('Widget: Auto-starting tour', matchingTour.title, 'Behavior:', playBehavior);
                 setTour(matchingTour);
                 setStatus('playing');
-                localStorage.setItem(storageKey, 'true');
+                // Note: Stats are recorded in WidgetTourPlayer upon completion
             }
         }
     }, [tours, status, autoStart, projectId, setTour, setStatus, currentPath, isAdminListOpen, isCreateTourDialogOpen]);
@@ -350,7 +440,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
 
     // Get current project settings
     const currentProject = projects.find(p => p.id === projectId);
-    const launcherText = currentProject?.launcherText || 'Product Tours';
+    const launcherText = currentProject?.launcherText || 'Guidemark';
     const shouldShowAdmin = showAdminPanel && (currentProject?.showLauncher !== false);
 
     const theme = currentProject?.themeSettings || {
@@ -496,7 +586,9 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                                                                     tour={tour}
                                                                     onEdit={() => { setAdminListOpen(false); editTour(tour); }}
                                                                     onPlay={() => { setAdminListOpen(false); setTour(tour); setStatus('playing'); }}
+                                                                    onDelete={() => setTourToDelete(tour)}
                                                                     toggleTourActivation={toggleTourActivation}
+                                                                    updateTourBehavior={updateTourBehavior}
                                                                     isLoading={isLoading}
                                                                     onActivationChange={setFeedback}
                                                                 />
@@ -520,7 +612,9 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                                                                     tour={tour}
                                                                     onEdit={() => { setAdminListOpen(false); editTour(tour); }}
                                                                     onPlay={() => { setAdminListOpen(false); setTour(tour); setStatus('playing'); }}
+                                                                    onDelete={() => setTourToDelete(tour)}
                                                                     toggleTourActivation={toggleTourActivation}
+                                                                    updateTourBehavior={updateTourBehavior}
                                                                     isLoading={isLoading}
                                                                     onActivationChange={setFeedback}
                                                                 />
@@ -593,6 +687,53 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
             {status === 'playing' && (
                 <WidgetTourPlayer />
             )}
+
+            {/* Widget Delete Confirmation */}
+            <AnimatePresence>
+                {tourToDelete && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2147483647] flex items-center justify-center p-6 pointer-events-auto"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl text-center"
+                        >
+                            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                                <Trash2 className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">Delete Tour?</h3>
+                            <p className="text-slate-500 text-sm mb-8">
+                                Are you sure you want to delete <span className="font-bold text-slate-700">"{tourToDelete.title}"</span>? This action cannot be undone.
+                            </p>
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => setTourToDelete(null)}
+                                    className="flex-1 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-900 border-none transition-colors"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={async () => {
+                                        await deleteTour(tourToDelete.id);
+                                        setTourToDelete(null);
+                                        setFeedback("Tour deleted");
+                                    }}
+                                    className="flex-1 h-12 rounded-xl bg-red-500 hover:bg-red-600 text-white border-none shadow-lg shadow-red-500/20 transition-colors"
+                                >
+                                    Yes, Delete
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <CreateTourDialog
                 isOpen={isCreateTourDialogOpen}

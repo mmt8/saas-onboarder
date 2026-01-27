@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, MousePointer2, Sparkles, Mic } from "lucide-react";
+import { X, MousePointer2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTourStore } from "@/store/tour-store";
 
@@ -12,31 +12,24 @@ interface CreateTourDialogProps {
 }
 
 export function CreateTourDialog({ isOpen, onClose }: CreateTourDialogProps) {
-    const { startRecording, generateAISteps, isLoading } = useTourStore();
+    const { startRecording, isLoading } = useTourStore();
 
     const [tourName, setTourName] = useState("");
     const isNameValid = tourName.trim().length >= 3;
 
-    const handleModeSelect = async (mode: 'manual' | 'auto') => {
+    const handleModeSelect = async (mode: 'manual') => {
         if (!isNameValid || isLoading) return;
 
         if (mode === 'manual') {
             startRecording('manual', tourName.trim());
             onClose();
-        } else if (mode === 'auto') {
-            startRecording('auto', tourName.trim());
-            onClose();
-            // Trigger AI generation in the background/state
-            await generateAISteps();
         }
     };
 
-    const [hoveredButton, setHoveredButton] = useState<'manual' | 'auto' | null>(null);
+    const [isHovered, setIsHovered] = useState(false);
 
-    const getButtonStyle = (buttonId: 'manual' | 'auto') => ({
-        border: hoveredButton === buttonId ? '1px solid #495BFD' : '1px solid #E2E8F0',
-        transform: hoveredButton === buttonId ? 'translateY(-4px)' : 'none',
-        boxShadow: hoveredButton === buttonId ? '0 12px 24px -8px rgba(0, 0, 0, 0.15)' : 'none',
+    const getButtonStyle = () => ({
+        border: isHovered ? '2px solid #ffffff' : '2px solid rgba(255,255,255,0.2)',
         transition: 'all 0.2s ease-out'
     });
 
@@ -83,46 +76,24 @@ export function CreateTourDialog({ isOpen, onClose }: CreateTourDialogProps) {
                             </div>
 
                             <div className="pt-2">
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Select Recording Mode</p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <button
-                                        onClick={() => handleModeSelect('manual')}
-                                        onMouseEnter={() => setHoveredButton('manual')}
-                                        onMouseLeave={() => setHoveredButton(null)}
-                                        className="group relative p-6 rounded-xl bg-card text-left flex flex-col gap-4 cursor-pointer"
-                                        style={getButtonStyle('manual')}
-                                    >
-                                        <div className="p-3 rounded-lg bg-blue-500/10 w-fit group-hover:scale-110 transition-transform">
-                                            <MousePointer2 className="w-6 h-6 text-blue-600" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-foreground mb-1">Manual Builder</h3>
-                                            <p className="text-xs text-muted-foreground">Build a tour by clicking elements yourself.</p>
-                                        </div>
-                                    </button>
-
-                                    <button
-                                        onClick={() => handleModeSelect('auto')}
-                                        onMouseEnter={() => setHoveredButton('auto')}
-                                        onMouseLeave={() => setHoveredButton(null)}
-                                        className="group relative p-6 rounded-xl bg-card text-left flex flex-col gap-4 cursor-pointer"
-                                        style={getButtonStyle('auto')}
-                                    >
-                                        <div className="p-3 rounded-lg bg-purple-500/10 w-fit group-hover:scale-110 transition-transform">
-                                            <Sparkles className="w-6 h-6 text-purple-600" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-foreground mb-1">Auto-Generate</h3>
-                                            <p className="text-xs text-muted-foreground">AI scans your page and creates a guide automatically.</p>
-                                        </div>
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={() => handleModeSelect('manual')}
+                                    onMouseEnter={() => setIsHovered(true)}
+                                    onMouseLeave={() => setIsHovered(false)}
+                                    className="group relative p-8 rounded-xl bg-[#495BFD] text-white text-center flex flex-col items-center gap-4 cursor-pointer w-full transition-all hover:scale-[1.02] shadow-xl shadow-blue-500/20"
+                                    style={getButtonStyle()}
+                                >
+                                    <div className="p-4 rounded-full bg-white/20 w-fit">
+                                        <MousePointer2 className="w-8 h-8" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold mb-1">Start Recording</h3>
+                                        <p className="text-sm opacity-90">Click elements on your page to build the tour.</p>
+                                    </div>
+                                </button>
                             </div>
                         </div>
 
-                        <div className="px-6 pb-6 text-center">
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">✨ Powered by Product Tour AI</p>
-                        </div>
                     </motion.div>
                 </>
             )}

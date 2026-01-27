@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import { CreateTourDialog } from "@/components/admin/CreateTourDialog";
 import { useRouter } from "next/navigation";
 import { CreateProjectDialog } from "@/components/admin/CreateProjectDialog";
-import { Sparkles } from "lucide-react";
 import { DashboardNav } from "@/components/admin/DashboardNav";
 import { InstallationTutorialModal } from "@/components/admin/InstallationTutorialModal";
 import { RefreshCw, Play, Circle, AlertCircle, LogOut, User } from "lucide-react";
@@ -135,14 +134,14 @@ export default function DashboardLayout({
             <div className="min-h-screen bg-background flex items-center justify-center p-8">
                 <div className="max-w-xl w-full text-center space-y-8 animate-in fade-in zoom-in duration-700">
                     <div className="relative mx-auto w-24 h-24 bg-primary/10 rounded-[2rem] flex items-center justify-center p-4">
-                        <img src="/logo.svg" alt="Product Tour Logo" className="w-full h-full" />
+                        <img src="/logo.svg" alt="Guidemark Logo" className="w-full h-full" />
                         <div className="absolute -top-2 -right-2 w-6 h-6 bg-accent rounded-full animate-bounce" />
                     </div>
 
                     <div className="space-y-4">
                         <h1 className="text-5xl font-bold font-fraunces leading-tight">
                             Welcome to <br />
-                            <span className="text-primary">Product Tour</span>
+                            <span className="text-primary">Guidemark</span>
                         </h1>
                         <p className="text-xl text-muted-foreground leading-relaxed">
                             Every great journey begins with a project. Create yours now to start building interactive tours for your users.
@@ -207,7 +206,7 @@ export default function DashboardLayout({
                     <div className="flex items-center justify-between">
                         <Link href="/dashboard" className="flex items-center gap-2 group">
                             <img src="/logo.svg" alt="Product Tour Logo" className="w-8 h-8 transition-transform group-hover:scale-105" />
-                            <span className="font-serif font-bold text-xl tracking-tight text-foreground">Product Tour</span>
+                            <span className="font-serif font-bold text-xl tracking-tight text-foreground">Guidemark</span>
                         </Link>
 
                         <div className="flex items-center gap-2">
@@ -272,7 +271,7 @@ export default function DashboardLayout({
                                 className="px-6 py-6 font-bold"
                             >
                                 {isInstalled ? <Plus className="w-4 h-4 mr-2" /> : <AlertCircle className="w-4 h-4 mr-2" />}
-                                {isInstalled ? "Create New Tour" : "Setup Product Tour"}
+                                {isInstalled ? "Create New Tour" : "Setup Guidemark"}
                             </Button>
                         </div>
                     </div>

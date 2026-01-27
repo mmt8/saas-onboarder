@@ -23,11 +23,19 @@ CREATE TABLE IF NOT EXISTS tours (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 3. Add project_id to tours if it doesn't exist (Migration)
+-- 3. Update tours table with missing columns (Migration)
 DO $$ 
 BEGIN 
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='tours' AND column_name='project_id') THEN
     ALTER TABLE tours ADD COLUMN project_id UUID REFERENCES projects(id) ON DELETE CASCADE;
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='tours' AND column_name='is_active') THEN
+    ALTER TABLE tours ADD COLUMN is_active BOOLEAN DEFAULT true;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='tours' AND column_name='play_behavior') THEN
+    ALTER TABLE tours ADD COLUMN play_behavior TEXT DEFAULT 'first_time';
   END IF;
 END $$;
 
