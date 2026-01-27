@@ -38473,7 +38473,7 @@ ${suffix}`;
                       tour.playBehavior === "weekly" && "Weekly (2x max)",
                       tour.playBehavior === "monthly_thrice" && "Monthly (3x max)"
                     ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "w-3 h-3 text-slate-400 mr-1" })
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "w-3 h-3 text-slate-400" })
                   ]
                 }
               ),
