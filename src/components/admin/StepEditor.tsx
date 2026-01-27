@@ -205,7 +205,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                 </div>
             )}
 
-            <div className="space-y-1.5 px-4">
+            <div className="space-y-1.5 px-4 mt-2">
                 <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest flex items-center gap-1 ml-1">
                     Tour Title
                     <span className="text-destructive font-bold">*</span>
@@ -234,8 +234,8 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                     )}
                 </div>
             </div>
-            <div className="text-xs text-muted-foreground flex justify-between ml-1 mt-2">
-                <span>Steps: {recordedSteps.length}</span>
+            <div className="text-xs text-muted-foreground flex justify-between px-4 mt-2">
+                <span className="ml-1">Steps: {recordedSteps.length}</span>
             </div>
 
             {/* Delete Confirmation Dialog */}

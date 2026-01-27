@@ -37760,7 +37760,7 @@ ${suffix}`;
           )
         ] })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5 px-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5 px-4 mt-2", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "text-[10px] text-muted-foreground font-bold uppercase tracking-widest flex items-center gap-1 ml-1", children: [
           "Tour Title",
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-destructive font-bold", children: "*" })
@@ -37788,7 +37788,7 @@ ${suffix}`;
           ] })
         ] })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-muted-foreground flex justify-between ml-1 mt-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-muted-foreground flex justify-between px-4 mt-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "ml-1", children: [
         "Steps: ",
         recordedSteps.length
       ] }) }),
