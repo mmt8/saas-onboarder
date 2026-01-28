@@ -47,7 +47,7 @@ export default function PricingPage() {
                         </motion.p>
 
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start text-left">
+                        <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-16 items-start text-left">
                             {/* Left Column: Interactive Controls */}
                             <div className="space-y-12">
                                 <div>

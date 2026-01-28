@@ -259,8 +259,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 relative z-10">
           <div className="md:col-span-2 flex flex-col items-start gap-4">
             <div className="flex items-center gap-1.5">
-              <img src="/logo.svg" alt="Guidemark Logo" className="w-8 h-8 opacity-90" />
-              <span className="font-serif font-bold text-xl text-white">Guidemark</span>
+              <img src="/logo.svg" alt="Product Tour Logo" className="w-8 h-8 opacity-90" />
+              <span className="font-serif font-bold text-xl text-white">Product Tour</span>
             </div>
             <p className="text-white/60 mt-2 max-w-sm leading-relaxed">
               The easiest way to create interactive product walkthroughs.
@@ -287,7 +287,7 @@ export default function Home() {
           </div>
         </div>
         <div className="mt-16 pt-8 border-t border-white/10 text-center text-sm text-white/40">
-          © {new Date().getFullYear()} Guidemark. All rights reserved.
+          © {new Date().getFullYear()} Product Tour. All rights reserved.
         </div>
       </footer>
     </div>

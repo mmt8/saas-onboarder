@@ -27,7 +27,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://producttour.app'),
-  title: "Guidemark",
+  title: "Product Tour",
   description: "The easiest way to create interactive high-fidelity tours.",
 };
 

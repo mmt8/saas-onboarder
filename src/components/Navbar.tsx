@@ -46,8 +46,8 @@ export function Navbar() {
                 {/* 1. Left: Logo (Standalone) */}
                 <div className="flex items-center z-50 relative">
                     <Link href="/" className="flex items-center gap-0.5 group">
-                        <img src="/logo.svg" alt="Guidemark Logo" className="w-9 h-9 transition-transform group-hover:scale-105" />
-                        <span className="font-serif font-bold text-2xl tracking-tight text-foreground hidden md:block ml-1">Guidemark</span>
+                        <img src="/logo.svg" alt="Product Tour Logo" className="w-9 h-9 transition-transform group-hover:scale-105" />
+                        <span className="font-serif font-bold text-2xl tracking-tight text-foreground hidden md:block ml-1">Product Tour</span>
                     </Link>
                 </div>
 
@@ -129,27 +129,39 @@ export function Navbar() {
                         className="fixed inset-0 z-40 bg-background/95 backdrop-blur-3xl pt-24 px-6 md:hidden flex flex-col"
                     >
                         <div className="flex flex-col gap-6 text-center mt-10">
-                            <MobileNavLink href="/#features" onClick={() => setMobileMenuOpen(false)}>Features</MobileNavLink>
-                            <MobileNavLink href="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</MobileNavLink>
-                            <MobileNavLink href="/resources" onClick={() => setMobileMenuOpen(false)}>Resources</MobileNavLink>
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                                <MobileNavLink href="/#features" onClick={() => setMobileMenuOpen(false)}>Features</MobileNavLink>
+                            </motion.div>
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+                                <MobileNavLink href="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</MobileNavLink>
+                            </motion.div>
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                                <MobileNavLink href="/resources" onClick={() => setMobileMenuOpen(false)}>Resources</MobileNavLink>
+                            </motion.div>
 
                             <div className="h-px bg-border/50 w-full my-4" />
 
                             {user ? (
                                 <div className="flex flex-col gap-4">
-                                    <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-bold font-serif text-foreground hover:text-primary transition-colors py-2 flex items-center justify-center gap-2">
-                                        <LayoutDashboard className="w-6 h-6" />
-                                        Dashboard
-                                    </Link>
-                                    <button
-                                        onClick={() => { signOut(); setMobileMenuOpen(false); }}
-                                        className="text-2xl font-bold font-serif text-destructive hover:text-destructive/80 transition-colors py-2"
-                                    >
-                                        Sign Out
-                                    </button>
+                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+                                        <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-3xl font-bold font-serif text-foreground hover:text-primary transition-colors py-2 flex items-center justify-center gap-2">
+                                            <LayoutDashboard className="w-7 h-7" />
+                                            Dashboard
+                                        </Link>
+                                    </motion.div>
+                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                                        <button
+                                            onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                                            className="text-3xl font-bold font-serif text-destructive hover:text-destructive/80 transition-colors py-2"
+                                        >
+                                            Sign Out
+                                        </button>
+                                    </motion.div>
                                 </div>
                             ) : (
-                                <MobileNavLink href="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</MobileNavLink>
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+                                    <MobileNavLink href="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</MobileNavLink>
+                                </motion.div>
                             )}
                         </div>
                     </motion.div>
@@ -175,7 +187,7 @@ function MobileNavLink({ href, children, onClick }: { href: string; children: Re
         <Link
             href={href}
             onClick={onClick}
-            className="text-[15px] font-bold text-foreground hover:text-primary transition-colors py-2"
+            className="text-3xl font-bold font-serif text-foreground hover:text-primary transition-colors py-2"
         >
             {children}
         </Link>
