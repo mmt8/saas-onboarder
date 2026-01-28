@@ -18,7 +18,7 @@ const faqs = [
     },
     {
         question: "Does it work on single page applications (SPAs)?",
-        answer: "Yes, Guidemark is designed specifically for modern web apps. We support React, Vue, Angular, Svelte, and vanilla JS. It handles client-side routing out of the box."
+        answer: "Yes, Product Tour is designed specifically for modern web apps. We support React, Vue, Angular, Svelte, and vanilla JS. It handles client-side routing out of the box."
     },
     {
         question: "What happens if I change my UI?",
@@ -45,7 +45,7 @@ export function FAQ() {
                 <div className="text-center mb-16">
                     <h2 className="text-4xl md:text-5xl font-bold font-serif mb-4">Questions & Answers</h2>
                     <p className="text-white/60">
-                        If you have any other questions, please get in touch at <a href="mailto:support@guidemark.app" className="text-white underline underline-offset-4 hover:text-white/80 transition-colors">support@guidemark.app</a>.
+                        If you have any other questions, please get in touch at <a href="mailto:support@producttour.app" className="text-white underline underline-offset-4 hover:text-white/80 transition-colors">support@producttour.app</a>.
                     </p>
                 </div>
 

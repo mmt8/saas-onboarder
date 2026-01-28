@@ -16,7 +16,7 @@ const isConfigured = supabaseUrl && supabaseAnonKey &&
     supabaseAnonKey !== 'undefined';
 
 if (!isConfigured) {
-    console.warn('Guidemark: Supabase is NOT configured. Check environment variables.');
+    console.warn('Product Tour: Supabase is NOT configured. Check environment variables.');
 }
 
 export const supabase = isConfigured

@@ -227,7 +227,7 @@ export const useTourStore = create<TourState>()(
 
                     if (error) {
                         if (error.code === 'PGRST202') {
-                            console.warn('Guidemark: Database function "ping_project" not found. Please run the provided SQL migration.');
+                            console.warn('Product Tour: Database function "ping_project" not found. Please run the provided SQL migration.');
                         } else {
                             console.error('Ping error details:', error);
                         }

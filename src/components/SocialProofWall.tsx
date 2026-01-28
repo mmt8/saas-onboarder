@@ -113,7 +113,7 @@ export function SocialProofWall() {
                         Loved by product teams.
                     </h2>
                     <p className="text-xl text-white/60 max-w-2xl mx-auto font-sans">
-                        See what others are creating with Guidemark.
+                        See what others are creating with Product Tour.
                     </p>
                 </div>
 

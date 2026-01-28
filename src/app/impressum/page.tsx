@@ -9,7 +9,7 @@ export default function ImpressumPage() {
                 <section>
                     <h2 className="text-xl font-bold text-foreground">Information according to § 5 TMG</h2>
                     <p>
-                        Guidemark<br />
+                        Product Tour<br />
                         Mariendorfer Damm 1<br />
                         12099 Berlin<br />
                         Germany

@@ -440,7 +440,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
 
     // Get current project settings
     const currentProject = projects.find(p => p.id === projectId);
-    const launcherText = currentProject?.launcherText || 'Guidemark';
+    const launcherText = currentProject?.launcherText || 'Product Tour';
     const shouldShowAdmin = showAdminPanel && (currentProject?.showLauncher !== false);
 
     const theme = currentProject?.themeSettings || {
