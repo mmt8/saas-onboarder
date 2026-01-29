@@ -26289,26 +26289,31 @@ ${suffix}`;
           }
         },
         saveDetectedBranding: async (projectId, branding) => {
-          if (!projectId || !branding) return;
+          if (!projectId || !branding) {
+            console.warn("Product Tour: saveDetectedBranding called with missing data", { projectId, branding });
+            return;
+          }
+          console.log("Product Tour: Attempting to save branding to database...", { projectId, branding });
           try {
-            const { error } = await supabase.rpc("save_detected_branding", {
+            const { error, data } = await supabase.rpc("save_detected_branding", {
               project_id: projectId,
               primary_color: branding.primaryColor,
               font_family: branding.fontFamily,
               border_radius: branding.borderRadius,
               text_color: branding.textColor
             });
+            console.log("Product Tour: RPC response", { error, data });
             if (error) {
               if (error.code === "PGRST202") {
                 console.warn('Product Tour: Database function "save_detected_branding" not found. Please run the SQL migration from supabase_rpc_branding.sql');
               } else {
-                console.error("Error saving detected branding:", error);
+                console.error("Product Tour: Error saving detected branding:", error);
               }
               return;
             }
-            console.log("Product Tour: Detected branding saved for project", projectId);
+            console.log("Product Tour: Detected branding saved successfully for project", projectId);
           } catch (error) {
-            console.error("Error saving detected branding:", error);
+            console.error("Product Tour: Exception saving detected branding:", error);
           }
         },
         pingProject: async (id2) => {
