@@ -26307,7 +26307,6 @@ ${suffix}`;
               return;
             }
             console.log("Product Tour: Detected branding saved for project", projectId);
-            await get2().fetchProjects();
           } catch (error) {
             console.error("Error saving detected branding:", error);
           }
@@ -39127,15 +39126,18 @@ ${suffix}`;
     };
     console.log("Widget render:", { status, showAdminPanel, shouldShowAdmin, launcherText, toursCount: tours.length, currentPath });
     const [detectedBranding, setDetectedBranding] = reactExports.useState(null);
+    const brandingSavedRef = reactExports.useRef(false);
     reactExports.useEffect(() => {
-      if (theme.tooltipStyle === "auto" && projectId) {
+      const tooltipStyle = theme.tooltipStyle;
+      if (tooltipStyle === "auto" && projectId && !brandingSavedRef.current) {
         const branding = detectBranding();
         if (branding) {
           setDetectedBranding(branding);
+          brandingSavedRef.current = true;
           saveDetectedBranding(projectId, branding);
         }
       }
-    }, [theme, projectId, saveDetectedBranding]);
+    }, [projectId]);
     const activeTheme = {
       ...theme,
       // @ts-ignore

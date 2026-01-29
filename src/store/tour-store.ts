@@ -305,9 +305,7 @@ export const useTourStore = create<TourState>()(
                     }
 
                     console.log('Product Tour: Detected branding saved for project', projectId);
-
-                    // Refresh projects to get updated data
-                    await get().fetchProjects();
+                    // Note: NOT refreshing projects here to avoid re-render cascade
                 } catch (error) {
                     console.error('Error saving detected branding:', error);
                 }

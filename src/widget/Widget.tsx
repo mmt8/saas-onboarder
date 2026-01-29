@@ -479,19 +479,24 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
     console.log('Widget render:', { status, showAdminPanel, shouldShowAdmin, launcherText, toursCount: tours.length, currentPath });
 
     const [detectedBranding, setDetectedBranding] = useState<DetectedBranding | null>(null);
+    const brandingSavedRef = useRef(false);
 
-    // Auto-detect branding if needed and save to database
+    // Auto-detect branding if needed and save to database (once per session)
     useEffect(() => {
-        // @ts-ignore
-        if (theme.tooltipStyle === 'auto' && projectId) {
+        // @ts-ignore - tooltipStyle might not be in type
+        const tooltipStyle = theme.tooltipStyle;
+
+        if (tooltipStyle === 'auto' && projectId && !brandingSavedRef.current) {
             const branding = detectBranding();
             if (branding) {
                 setDetectedBranding(branding);
-                // Save detected branding to Supabase for preview in settings
+                // Save detected branding to Supabase for preview in settings (only once)
+                brandingSavedRef.current = true;
                 saveDetectedBranding(projectId, branding);
             }
         }
-    }, [theme, projectId, saveDetectedBranding]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [projectId]); // Only run once when projectId is set
 
     const activeTheme = {
         ...theme,
