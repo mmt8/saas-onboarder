@@ -2,7 +2,7 @@
 
 import { useTourStore } from "@/store/tour-store";
 import { Button } from "@/components/ui/button";
-import { Settings, Loader2, Layout, X, ChevronDown } from "lucide-react";
+import { Settings, Loader2, Layout, X, ChevronDown, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
