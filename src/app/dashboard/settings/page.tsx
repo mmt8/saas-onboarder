@@ -454,10 +454,10 @@ export default function SettingsPage() {
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,#a78bfa,transparent)]" />
                         <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] animate-spin-slower" style={{ background: 'conic-gradient(from 0deg, transparent 0 340deg, #fff 360deg)', opacity: 0.1 }} />
                         <div
-                            className="absolute inset-0 transition-colors duration-1000"
+                            className="absolute inset-0 transition-all duration-1000"
                             style={{
                                 backgroundColor: isDetecting ? 'transparent' : (autoBranding?.backgroundColor || 'transparent'),
-                                opacity: autoBranding?.backgroundColor ? 1 : 0
+                                opacity: isDetecting ? 0 : (autoBranding?.backgroundColor ? 1 : 0)
                             }}
                         />
                         <div
@@ -483,10 +483,10 @@ export default function SettingsPage() {
                         <div className="flex flex-col items-center justify-center gap-4 animate-in fade-in zoom-in duration-500 relative z-10">
                             <div className="relative w-16 h-16">
                                 <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-white animate-spin" />
-                                <div className="absolute inset-2 rounded-full border-b-2 border-l-2 border-white/40 animate-spin-slow" />
+                                <div className="absolute inset-2 rounded-full border-b-2 border-l-2 border-white/30 animate-spin-slow" />
                                 <Sparkles className="absolute inset-0 m-auto w-6 h-6 text-white animate-pulse" />
                             </div>
-                            <p className="text-white/80 font-bold text-sm tracking-widest uppercase">Detecting Brand...</p>
+                            <p className="text-white font-bold text-sm tracking-widest uppercase">Detecting Brand...</p>
                         </div>
                     ) : (
                         <div
