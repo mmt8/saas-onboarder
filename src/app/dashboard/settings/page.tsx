@@ -471,9 +471,8 @@ export default function SettingsPage() {
                         <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] animate-spin-slower" style={{ background: 'conic-gradient(from 0deg, transparent 0 340deg, #fff 360deg)', opacity: 0.1 }} />
                         <div
                             className="absolute inset-0 transition-all duration-1000"
-                            style={{
-                                backgroundColor: isDetecting ? 'transparent' : (autoBranding?.backgroundColor || 'transparent'),
-                                opacity: isDetecting ? 0 : (autoBranding?.backgroundColor ? 1 : 0)
+                            backgroundColor: 'transparent',
+                        opacity: 0
                             }}
                         />
                         <div
@@ -489,7 +488,7 @@ export default function SettingsPage() {
                                     radial-gradient(at 79% 53%, hsla(343, 68%, 79%, 1) 0px, transparent 50%)
                                 `,
                                 filter: 'blur(40px)',
-                                opacity: autoBranding?.backgroundColor ? 0.3 : 0.8
+                                opacity: 0.8
                             }}
                         />
                     </div>
