@@ -9,108 +9,76 @@ export interface DetectedBranding {
     fontFamily: string;
     borderRadius: string;
     textColor: 'white' | 'black';
-    backgroundColor: string;
 }
 
-/**
- * Scans the current document for branding elements.
- * Returns null if no non-neutral brand elements (vibrant colors) are found.
- */
-export function detectBranding(ignoreSelector?: string): DetectedBranding | null {
+export function detectBranding(): DetectedBranding | null {
     if (typeof window === 'undefined') return null;
 
-    let primaryColor = '#495BFD'; // Intentional Blue Fallback
+    let primaryColor = '#495BFD'; // Default fallback
     let fontFamily = 'Inter, sans-serif';
     let borderRadius = '12';
-    let backgroundColor = '#ffffff';
-    let foundColor = false;
-    let foundFont = false;
 
     try {
-        // 1. Detect Background Color
-        const bodyStyle = window.getComputedStyle(document.body);
-        if (bodyStyle.backgroundColor && bodyStyle.backgroundColor !== 'transparent' && bodyStyle.backgroundColor !== 'rgba(0, 0, 0, 0)') {
-            backgroundColor = rgbToHex(bodyStyle.backgroundColor);
-        }
-
-        // 2. Detect Typography (Prioritize serif headings for "Earthy" feel)
-        const headings = document.querySelectorAll('h1, h2, h3, h4, .site-title, [class*="title"]');
-        for (const h of Array.from(headings)) {
-            const style = window.getComputedStyle(h);
-            const font = style.fontFamily;
-            if (font && font !== 'inherit' && !font.includes('Inter')) {
-                fontFamily = font;
-                foundFont = true;
-                break;
-            }
-        }
-
-        // 3. Detect Primary Color & Radius
+        // 1. Detect Primary Color
+        // Strategy: Look for the first prominent button or a major CSS variable
         const primarySelectors = [
-            'button[type="submit"]',
             'button.btn-primary',
             'button.primary',
             '.bg-primary',
+            'button[type="submit"]',
             'a.btn-primary',
             '.cta',
-            '.action-button',
-            'button',
-            'a.button',
-            'input[type="submit"]',
-            '[role="button"]'
+            'button'
         ];
 
+        let foundColor = false;
         for (const selector of primarySelectors) {
-            const elements = document.querySelectorAll(selector);
-            for (const el of Array.from(elements)) {
-                if (ignoreSelector && (el.closest(ignoreSelector) || el.className?.includes?.('product-tour'))) continue;
-
+            const el = document.querySelector(selector);
+            if (el) {
                 const style = window.getComputedStyle(el);
                 const bg = style.backgroundColor;
-
-                if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
-                    const hex = rgbToHex(bg);
-
-                    // Accept any non-neutral color as a brand color
-                    if (!isNeutral(hex)) {
-                        primaryColor = hex;
-                        foundColor = true;
-
-                        const br = style.borderRadius;
-                        if (br && br !== '0px') {
-                            const firstRadius = br.split(' ')[0];
-                            const parsedRadius = parseFloat(firstRadius);
-                            // Sanitize and clamp radius to reasonable values (0-24px) to avoid erratic inputs
-                            if (!isNaN(parsedRadius) && parsedRadius < 1000) {
-                                borderRadius = Math.min(Math.max(parsedRadius, 0), 24).toString();
-                            } else {
-                                borderRadius = '4'; // Safe default
-                            }
-                        }
-
-                        if (!foundFont) {
-                            fontFamily = style.fontFamily;
-                            foundFont = true;
-                        }
-
-                        break;
+                if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)' && !isNeutral(bg)) {
+                    primaryColor = rgbToHex(bg);
+                    foundColor = true;
+                    // Also grab radius while we're at it
+                    const br = style.borderRadius;
+                    if (br && br !== '0px') {
+                        borderRadius = br.replace('px', '');
                     }
+                    break;
                 }
             }
-            if (foundColor) break;
         }
 
-        // 4. Return null if no vibrant color found to allow fallback to intentional Blue
-        if (!foundColor) return null;
+        // If no button found, look for accent color in CSS vars
+        if (!foundColor) {
+            const rootStyle = window.getComputedStyle(document.documentElement);
+            const colorVars = ['--primary', '--accent', '--brand-color', '--main-color'];
+            for (const v of colorVars) {
+                const val = rootStyle.getPropertyValue(v).trim();
+                if (val && !isNeutral(val)) {
+                    primaryColor = val.startsWith('#') ? val : rgbToHex(val);
+                    foundColor = true;
+                    break;
+                }
+            }
+        }
 
+        // 2. Detect Font Family
+        const bodyStyle = window.getComputedStyle(document.body);
+        const bodyFont = bodyStyle.fontFamily;
+        if (bodyFont) {
+            fontFamily = bodyFont;
+        }
+
+        // 3. Determine Text Color (Contrast)
         const textColor = getContrastColor(primaryColor);
 
         return {
             primaryColor,
             fontFamily,
             borderRadius: borderRadius || '12',
-            textColor,
-            backgroundColor
+            textColor
         };
     } catch (e) {
         console.warn('Product Tour: Branding detection failed', e);
@@ -119,35 +87,27 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
 }
 
 function isNeutral(color: string): boolean {
-    try {
-        const hex = color.startsWith('#') ? color : rgbToHex(color);
-        if (!hex || hex.length < 7) return true;
+    // Simple check for grey/black/white
+    const hex = color.startsWith('#') ? color : rgbToHex(color);
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
 
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
+    const diff1 = Math.abs(r - g);
+    const diff2 = Math.abs(g - b);
+    const diff3 = Math.abs(r - b);
 
-        const diff1 = Math.abs(r - g);
-        const diff2 = Math.abs(g - b);
-        const diff3 = Math.abs(r - b);
+    const isGrey = diff1 < 15 && diff2 < 15 && diff3 < 15;
+    const isTooLight = r > 240 && g > 240 && b > 240;
+    const isTooDark = r < 20 && g < 20 && b < 20;
 
-        // Brown/Tan colors are non-neutral. Neutral colors have very similar RGB values.
-        const tolerance = 8;
-        const isGrey = diff1 < tolerance && diff2 < tolerance && diff3 < tolerance;
-
-        const isTooLight = r > 248 && g > 248 && b > 248;
-        const isTooDark = r < 22 && g < 22 && b < 22;
-
-        return isGrey || isTooLight || isTooDark;
-    } catch (e) {
-        return true;
-    }
+    return isGrey || isTooLight || isTooDark;
 }
 
 function rgbToHex(rgb: string): string {
     if (rgb.startsWith('#')) return rgb;
-    const match = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/);
-    if (!match) return '#495BFD'; // Restore Blue Fallback
+    const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    if (!match) return '#495BFD';
     function hex(x: string) {
         return ("0" + parseInt(x).toString(16)).slice(-2);
     }
@@ -155,13 +115,9 @@ function rgbToHex(rgb: string): string {
 }
 
 function getContrastColor(hexColor: string): 'white' | 'black' {
-    try {
-        const r = parseInt(hexColor.slice(1, 3), 16);
-        const g = parseInt(hexColor.slice(3, 5), 16);
-        const b = parseInt(hexColor.slice(5, 7), 16);
-        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-        return (yiq >= 128) ? 'black' : 'white';
-    } catch (e) {
-        return 'white';
-    }
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? 'black' : 'white';
 }
