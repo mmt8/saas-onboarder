@@ -135,7 +135,7 @@ export default function Home() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-              <div className="bg-background border border-border/50 p-8 rounded-[2.5rem] relative z-10 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow group">
+              <div className="bg-white border border-border/50 p-8 rounded-[2.5rem] relative z-10 flex flex-col items-start text-left shadow-sm hover:shadow-md transition-shadow group">
                 <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
                   1
                 </div>
@@ -145,7 +145,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="bg-background border border-border/50 p-8 rounded-[2.5rem] relative z-10 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow group">
+              <div className="bg-white border border-border/50 p-8 rounded-[2.5rem] relative z-10 flex flex-col items-start text-left shadow-sm hover:shadow-md transition-shadow group">
                 <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
                   2
                 </div>
@@ -155,7 +155,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="bg-background border border-border/50 p-8 rounded-[2.5rem] relative z-10 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow group">
+              <div className="bg-white border border-border/50 p-8 rounded-[2.5rem] relative z-10 flex flex-col items-start text-left shadow-sm hover:shadow-md transition-shadow group">
                 <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
                   3
                 </div>
