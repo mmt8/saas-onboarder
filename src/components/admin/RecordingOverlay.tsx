@@ -4,11 +4,43 @@ import { useEffect, useState } from "react";
 import { useTourStore } from "@/store/tour-store";
 import { getUniqueSelector } from "@/lib/dom-utils";
 import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "sonner";
+import { analyzeElement, discoverSteps } from "@/lib/ai-utils";
 
 export function RecordingOverlay() {
-    const { isRecording, addStep } = useTourStore();
+    const { isRecording, addStep, creationMode, recordedSteps } = useTourStore();
     const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
     const [clickPosition, setClickPosition] = useState<{ x: number; y: number } | null>(null);
+
+    // Auto-Discovery Effect
+    useEffect(() => {
+        if (isRecording && creationMode === 'auto' && recordedSteps.length === 0) {
+            console.log('RecordingOverlay: Starting auto-discovery...');
+
+            // Short delay to ensure DOM is ready and widget settled
+            const timer = setTimeout(() => {
+                const discovered = discoverSteps();
+                if (discovered.length > 0) {
+                    discovered.forEach((step) => {
+                        const selector = getUniqueSelector(step.element);
+                        addStep({
+                            target: selector,
+                            content: step.content,
+                            action: 'click',
+                        });
+                    });
+
+                    toast.success(`AI generated ${discovered.length} steps`, {
+                        description: "Review and save your tour.",
+                        duration: 3000,
+                        position: 'bottom-center'
+                    });
+                }
+            }, 800);
+
+            return () => clearTimeout(timer);
+        }
+    }, [isRecording, creationMode, recordedSteps.length, addStep]);
 
     useEffect(() => {
         if (!isRecording) return;
@@ -58,17 +90,31 @@ export function RecordingOverlay() {
 
             if (!interactive) return;
 
-            e.preventDefault();
-            e.stopPropagation();
-
             const selector = getUniqueSelector(interactive);
+
+            // If it's AI auto-generate mode, we analyze the element to provide content
+            const { title, content: generatedContent } = creationMode === 'auto'
+                ? analyzeElement(interactive)
+                : { title: '', content: '' };
+
+            if (creationMode === 'auto') {
+                toast.success(title, {
+                    description: generatedContent,
+                    duration: 1500,
+                    position: 'bottom-center'
+                });
+            } else {
+                // In manual mode, we block the interaction to allow clean recording
+                e.preventDefault();
+                e.stopPropagation();
+            }
 
             setClickPosition({ x: e.clientX, y: e.clientY });
             setTimeout(() => setClickPosition(null), 1000);
 
             addStep({
                 target: selector,
-                content: "",
+                content: generatedContent,
                 action: 'click',
             });
         };
@@ -80,7 +126,7 @@ export function RecordingOverlay() {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('click', handleClick, { capture: true });
         };
-    }, [isRecording, addStep]);
+    }, [isRecording, addStep, creationMode]);
 
     if (!isRecording) return null;
 

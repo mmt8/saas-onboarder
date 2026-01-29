@@ -34,6 +34,12 @@ import styles from '@/app/globals.css?inline';
     styleEl.textContent = styles;
     shadow.appendChild(styleEl);
 
+    // Inject Font Link to Main Head (Shadow DOM can't always load fonts via @import reliably)
+    const fontLink = document.createElement('link');
+    fontLink.rel = 'stylesheet';
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700;800;900&display=swap';
+    document.head.appendChild(fontLink);
+
     // Mount Point
     const container = document.createElement('div');
     container.id = 'producttour-root';

@@ -55,7 +55,7 @@ interface TourState {
     status: TourStatus;
     isRecording: boolean;
     isLoading: boolean;
-    creationMode: 'manual' | null;
+    creationMode: 'manual' | 'auto' | null;
     recordedSteps: Step[];
     editingTourId: string | null;
     recordingTourTitle: string;
@@ -78,7 +78,7 @@ interface TourState {
     }) => Promise<void>;
     pingProject: (id: string | null) => Promise<void>;
     fetchTours: () => Promise<void>;
-    startRecording: (mode: 'manual', title?: string) => void;
+    startRecording: (mode: 'manual' | 'auto', title?: string) => void;
     stopRecording: () => void;
     editTour: (tour: Tour) => void;
     addStep: (step: Omit<Step, 'id' | 'order'>) => void;

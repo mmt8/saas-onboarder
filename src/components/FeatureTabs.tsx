@@ -1,41 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Zap, Layout, Settings, MousePointerClick } from "lucide-react";
+import { Wand2, SunMoon, Layers, Palette } from "lucide-react";
 
 const features = [
     {
-        id: "smart-detect",
-        title: "Smart element detection",
-        description: "Click an element and we lock onto it, no manual positioning.",
-        icon: <Zap className="w-5 h-5" />,
-        image: "/features/smart-detect.png", // Placeholder
-        color: "bg-blue-500"
+        id: "auto-style",
+        title: "Auto-styled to your product",
+        description: "One click. Your colors, fonts, and spacing, applied for you.",
+        icon: <Wand2 className="w-5 h-5" />,
+        image: "/features/auto-style.png",
+        color: "bg-[#495BFD]"
     },
     {
-        id: "responsive",
-        title: "Responsive on desktop + mobile",
-        description: "One tour experience that adapts to every screen size.",
-        icon: <Layout className="w-5 h-5" />,
-        image: "/features/responsive.png", // Placeholder
+        id: "themes",
+        title: "Native dark & light themes",
+        description: "Tooltips that look right, day or night.",
+        icon: <SunMoon className="w-5 h-5" />,
+        image: "/features/themes.png",
+        color: "bg-orange-500"
+    },
+    {
+        id: "glassmorphism",
+        title: "Modern glassmorphism",
+        description: "Elegant, frosted-glass tooltips that feel modern and lightweight.",
+        icon: <Layers className="w-5 h-5" />,
+        image: "/features/glassmorphism.png",
         color: "bg-indigo-500"
     },
     {
-        id: "visual-editor",
-        title: "Edit in real time",
-        description: "Design, copy, and layout, instantly previewed.",
-        icon: <MousePointerClick className="w-5 h-5" />,
-        image: "/features/editor.png", // Placeholder
-        color: "bg-purple-500"
-    },
-    {
         id: "customization",
-        title: "Match your brand",
-        description: "Fonts, colors, styling, plus custom CSS when you need it.",
-        icon: <Settings className="w-5 h-5" />,
-        image: "/features/custom.png", // Placeholder
+        title: "On brand tooltips",
+        description: "Fine-tune colors, spacing and typography without touching code.",
+        icon: <Palette className="w-5 h-5" />,
+        image: "/features/custom.png",
         color: "bg-pink-500"
     }
 ];
@@ -115,13 +115,23 @@ export function FeatureTabs() {
                                 key={feature.id}
                                 onClick={() => setActiveTab(index)}
                                 className={cn(
-                                    "relative p-6 rounded-2xl cursor-pointer transition-all duration-300 border border-transparent",
+                                    "relative p-6 rounded-2xl cursor-pointer transition-all duration-300 border border-transparent overflow-hidden",
                                     activeTab === index
                                         ? "bg-secondary border-primary/10"
                                         : "hover:bg-secondary/50"
                                 )}
                             >
-                                <div className="flex flex-col gap-2">
+                                {/* Decorative Background Icon */}
+                                <div className={cn(
+                                    "absolute -top-4 -right-4 w-24 h-24 transition-all duration-500 pointer-events-none opacity-0 transform rotate-12",
+                                    activeTab === index ? "opacity-[0.08] scale-100" : "scale-75"
+                                )}>
+                                    <div className="w-full h-full [&>svg]:w-full [&>svg]:h-full">
+                                        {feature.icon}
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-2 relative z-10">
                                     <h3 className={cn(
                                         "text-xl font-bold transition-colors",
                                         activeTab === index ? "text-primary" : "text-foreground"

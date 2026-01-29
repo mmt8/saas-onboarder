@@ -9,27 +9,28 @@ import { HeroVisual } from "@/components/HeroVisual";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans selection:bg-primary/20">
+    <div className="min-h-screen flex flex-col font-sans selection:bg-primary/20 bg-pattern-toast">
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative pt-12 md:pt-20 pb-20 overflow-hidden">
+          <div className="vintage-vignette" />
           {/* Top Orange Gradient */}
           <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80 pointer-events-none">
             <div
-              className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#E65221] to-[#ff8c00] opacity-50 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+              className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#E65221] to-[#ff8c00] opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
               style={{ clipPath: "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)" }}
             />
           </div>
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#E65221]/20 via-background to-background pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#E65221]/10 via-background to-background pointer-events-none" />
 
           <div className="max-w-7xl mx-auto px-6 relative z-10 text-center flex flex-col items-center">
             <h1 className="text-5xl md:text-8xl font-bold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 font-serif max-w-4xl leading-[1.1] z-30 relative pt-12">
-              High-Fidelity tours <br />
+              AI product tours<br />
               <span className="text-[#E65221]">that drive adoption.</span>
             </h1>
 
             <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 leading-relaxed font-medium z-30 relative">
-              Record on-brand precision walkthroughs from your UI in seconds.
+              Auto-generate on-brand product tours with perfectly styled tooltips from your UI in seconds.
             </p>
 
             {/* Parallax Hero Visual */}
@@ -121,7 +122,7 @@ export default function Home() {
         </section>
 
         {/* Feature Tabs Section */}
-        <section className="bg-background">
+        <section className="bg-transparent">
           <FeatureTabs />
         </section>
 
@@ -147,7 +148,7 @@ export default function Home() {
         </section>
 
         {/* Social Proof Wall */}
-        <div className="py-24 bg-background">
+        <div className="py-24 bg-transparent">
           <div className="max-w-7xl mx-auto px-6 text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold font-serif">Enabling SaaS teams crush churn.</h2>
           </div>
@@ -155,7 +156,7 @@ export default function Home() {
         </div>
 
         {/* How It Works Section */}
-        <section className="py-32 bg-background relative overflow-hidden">
+        <section className="py-32 bg-transparent relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center mb-20">
               <h2 className="text-4xl md:text-5xl font-bold font-serif mb-6">Clarity in 3 simple steps.</h2>

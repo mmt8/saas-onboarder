@@ -61,108 +61,111 @@ const TourCard = ({ tour, onEdit, onPlay, onDelete, toggleTourActivation, update
         <div
             onClick={onEdit}
             className={cn(
-                "group p-4 bg-white rounded-2xl shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:bg-slate-50 transition-colors cursor-pointer"
+                "group p-1.5 bg-white rounded-xl shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:z-10 transition-all cursor-pointer"
             )}
             style={{ border: '1px solid #CBD5E1' }}
         >
-            <div className="flex justify-between items-start mb-4">
-                <div className="flex-1 min-w-0 mr-2 space-y-1">
-                    <div className="flex items-center gap-2">
+            <div className="space-y-1">
+                {/* Top Row: Meta & Actions */}
+                <div className="flex items-center justify-between gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
                         <div className={cn(
-                            "w-1.5 h-1.5 rounded-full",
+                            "w-1.5 h-1.5 rounded-full flex-shrink-0 ml-1.5",
                             tour.isActive ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-slate-400"
                         )} />
-                        <div className="font-semibold text-slate-800 truncate">{tour.title}</div>
-                    </div>
-                    <div className="text-[10px] text-[#495BFD] font-mono truncate px-3.5">{tour.pageUrl || '/'}</div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                    <Switch
-                        checked={tour.isActive}
-                        onChange={async (newState) => {
-                            await toggleTourActivation(tour.id);
-                            onActivationChange?.(newState ? "Tour activated" : "Tour deactivated");
-                        }}
-                        disabled={isLoading}
-                    />
-                    <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 bg-blue-100 hover:bg-blue-200 text-[#495BFD] border-none transition-colors active:scale-100"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onPlay();
-                        }}
-                    >
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                    </Button>
-                </div>
-            </div>
-
-            {/* Behavioral Section */}
-            <div className="bg-slate-50 rounded-xl p-3 mb-1 border border-slate-100">
-                <div className="flex items-center gap-2 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    <Zap className="w-3 h-3 text-[#E65221]" />
-                    <span>Delivery</span>
-                </div>
-
-                <div className="relative">
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsDropdownOpen(!isDropdownOpen);
-                        }}
-                        className="w-full flex items-center justify-between bg-white border-solid border border-slate-200 hover:border-blue-400/50 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/10 transition-all shadow-sm"
-                    >
-                        <span>
-                            {tour.playBehavior === 'first_time' && 'Show once'}
-                            {tour.playBehavior === 'weekly' && 'Weekly (2x max)'}
-                            {tour.playBehavior === 'monthly_thrice' && 'Monthly (3x max)'}
+                        <span className="text-sm font-bold text-slate-700 truncate pt-0.5">
+                            {tour.title}
                         </span>
-                        <ChevronDown className="w-3 h-3 text-slate-400" />
-                    </button>
+                        <span className="text-[10px] text-[#495BFD] font-mono opacity-60 truncate">
+                            {tour.pageUrl || '/'}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0 pr-0.5">
+                        <Switch
+                            checked={tour.isActive}
+                            onChange={async (newState) => {
+                                await toggleTourActivation(tour.id);
+                                onActivationChange?.(newState ? "Tour activated" : "Tour deactivated");
+                            }}
+                            disabled={isLoading}
+                        />
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 bg-blue-100/50 hover:bg-blue-100 text-[#495BFD] border-none transition-colors active:scale-95"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onPlay();
+                            }}
+                        >
+                            <Play className="w-3 h-3 fill-current" />
+                        </Button>
+                    </div>
+                </div>
 
-                    {isDropdownOpen && (
-                        <>
-                            <div
-                                className="fixed inset-0 z-[2147483646]"
-                                onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(false); }}
-                            />
-                            <div
-                                className="absolute top-full left-0 w-full mt-1 bg-white rounded-lg shadow-xl border border-slate-100 z-[2147483647] overflow-hidden min-w-[200px]"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <div className="p-1">
-                                    {[
-                                        { value: 'first_time', label: 'Show once' },
-                                        { value: 'weekly', label: 'Weekly (2x max)' },
-                                        { value: 'monthly_thrice', label: 'Monthly (3x max)' }
-                                    ].map((item) => (
-                                        <div
-                                            key={item.value}
-                                            onClick={() => {
-                                                updateTourBehavior(tour.id, item.value as any);
-                                                setIsDropdownOpen(false);
-                                            }}
-                                            className={cn(
-                                                "relative flex items-center h-8 px-8 text-[11px] font-bold rounded-md select-none cursor-pointer transition-colors",
-                                                tour.playBehavior === item.value
-                                                    ? "bg-slate-50 text-[#495BFD]"
-                                                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                            )}
-                                        >
-                                            <span>{item.label}</span>
-                                            {tour.playBehavior === item.value && (
-                                                <div className="absolute left-2 flex items-center justify-center">
-                                                    <Check className="w-3 h-3 text-[#495BFD]" />
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
+                {/* Behavioral Section */}
+                <div className="bg-slate-50/50 rounded-lg p-2 mt-1 border border-slate-100/50">
+                    <div className="relative">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsDropdownOpen(!isDropdownOpen);
+                            }}
+                            className="w-full h-8 flex items-center justify-between bg-white border-solid border border-slate-200 hover:border-blue-400/30 rounded-md px-2 text-sm font-bold text-slate-600 outline-none transition-all shadow-sm"
+                        >
+                            <div className="flex items-center gap-1.5">
+                                <Zap className="w-3 h-3 text-[#E65221]" />
+                                <span>
+                                    {tour.playBehavior === 'first_time' && 'Show once'}
+                                    {tour.playBehavior === 'weekly' && 'Weekly (2x max)'}
+                                    {tour.playBehavior === 'monthly_thrice' && 'Monthly (3x max)'}
+                                </span>
                             </div>
-                        </>
-                    )}
+                            <ChevronDown className="w-3 h-3 text-slate-400" />
+                        </button>
+
+                        {isDropdownOpen && (
+                            <>
+                                <div
+                                    className="fixed inset-0 z-[2147483646]"
+                                    onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(false); }}
+                                />
+                                <div
+                                    className="absolute top-full left-0 w-full mt-1 bg-white rounded-lg shadow-xl border border-slate-100 z-[2147483647] overflow-hidden min-w-[200px]"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <div className="p-1">
+                                        {[
+                                            { value: 'first_time', label: 'Show once' },
+                                            { value: 'weekly', label: 'Weekly (2x max)' },
+                                            { value: 'monthly_thrice', label: 'Monthly (3x max)' }
+                                        ].map((item) => (
+                                            <div
+                                                key={item.value}
+                                                onClick={() => {
+                                                    updateTourBehavior(tour.id, item.value as any);
+                                                    setIsDropdownOpen(false);
+                                                }}
+                                                className={cn(
+                                                    "relative flex items-center h-8 px-8 text-sm font-bold rounded-md select-none cursor-pointer transition-colors",
+                                                    tour.playBehavior === item.value
+                                                        ? "bg-slate-50 text-[#495BFD]"
+                                                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                                )}
+                                            >
+                                                <span>{item.label}</span>
+                                                {tour.playBehavior === item.value && (
+                                                    <div className="absolute left-2 flex items-center justify-center">
+                                                        <Check className="w-3 h-3 text-[#495BFD]" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
@@ -458,7 +461,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
     return (
         <div
             className="w-full h-full pointer-events-none font-sans text-base antialiased"
-            style={{ ...themeStyles, color: '#0f172a', fontFamily: theme.fontFamily }}
+            style={{ ...themeStyles, color: '#0f172a', fontFamily: '"Gabarito", sans-serif' }}
         >
             <Toaster position="top-center" />
 
@@ -493,16 +496,16 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                className="bg-white px-0 w-80 flex flex-col overflow-hidden mr-6"
+                                className="bg-white px-0 w-[24rem] flex flex-col overflow-hidden mr-6"
                                 style={{
                                     borderRadius: '1.5rem',
                                     boxShadow: '0 8px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05)',
-                                    fontFamily: theme.fontFamily
+                                    fontFamily: '"Gabarito", sans-serif'
                                 }}
                             >
                                 {status === 'idle' ? (
-                                    <div className="flex flex-col h-[600px]">
-                                        <div className="p-6 pb-2 space-y-4">
+                                    <div className="flex flex-col h-[75vh] w-[24rem]">
+                                        <div className="px-5 pb-2 pt-4 space-y-4">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
                                                     <h3 className="font-bold text-xl text-slate-900 font-sans tracking-tight">Tours</h3>
@@ -545,7 +548,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className="flex-1 overflow-y-auto p-4 pt-0.5 space-y-4">
+                                        <div className="flex-1 overflow-y-auto pl-5 pr-1 py-2 space-y-4 [scrollbar-gutter:stable]">
                                             <AnimatePresence>
                                                 {feedback && (
                                                     <motion.div
@@ -630,9 +633,9 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                                                 );
                                             })()}
                                         </div>
-                                        <div className="p-6">
+                                        <div className="px-5 pb-6 pt-2">
                                             <Button
-                                                className="w-full h-11 gap-2"
+                                                className="w-full h-11 gap-2 font-sans"
                                                 onClick={() => {
                                                     setAdminListOpen(false);
                                                     setIsCreateTourDialogOpen(true);

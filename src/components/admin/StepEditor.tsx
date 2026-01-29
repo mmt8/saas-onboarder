@@ -79,7 +79,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
             "flex flex-col overflow-hidden",
             isFloating ? "fixed top-24 right-6 w-80 max-h-[calc(100vh-10rem)] bg-white rounded-[2.5rem] shadow-2xl border border-slate-200/60 admin-toolbar-ignore z-40" : "h-full w-full"
         )}>
-            <div className="p-4 pb-2 space-y-5">
+            <div className="px-5 pb-2 pt-4 space-y-5">
                 <div className="flex items-center justify-between">
                     <h3 className="font-bold text-foreground">
                         {isEditingExistingTour ? 'Edit Tour' : 'Recorded Steps'}
@@ -205,7 +205,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                 </div>
             )}
 
-            <div className="space-y-1.5 px-4 mt-2">
+            <div className="space-y-1.5 px-5 mt-2">
                 <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest flex items-center gap-1 ml-1">
                     Tour Title
                     <span className="text-destructive font-bold">*</span>
@@ -234,7 +234,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                     )}
                 </div>
             </div>
-            <div className="text-xs text-muted-foreground flex justify-between px-4 mt-2">
+            <div className="text-xs text-muted-foreground flex justify-between px-5 mt-2">
                 <span className="ml-1">Steps: {recordedSteps.length}</span>
             </div>
 
@@ -270,7 +270,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                 )
             }
 
-            <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1.5">
+            <div className="flex-1 overflow-y-auto pl-5 pr-1 py-2 space-y-1.5 [scrollbar-gutter:stable]">
                 <Reorder.Group axis="y" values={recordedSteps} onReorder={reorderSteps} className="space-y-1.5">
                     <AnimatePresence initial={false}>
                         {recordedSteps.map((step, index) => (
@@ -280,7 +280,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                className="group relative bg-white rounded-xl p-1.5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-lg hover:scale-[1.01] hover:z-10 transition-all cursor-grab active:cursor-grabbing"
+                                className="group relative bg-white rounded-xl p-1.5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:z-10 transition-all cursor-grab active:cursor-grabbing"
                                 style={{
                                     border: '1px solid #CBD5E1'
                                 }}
