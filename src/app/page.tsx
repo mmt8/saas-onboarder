@@ -319,7 +319,7 @@ export default function Home() {
       {/* Footer */}
       {/* Footer */}
       {/* Footer */}
-      <footer className="border-t border-white/10 py-16 bg-[#421d24] text-white/80 relative overflow-hidden">
+      <footer className="border-t border-white/10 pt-16 pb-8 bg-[#421d24] text-white/80 relative overflow-hidden">
         {/* Decorative background element for footer */}
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[120px] -mb-48 -mr-48 pointer-events-none" />
 
