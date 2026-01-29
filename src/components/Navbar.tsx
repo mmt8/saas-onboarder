@@ -62,7 +62,6 @@ export function Navbar() {
                     <Link href="/pricing" className="px-6 py-2 flex items-center text-base font-bold text-primary transition-all hover:bg-primary/10 rounded-full">
                         Pricing
                     </Link>
-                    <NavLink href="/resources">Resources</NavLink>
                 </nav>
 
                 {/* 3. Right: Actions & Mobile Toggle */}
@@ -134,9 +133,6 @@ export function Navbar() {
                             </motion.div>
                             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
                                 <MobileNavLink href="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</MobileNavLink>
-                            </motion.div>
-                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                                <MobileNavLink href="/resources" onClick={() => setMobileMenuOpen(false)}>Resources</MobileNavLink>
                             </motion.div>
 
                             <div className="h-px bg-border/50 w-full my-4" />
