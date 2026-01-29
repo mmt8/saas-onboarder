@@ -295,19 +295,20 @@ export default function Home() {
         </section>
 
         {/* Bottom CTA */}
-        <section className="py-32 text-center px-6">
-          <div className="max-w-3xl mx-auto space-y-8">
+        <section className="py-32 text-center px-6 bg-white/40 border-y border-border/10 relative overflow-hidden">
+          <div className="absolute inset-0 bg-pattern-toast opacity-20 pointer-events-none" />
+          <div className="max-w-3xl mx-auto space-y-8 relative z-10">
             <h2 className="text-4xl md:text-6xl font-bold font-serif tracking-tight leading-tight">
-              Stop fighting with tooltip code. <br />
-              <span className="text-[#E65221]">Build guides in minutes.</span>
+              Your Entire Onboarding Flow. <br />
+              <span className="text-[#E65221]">Done in Seconds.</span>
             </h2>
-            <p className="text-xl text-muted-foreground">
-              Empower your users, reduce support tickets, and crush churn with interactive guides.
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Turn new signups into power users automatically. Just connect your web-app and let our AI build your product tour instantly.
             </p>
             <div className="flex justify-center pt-4">
               <Button size="lg" className="rounded-full px-12 h-16 text-xl shadow-2xl" asChild>
                 <Link href="/signup">
-                  Get Started for Free
+                  Get Started
                 </Link>
               </Button>
             </div>
