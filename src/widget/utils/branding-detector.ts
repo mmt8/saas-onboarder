@@ -19,7 +19,7 @@ export interface DetectedBranding {
 export function detectBranding(ignoreSelector?: string): DetectedBranding | null {
     if (typeof window === 'undefined') return null;
 
-    let primaryColor = '#E65221'; // Default internal fallback (Guidemark Orange)
+    let primaryColor = '#E65221'; // Internal default (Guidemark Orange)
     let fontFamily = 'Inter, sans-serif';
     let borderRadius = '12';
     let backgroundColor = '#ffffff';
@@ -27,14 +27,14 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
     let foundFont = false;
 
     try {
-        // 1. Detect Background Color (Body or first large container)
+        // 1. Detect Background Color (Improves preview realism)
         const bodyStyle = window.getComputedStyle(document.body);
         if (bodyStyle.backgroundColor && bodyStyle.backgroundColor !== 'transparent' && bodyStyle.backgroundColor !== 'rgba(0, 0, 0, 0)') {
             backgroundColor = rgbToHex(bodyStyle.backgroundColor);
         }
 
-        // 2. Detect Typography (Prioritize Headings then Body)
-        const heading = document.querySelector('h1, h2, h3');
+        // 2. Detect Typography (Prioritize Headings)
+        const heading = document.querySelector('h1, h2, h3, h4');
         if (heading) {
             const style = window.getComputedStyle(heading);
             if (style.fontFamily && style.fontFamily !== 'inherit') {
@@ -43,8 +43,7 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
             }
         }
 
-        // 3. Detect Primary Color & Radius
-        // We look for vibrant colors in common interactive elements
+        // 3. Detect Primary Color & Radius (Aggressive Scrape)
         const primarySelectors = [
             'button[type="submit"]',
             'button.btn-primary',
@@ -62,8 +61,8 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
         for (const selector of primarySelectors) {
             const elements = document.querySelectorAll(selector);
             for (const el of Array.from(elements)) {
-                // Ignore our own widget elements
-                if (ignoreSelector && (el.closest(ignoreSelector) || el.classList.contains(ignoreSelector.replace('.', '')))) continue;
+                // Ignore widget elements to prevent "detecting self"
+                if (ignoreSelector && (el.closest(ignoreSelector) || el.className?.includes?.('product-tour'))) continue;
 
                 const style = window.getComputedStyle(el);
                 const bg = style.backgroundColor;
@@ -71,8 +70,8 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
                 if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
                     const hex = rgbToHex(bg);
 
-                    // We only accept non-neutral colors as "detected" primary colors
-                    if (!isNeutral(hex, false)) {
+                    // Earthy colors might have lower saturation, so we adjust neutral checks
+                    if (!isNeutral(hex)) {
                         primaryColor = hex;
                         foundColor = true;
 
@@ -83,7 +82,7 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
                             borderRadius = firstRadius.replace('px', '').replace('%', '');
                         }
 
-                        // If font wasn't found from heading, take it from the button
+                        // Font if not yet found
                         if (!foundFont) {
                             fontFamily = style.fontFamily;
                             foundFont = true;
@@ -96,15 +95,15 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
             if (foundColor) break;
         }
 
-        // 4. Try CSS Variables if no vibrant color found on buttons
+        // 4. Fallback to CSS Variables (Common for modern brands)
         if (!foundColor) {
             const rootStyle = window.getComputedStyle(document.documentElement);
-            const colorVars = ['--primary', '--brand', '--accent', '--main-color', '--primary-600', '--blue-600'];
+            const colorVars = ['--primary', '--brand', '--accent', '--main-color', '--primary-600', '--blue-600', '--indigo-600'];
             for (const v of colorVars) {
                 const val = rootStyle.getPropertyValue(v).trim();
                 if (val) {
                     const hex = val.startsWith('#') ? val : rgbToHex(val);
-                    if (!isNeutral(hex, true)) {
+                    if (!isNeutral(hex)) {
                         primaryColor = hex;
                         foundColor = true;
                         break;
@@ -113,13 +112,13 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
             }
         }
 
-        // Final fallback font check
+        // Final font fallback
         if (!foundFont && bodyStyle.fontFamily && bodyStyle.fontFamily !== 'inherit') {
             fontFamily = bodyStyle.fontFamily;
         }
 
-        // IF NO VIBRANT COLOR FOUND, RETURN NULL
-        // This allows the caller to handle the failure (e.g. show a fallback or error)
+        // CRITICAL: If no vibrant "brand" color was found, return null.
+        // This prevents returning a default blue/orange and forces the caller to use its OWN brand.
         if (!foundColor) return null;
 
         const textColor = getContrastColor(primaryColor);
@@ -137,10 +136,7 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
     }
 }
 
-/**
- * Checks if a color is neutral (grey, black, or white).
- */
-function isNeutral(color: string, lenient = false): boolean {
+function isNeutral(color: string): boolean {
     try {
         const hex = color.startsWith('#') ? color : rgbToHex(color);
         if (!hex || hex.length < 7) return true;
@@ -153,13 +149,12 @@ function isNeutral(color: string, lenient = false): boolean {
         const diff2 = Math.abs(g - b);
         const diff3 = Math.abs(r - b);
 
-        // Brownish colors have higher diffs than strictly neutral greys
-        // Neutral greys have very low variance between R, G, and B.
-        const tolerance = lenient ? 8 : 15;
+        // Very tight tolerance for neutrals, allowing earthy/saturated colors to pass
+        const tolerance = 10;
         const isGrey = diff1 < tolerance && diff2 < tolerance && diff3 < tolerance;
 
         const isTooLight = r > 248 && g > 248 && b > 248;
-        const isTooDark = r < 18 && g < 18 && b < 18;
+        const isTooDark = r < 20 && g < 20 && b < 20;
 
         return isGrey || isTooLight || isTooDark;
     } catch (e) {
@@ -167,23 +162,16 @@ function isNeutral(color: string, lenient = false): boolean {
     }
 }
 
-/**
- * Utility to convert RGB(A) to HEX.
- * Defaults to Guidemark Orange on failure.
- */
 function rgbToHex(rgb: string): string {
     if (rgb.startsWith('#')) return rgb;
     const match = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/);
-    if (!match) return '#E65221';
+    if (!match) return '#E65221'; // Default to Brand Orange
     function hex(x: string) {
         return ("0" + parseInt(x).toString(16)).slice(-2);
     }
     return "#" + hex(match[1]) + hex(match[2]) + hex(match[3]);
 }
 
-/**
- * Determines whether text should be black or white based on background contrast.
- */
 function getContrastColor(hexColor: string): 'white' | 'black' {
     try {
         const r = parseInt(hexColor.slice(1, 3), 16);

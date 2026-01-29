@@ -119,7 +119,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                     saveTour(tourTitle, window.location.pathname);
                                 }}
                                 disabled={isLoading}
-                                className="h-8 px-4 text-xs shadow-blue-500/20 transition-all active:scale-95 bg-[#495BFD] text-white hover:bg-[#3749d0] rounded-xl font-medium"
+                                className="h-8 px-4 text-xs shadow-blue-500/20 transition-all active:scale-95 bg-[#E65221] text-white hover:bg-[#3749d0] rounded-xl font-medium"
                             >
                                 {isLoading ? "Saving..." : "Save Tour"}
                             </Button>
@@ -168,12 +168,12 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                                     setFrequencyOpen(false);
                                                 }
                                             }}
-                                            className="relative flex items-center h-8 px-8 text-sm font-bold text-slate-600 rounded-md select-none hover:bg-slate-50 hover:text-[#495BFD] cursor-pointer transition-colors"
+                                            className="relative flex items-center h-8 px-8 text-sm font-bold text-slate-600 rounded-md select-none hover:bg-slate-50 hover:text-[#E65221] cursor-pointer transition-colors"
                                         >
                                             <span className="flex-1">{item.label}</span>
                                             {currentTour?.playBehavior === item.value && (
                                                 <div className="absolute left-2 flex items-center justify-center">
-                                                    <Check className="w-3 h-3 text-[#495BFD]" />
+                                                    <Check className="w-3 h-3 text-[#E65221]" />
                                                 </div>
                                             )}
                                         </div>
@@ -289,7 +289,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                     {/* Top Row: Meta & Actions */}
                                     <div className="flex items-center justify-between gap-1.5">
                                         <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                            <div className="text-slate-400 hover:text-[#495BFD] transition-colors cursor-grab active:cursor-grabbing">
+                                            <div className="text-slate-400 hover:text-[#E65221] transition-colors cursor-grab active:cursor-grabbing">
                                                 <GripVertical className="w-3.5 h-3.5" />
                                             </div>
                                             <span className="shrink-0 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0 rounded-full uppercase tracking-wider leading-relaxed">

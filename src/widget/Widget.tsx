@@ -31,7 +31,7 @@ const Switch = ({ checked, onChange, disabled }: { checked: boolean, onChange: (
         disabled={disabled}
         className={cn(
             "relative w-7 h-4 rounded-full transition-colors duration-200 outline-none",
-            checked ? "bg-[#495BFD]" : "bg-slate-300",
+            checked ? "bg-[#E65221]" : "bg-slate-300",
             disabled && "opacity-50 cursor-not-allowed"
         )}
     >
@@ -76,7 +76,7 @@ const TourCard = ({ tour, onEdit, onPlay, onDelete, toggleTourActivation, update
                         <span className="text-sm font-bold text-slate-700 truncate pt-0.5">
                             {tour.title}
                         </span>
-                        <span className="text-[10px] text-[#495BFD] font-mono opacity-60 truncate">
+                        <span className="text-[10px] text-[#E65221] font-mono opacity-60 truncate">
                             {tour.pageUrl || '/'}
                         </span>
                     </div>
@@ -92,7 +92,7 @@ const TourCard = ({ tour, onEdit, onPlay, onDelete, toggleTourActivation, update
                         <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 bg-blue-100/50 hover:bg-blue-100 text-[#495BFD] border-none transition-colors active:scale-95"
+                            className="h-7 w-7 bg-blue-100/50 hover:bg-blue-100 text-[#E65221] border-none transition-colors active:scale-95"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onPlay();
@@ -149,14 +149,14 @@ const TourCard = ({ tour, onEdit, onPlay, onDelete, toggleTourActivation, update
                                                 className={cn(
                                                     "relative flex items-center h-8 px-8 text-sm font-bold rounded-md select-none cursor-pointer transition-colors",
                                                     tour.playBehavior === item.value
-                                                        ? "bg-slate-50 text-[#495BFD]"
+                                                        ? "bg-slate-50 text-[#E65221]"
                                                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                                                 )}
                                             >
                                                 <span>{item.label}</span>
                                                 {tour.playBehavior === item.value && (
                                                     <div className="absolute left-2 flex items-center justify-center">
-                                                        <Check className="w-3 h-3 text-[#495BFD]" />
+                                                        <Check className="w-3 h-3 text-[#E65221]" />
                                                     </div>
                                                 )}
                                             </div>
@@ -388,7 +388,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
     const themeStyles = {
         '--background': '#FAF9F5',
         '--foreground': '#1a1a1a',
-        '--primary': '#495BFD',
+        '--primary': '#E65221',
         '--primary-foreground': '#ffffff',
         '--secondary': '#ffffff',
         '--secondary-foreground': '#1a1a1a',
@@ -404,7 +404,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
         '--destructive-foreground': '#ffffff',
         '--border': '#e5e5e5',
         '--input': '#e5e5e5',
-        '--ring': '#495BFD',
+        '--ring': '#E65221',
         '--radius': '0.75rem',
     } as React.CSSProperties;
 
@@ -449,7 +449,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
     const theme = currentProject?.themeSettings || {
         fontFamily: 'Inter, sans-serif',
         darkMode: false,
-        primaryColor: '#495BFD',
+        primaryColor: '#E65221',
         borderRadius: '12',
         paddingV: '10',
         paddingH: '20'
@@ -512,7 +512,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                                                     <a
                                                         href="https://producttour.app/dashboard"
                                                         target="_blank"
-                                                        className="flex items-center gap-1.5 text-[10px] font-bold text-[#495BFD] hover:text-[#3749d0] transition-colors bg-[#495BFD]/5 px-2 py-1 rounded-full uppercase tracking-wider group/link"
+                                                        className="flex items-center gap-1.5 text-[10px] font-bold text-[#E65221] hover:text-[#3749d0] transition-colors bg-[#E65221]/5 px-2 py-1 rounded-full uppercase tracking-wider group/link"
                                                     >
                                                         Dashboard
                                                         <ExternalLink className="w-3 h-3 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
@@ -671,7 +671,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                 <div className="fixed bottom-6 right-6 z-[2147483646] pointer-events-auto">
                     <button
                         onClick={handleUserStartTour}
-                        className="w-14 h-14 bg-[#495BFD] rounded-full shadow-lg flex items-center justify-center hover:scale-110 hover:shadow-xl transition-all duration-200"
+                        className="w-14 h-14 bg-[#E65221] rounded-full shadow-lg flex items-center justify-center hover:scale-110 hover:shadow-xl transition-all duration-200"
                         title="Need help? Start a guided tour"
                     >
                         <HelpCircle className="w-7 h-7 text-white" />

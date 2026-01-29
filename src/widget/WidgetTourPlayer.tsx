@@ -32,12 +32,12 @@ export function WidgetTourPlayer() {
     const theme = {
         fontFamily: currentProject?.themeSettings?.fontFamily ?? 'Inter, sans-serif',
         darkMode: currentProject?.themeSettings?.darkMode ?? false,
-        primaryColor: currentProject?.themeSettings?.primaryColor ?? '#495BFD',
+        primaryColor: currentProject?.themeSettings?.primaryColor ?? '#E65221',
         borderRadius: currentProject?.themeSettings?.borderRadius ?? '20',
         paddingV: currentProject?.themeSettings?.paddingV ?? '10',
         paddingH: currentProject?.themeSettings?.paddingH ?? '20',
         tooltipStyle: currentProject?.themeSettings?.tooltipStyle ?? ('solid' as const),
-        tooltipColor: currentProject?.themeSettings?.tooltipColor ?? '#495BFD',
+        tooltipColor: currentProject?.themeSettings?.tooltipColor ?? '#E65221',
         textColor: 'white'
     };
 

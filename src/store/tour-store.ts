@@ -141,12 +141,12 @@ export const useTourStore = create<TourState>()(
                         themeSettings: {
                             fontFamily: p.theme_settings?.fontFamily ?? 'Inter',
                             darkMode: p.theme_settings?.darkMode ?? false,
-                            primaryColor: p.theme_settings?.primaryColor ?? '#495BFD',
+                            primaryColor: p.theme_settings?.primaryColor ?? '#E65221',
                             borderRadius: p.theme_settings?.borderRadius ?? '12',
                             paddingV: p.theme_settings?.paddingV ?? '10',
                             paddingH: p.theme_settings?.paddingH ?? '20',
                             tooltipStyle: p.theme_settings?.tooltipStyle ?? 'solid',
-                            tooltipColor: p.theme_settings?.tooltipColor ?? '#495BFD'
+                            tooltipColor: p.theme_settings?.tooltipColor ?? '#E65221'
                         },
                         lastSeenAt: p.last_seen_at ? new Date(p.last_seen_at) : undefined,
                         createdAt: new Date(p.created_at)

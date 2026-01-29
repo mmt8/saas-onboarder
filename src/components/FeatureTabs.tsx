@@ -12,7 +12,7 @@ const features = [
         description: "One click. Your colors, fonts, and spacing, applied for you.",
         icon: <Wand2 className="w-5 h-5" />,
         image: "/features/auto-style.png",
-        color: "bg-[#495BFD]"
+        color: "bg-[#E65221]"
     },
     {
         id: "themes",

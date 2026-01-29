@@ -112,7 +112,7 @@ export function CreateTourDialog({ isOpen, onClose }: CreateTourDialogProps) {
                                     className={cn(
                                         "group relative p-8 rounded-[2rem] border-2 flex flex-col items-center gap-6 cursor-pointer transition-all duration-300",
                                         hoveredMode === 'manual'
-                                            ? "bg-[#495BFD] border-[#495BFD] text-white scale-[1.02] shadow-xl shadow-blue-500/20"
+                                            ? "bg-[#E65221] border-[#E65221] text-white scale-[1.02] shadow-xl shadow-blue-500/20"
                                             : "bg-background border-border hover:border-primary/30 text-foreground"
                                     )}
                                 >

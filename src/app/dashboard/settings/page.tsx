@@ -34,7 +34,7 @@ export default function SettingsPage() {
         paddingV: '10',
         paddingH: '20',
         tooltipStyle: 'solid' as 'solid' | 'color' | 'glass' | 'auto',
-        tooltipColor: '#495BFD'
+        tooltipColor: '#E65221'
     });
 
     // Dynamically load the font for preview
@@ -89,7 +89,7 @@ export default function SettingsPage() {
                     ...currentProject.themeSettings,
                     // Ensure defaults for new fields if they don't exist in DB yet
                     tooltipStyle: (currentProject.themeSettings as any).tooltipStyle || 'solid',
-                    tooltipColor: (currentProject.themeSettings as any).tooltipColor || '#495BFD'
+                    tooltipColor: (currentProject.themeSettings as any).tooltipColor || '#E65221'
                 });
             }
         }
