@@ -31,7 +31,7 @@ const Switch = ({ checked, onChange, disabled }: { checked: boolean, onChange: (
         disabled={disabled}
         className={cn(
             "relative w-7 h-4 rounded-full transition-colors duration-200 outline-none",
-            checked ? "bg-[#E65221]" : "bg-slate-300",
+            checked ? "bg-[#495BFD]" : "bg-slate-300",
             disabled && "opacity-50 cursor-not-allowed"
         )}
     >

@@ -368,6 +368,7 @@ export default function SettingsPage() {
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Radius</label>
                         <input
                             type="number"
+                            min="0"
                             value={theme.borderRadius}
                             onChange={(e) => setTheme({ ...theme, borderRadius: e.target.value })}
                             className="w-full bg-secondary/20 border border-border rounded-xl px-4 py-3 font-mono text-foreground"
@@ -379,6 +380,7 @@ export default function SettingsPage() {
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Height</label>
                         <input
                             type="number"
+                            min="0"
                             value={theme.paddingV}
                             onChange={(e) => setTheme({ ...theme, paddingV: e.target.value })}
                             className="w-full bg-secondary/20 border border-border rounded-xl px-4 py-3 font-mono text-foreground"
@@ -390,6 +392,7 @@ export default function SettingsPage() {
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Width</label>
                         <input
                             type="number"
+                            min="0"
                             value={theme.paddingH}
                             onChange={(e) => setTheme({ ...theme, paddingH: e.target.value })}
                             className="w-full bg-secondary/20 border border-border rounded-xl px-4 py-3 font-mono text-foreground"
