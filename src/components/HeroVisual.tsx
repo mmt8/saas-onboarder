@@ -203,7 +203,7 @@ export function HeroVisual() {
 
             {/* Ambient Background Glows */}
             <motion.div style={{ x: useTransform(bgX, (val) => val * -1.5), y: useTransform(bgY, (val) => val * -1.5) }} className="absolute -z-10 -top-20 -left-20 w-80 h-80 bg-[#E65221]/20 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
-            <motion.div style={{ x: useTransform(bgX, (val) => val * 1.5), y: useTransform(bgY, (val) => val * 1.5) }} className="absolute -z-10 -bottom-20 -right-20 w-80 h-80 bg-fuchsia-500/10 rounded-full blur-[100px] pointer-events-none mix-blend-screen hidden md:block" />
+            <motion.div style={{ x: useTransform(bgX, (val) => val * 1.5), y: useTransform(bgY, (val) => val * 1.5) }} className="absolute -z-10 bottom-10 -right-20 w-80 h-80 bg-fuchsia-500/10 rounded-full blur-[100px] pointer-events-none mix-blend-screen hidden md:block" />
         </div>
     );
 }
