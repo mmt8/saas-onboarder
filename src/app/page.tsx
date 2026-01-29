@@ -178,7 +178,7 @@ export default function Home() {
 
 
         {/* Coming Soon Section */}
-        <section className="py-24 bg-[#505050] text-white overflow-hidden relative border-t border-white/10">
+        <section className="py-24 bg-black text-white overflow-hidden relative border-t border-white/10">
           {/* Lively Background elements */}
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
             <div className="absolute top-1/4 -left-20 w-80 h-80 bg-orange-500/10 rounded-full blur-[100px]" />
