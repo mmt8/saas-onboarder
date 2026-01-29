@@ -30,7 +30,7 @@ export function FontPicker({ value, onChange }: FontPickerProps) {
     }, []);
 
     return (
-        <div className="relative w-full" ref={containerRef}>
+        <div className="relative w-full font-sans" ref={containerRef}>
             <div
                 onClick={() => setOpen(!open)}
                 className="w-full bg-secondary/20 border border-border rounded-xl px-4 py-3 cursor-pointer flex items-center justify-between hover:bg-secondary/30 transition-all font-medium text-foreground"
@@ -49,7 +49,7 @@ export function FontPicker({ value, onChange }: FontPickerProps) {
                             placeholder="Search fonts..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="bg-transparent border-none focus:ring-0 text-sm w-full font-medium"
+                            className="bg-transparent border-none focus:ring-0 text-sm w-full font-medium font-sans"
                         />
                     </div>
                     <div className="max-h-[300px] overflow-y-auto p-2 space-y-1 custom-scrollbar">
