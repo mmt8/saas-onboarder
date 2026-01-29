@@ -286,29 +286,24 @@ export const useTourStore = create<TourState>()(
             saveDetectedBranding: async (projectId: string, branding: { primaryColor: string; fontFamily: string; borderRadius: string; textColor: 'white' | 'black' }) => {
                 if (!projectId || !branding) return;
                 try {
-                    // Fetch current theme settings
-                    const { data: project, error: fetchError } = await supabase
-                        .from('projects')
-                        .select('theme_settings')
-                        .eq('id', projectId)
-                        .single();
+                    // Use RPC to bypass RLS restrictions for anonymous widget updates
+                    const { error } = await supabase.rpc('save_detected_branding', {
+                        project_id: projectId,
+                        primary_color: branding.primaryColor,
+                        font_family: branding.fontFamily,
+                        border_radius: branding.borderRadius,
+                        text_color: branding.textColor
+                    });
 
-                    if (fetchError) throw fetchError;
+                    if (error) {
+                        if (error.code === 'PGRST202') {
+                            console.warn('Product Tour: Database function "save_detected_branding" not found. Please run the SQL migration from supabase_rpc_branding.sql');
+                        } else {
+                            console.error('Error saving detected branding:', error);
+                        }
+                        return;
+                    }
 
-                    const currentSettings = project?.theme_settings || {};
-
-                    // Merge detected branding into theme settings
-                    const updatedSettings = {
-                        ...currentSettings,
-                        detectedBranding: branding
-                    };
-
-                    const { error } = await supabase
-                        .from('projects')
-                        .update({ theme_settings: updatedSettings })
-                        .eq('id', projectId);
-
-                    if (error) throw error;
                     console.log('Product Tour: Detected branding saved for project', projectId);
 
                     // Refresh projects to get updated data

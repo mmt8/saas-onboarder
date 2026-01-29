@@ -26291,15 +26291,21 @@ ${suffix}`;
         saveDetectedBranding: async (projectId, branding) => {
           if (!projectId || !branding) return;
           try {
-            const { data: project, error: fetchError } = await supabase.from("projects").select("theme_settings").eq("id", projectId).single();
-            if (fetchError) throw fetchError;
-            const currentSettings = (project == null ? void 0 : project.theme_settings) || {};
-            const updatedSettings = {
-              ...currentSettings,
-              detectedBranding: branding
-            };
-            const { error } = await supabase.from("projects").update({ theme_settings: updatedSettings }).eq("id", projectId);
-            if (error) throw error;
+            const { error } = await supabase.rpc("save_detected_branding", {
+              project_id: projectId,
+              primary_color: branding.primaryColor,
+              font_family: branding.fontFamily,
+              border_radius: branding.borderRadius,
+              text_color: branding.textColor
+            });
+            if (error) {
+              if (error.code === "PGRST202") {
+                console.warn('Product Tour: Database function "save_detected_branding" not found. Please run the SQL migration from supabase_rpc_branding.sql');
+              } else {
+                console.error("Error saving detected branding:", error);
+              }
+              return;
+            }
             console.log("Product Tour: Detected branding saved for project", projectId);
             await get2().fetchProjects();
           } catch (error) {
