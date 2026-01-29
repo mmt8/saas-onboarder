@@ -258,8 +258,20 @@ export default function SettingsPage() {
                                 theme.tooltipStyle === 'auto' ? "border-primary bg-primary/5" : "border-border bg-card"
                             )}
                         >
-                            <div className="w-full h-8 rounded-lg shadow-sm bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center">
-                                <Sparkles className="w-4 h-4 text-white animate-pulse" />
+                            <div
+                                className="w-full h-8 rounded-lg shadow-sm flex items-center justify-center relative overflow-hidden"
+                                style={{
+                                    background: `
+                                        radial-gradient(at 0% 0%, #ff4d4d 0px, transparent 50%),
+                                        radial-gradient(at 100% 0%, #4d79ff 0px, transparent 50%),
+                                        radial-gradient(at 100% 100%, #ff4da6 0px, transparent 50%),
+                                        radial-gradient(at 0% 100%, #4dff88 0px, transparent 50%),
+                                        radial-gradient(at 50% 50%, #ffcc00 0px, transparent 50%)
+                                    `,
+                                    backgroundSize: '100% 100%'
+                                }}
+                            >
+                                <Sparkles className="w-3.5 h-3.5 text-white drop-shadow-sm animate-pulse" />
                             </div>
                             <span className="text-xs font-bold">Auto</span>
                         </div>
