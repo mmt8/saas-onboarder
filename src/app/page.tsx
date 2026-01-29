@@ -47,17 +47,6 @@ export default function Home() {
                 </Link>
               </Button>
             </div>
-
-            {/* Social Proof Placeholder */}
-            <div className="mt-24 py-12 border-t border-border/20 w-full max-w-2xl mx-auto opacity-80">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-8">Trusted by product teams obsessed with activation.</p>
-              <div className="flex justify-between items-center grayscale opacity-30 gap-8">
-                <div className="h-6 w-24 bg-foreground/20 rounded" />
-                <div className="h-6 w-24 bg-foreground/20 rounded" />
-                <div className="h-6 w-24 bg-foreground/20 rounded" />
-                <div className="h-6 w-24 bg-foreground/20 rounded" />
-              </div>
-            </div>
           </div>
         </section>
 
