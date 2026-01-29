@@ -470,6 +470,7 @@ export default function SettingsPage() {
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,#a78bfa,transparent)]" />
                         <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] animate-spin-slower" style={{ background: 'conic-gradient(from 0deg, transparent 0 340deg, #fff 360deg)', opacity: 0.1 }} />
                         <div
+                            className="absolute inset-0 transition-all duration-1000"
                             style={{
                                 backgroundColor: 'transparent',
                                 opacity: 0
