@@ -1,3 +1,6 @@
+"use client";
+
+import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BarChart3, MousePointerClick, Sparkles, Zap, Lock, Globe, Rocket, Megaphone, HelpCircle, Layers } from "lucide-react";
