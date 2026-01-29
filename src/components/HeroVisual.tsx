@@ -20,7 +20,7 @@ const Tooltip = ({ description, buttonText, className, x, y, parallaxFactor, var
 
     const variantStyles = {
         yellow: {
-            container: "bg-[#495BFD] text-white shadow-[0_20px_50px_-12px_rgba(73,91,253,0.3)] border-transparent",
+            container: "bg-black/20 backdrop-blur-md border-white/10 text-white shadow-[0_15px_24.5px_rgba(0,0,0,0.24),0_7px_10.5px_rgba(0,0,0,0.15)]",
             text: "text-white/90",
             button: "bg-white/10 text-white hover:bg-white/20 rounded-full"
         },
@@ -32,7 +32,7 @@ const Tooltip = ({ description, buttonText, className, x, y, parallaxFactor, var
         emerald: {
             container: "bg-white border-slate-100 text-slate-900 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]",
             text: "text-slate-700",
-            button: "bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm rounded-[4px]"
+            button: "bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm rounded-none"
         }
     };
 
@@ -124,7 +124,7 @@ export function HeroVisual() {
     return (
         <div
             ref={containerRef}
-            className="w-full max-w-5xl mx-auto relative group mb-20 overflow-hidden md:overflow-visible flex justify-center"
+            className="w-full max-w-5xl mx-auto relative group mb-20 overflow-hidden md:overflow-visible flex justify-start"
         >
             <div className="w-full aspect-video min-w-[640px] md:min-w-0 md:w-full relative shrink-0">
                 {/* Dashboard Background */}
@@ -145,7 +145,7 @@ export function HeroVisual() {
 
                 {/* Desktop Tooltips (Fixed Regions) */}
                 <div className="hidden md:block">
-                    <motion.div style={{ x: toolX1, y: toolY1 }} className="absolute z-20 left-[10%] bottom-[15%] pointer-events-none">
+                    <motion.div style={{ x: toolX1, y: toolY1 }} className="absolute z-20 left-[15%] top-[25%] pointer-events-none">
                         <Tooltip
                             x="0" y="0" parallaxFactor={1.5}
                             description={tooltipsData[0].description}
@@ -156,7 +156,7 @@ export function HeroVisual() {
 
                     <motion.div
                         style={{ x: toolX2, y: toolY2 }}
-                        className="absolute z-20 right-[5%] top-[10%] pointer-events-none scale-90 md:scale-100 origin-top-right"
+                        className="absolute z-20 right-[20%] top-[15%] pointer-events-none scale-90 md:scale-100 origin-top-right"
                     >
                         <Tooltip
                             x="0" y="0" parallaxFactor={1.8}
