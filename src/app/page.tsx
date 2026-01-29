@@ -125,6 +125,49 @@ export default function Home() {
           <FeatureTabs />
         </section>
 
+        {/* New How It Works Section */}
+        <section className="py-24 bg-transparent relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold font-serif mb-6">How it works</h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                The fastest way to build on-brand product walkthroughs.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+              <div className="bg-background border border-border/50 p-8 rounded-[2.5rem] relative z-10 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow group">
+                <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
+                  1
+                </div>
+                <h3 className="text-2xl font-bold mb-4 font-serif">Install with a single line of code</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Copy a lightweight snippet and add it to your site. No SDKs, no complex setup.
+                </p>
+              </div>
+
+              <div className="bg-background border border-border/50 p-8 rounded-[2.5rem] relative z-10 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow group">
+                <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
+                  2
+                </div>
+                <h3 className="text-2xl font-bold mb-4 font-serif">Match your product’s look & feel</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Choose a ready-made style or let AI automatically adapt tours to your existing UI and brand.
+                </p>
+              </div>
+
+              <div className="bg-background border border-border/50 p-8 rounded-[2.5rem] relative z-10 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow group">
+                <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
+                  3
+                </div>
+                <h3 className="text-2xl font-bold mb-4 font-serif">Generate, refine, and publish tours</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  AI creates draft product tours for you. Review, edit if needed, and publish instantly.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Use Cases Section */}
         <section className="py-20 border-y border-border/10 bg-secondary/30 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -154,34 +197,6 @@ export default function Home() {
           <SocialProofWall />
         </div>
 
-        {/* How It Works Section */}
-        <section className="py-32 bg-transparent relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-5xl font-bold font-serif mb-6">Clarity in 3 simple steps.</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
-              {/* Connector line for desktop */}
-              <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-border -translate-y-1/2 -z-10" />
-
-              <Step
-                number="1"
-                title="Record steps"
-                description="Use our precise point-and-click recorder to capture every interaction in your product walkthrough."
-              />
-              <Step
-                number="2"
-                title="Edit visually"
-                description="Use our intuitive no-code editor to tweak the copy, style, and flow. Brand it to match your product perfectly."
-              />
-              <Step
-                number="3"
-                title="Publish + measure"
-                description="Deploy with a single line of code. Track activation rates and identify exactly where users need more help."
-              />
-            </div>
-          </div>
-        </section>
 
         {/* FAQ Section */}
         <FAQ />
@@ -294,19 +309,6 @@ export default function Home() {
   );
 }
 
-function Step({ number, title, description }: { number: string, title: string, description: string }) {
-  return (
-    <div className="bg-background border border-border/50 p-8 rounded-[2.5rem] relative z-10 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow">
-      <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-primary/20">
-        {number}
-      </div>
-      <h3 className="text-2xl font-bold mb-4 font-serif">{title}</h3>
-      <p className="text-muted-foreground leading-relaxed">
-        {description}
-      </p>
-    </div>
-  );
-}
 
 function ComingSoonCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
   return (
