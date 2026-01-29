@@ -246,7 +246,7 @@ export default function Home() {
         {/* Coming Soon Section */}
         {/* Coming Soon Section */}
         {/* Coming Soon Section */}
-        <section className="py-24 bg-[#582400] text-white overflow-hidden relative border-t border-white/10">
+        <section className="py-24 bg-[#421d24] text-white overflow-hidden relative border-t border-white/10">
           {/* Lively Background elements */}
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
             <div className="absolute top-1/4 -left-20 w-80 h-80 bg-orange-500/10 rounded-full blur-[100px]" />
@@ -309,7 +309,7 @@ export default function Home() {
       {/* Footer */}
       {/* Footer */}
       {/* Footer */}
-      <footer className="border-t border-white/10 py-16 bg-[#582400] text-white/80 relative overflow-hidden">
+      <footer className="border-t border-white/10 py-16 bg-[#421d24] text-white/80 relative overflow-hidden">
         {/* Decorative background element for footer */}
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[120px] -mb-48 -mr-48 pointer-events-none" />
 
