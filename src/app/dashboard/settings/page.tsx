@@ -66,30 +66,20 @@ export default function SettingsPage() {
     }, [theme.fontFamily]);
 
     // Handle Auto Detection Preview
+    // Note: Auto styling is detected at RUNTIME on the target site, not here
     useEffect(() => {
         if (theme.tooltipStyle === 'auto') {
             setIsDetecting(true);
             setDetectionFailed(false);
 
+            // Simulate brief detection animation, then show rainbow preview
             const timer = setTimeout(() => {
-                const result = detectBranding();
-                if (result) {
-                    setAutoBranding(result);
-                    setDetectionFailed(false);
-                    // Populate theme with detected values to allow customization
-                    setTheme(prev => ({
-                        ...prev,
-                        primaryColor: result.primaryColor,
-                        fontFamily: result.fontFamily,
-                        borderRadius: result.borderRadius
-                    }));
-                } else {
-                    setDetectionFailed(true);
-                    toast.error("Auto-detection failed. Falling back to Solid style.");
-                    setTheme(prev => ({ ...prev, tooltipStyle: 'solid' }));
-                }
+                // Auto branding detection runs at runtime on target site
+                // Preview shows rainbow gradient to indicate dynamic behavior
+                setAutoBranding(null);
+                setDetectionFailed(false);
                 setIsDetecting(false);
-            }, 1200);
+            }, 800);
 
             return () => clearTimeout(timer);
         } else {
@@ -145,10 +135,16 @@ export default function SettingsPage() {
         }
 
         if (theme.tooltipStyle === 'auto') {
+            // Rainbow gradient for Auto preview
             return {
                 ...baseStyle,
-                backgroundColor: theme.primaryColor || '#495BFD',
-                color: getContrastColor(theme.primaryColor || '#495BFD') === 'black' ? '#1a1a1a' : '#fff',
+                background: `linear-gradient(135deg, 
+                    #43A047 0%, 
+                    #2E7D32 25%, 
+                    #1B5E20 50%, 
+                    #4CAF50 75%, 
+                    #66BB6A 100%)`,
+                color: 'white',
                 borderRadius: '24px'
             };
         }
@@ -306,6 +302,13 @@ export default function SettingsPage() {
                         <p className="text-[10px] text-rose-500 font-medium px-2 flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
                             <AlertCircle className="w-3 h-3" />
                             Branding detection unavailable for this environment.
+                        </p>
+                    )}
+
+                    {theme.tooltipStyle === 'auto' && !isDetecting && (
+                        <p className="text-[10px] text-emerald-600 font-medium px-2 flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
+                            <Sparkles className="w-3 h-3" />
+                            Styling auto-detected from your site at runtime.
                         </p>
                     )}
 
