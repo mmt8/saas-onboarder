@@ -241,7 +241,7 @@ export function WidgetTourPlayer() {
                             : targetRect.bottom + 20;
                         return Math.min(window.innerHeight - 250, Math.max(marginY, potentialTop));
                     })(),
-                    borderRadius: `${activeTheme.borderRadius}px`,
+                    borderRadius: '32px',
                     ...((activeTheme.tooltipStyle === 'color' || activeTheme.tooltipStyle === 'auto') ? { backgroundColor: activeTheme.tooltipColor, color: activeTheme.textColor, border: 'none' } : {}),
                     ...(activeTheme.tooltipStyle === 'glass' ? {
                         backgroundColor: 'rgba(15, 15, 15, 0.4)',
