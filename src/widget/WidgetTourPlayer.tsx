@@ -59,7 +59,10 @@ export function WidgetTourPlayer() {
         ...theme,
         primaryColor: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.primaryColor : (theme.tooltipStyle === 'auto' ? '#495BFD' : theme.primaryColor),
         fontFamily: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.fontFamily : theme.fontFamily,
-        borderRadius: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.borderRadius : theme.borderRadius,
+        borderRadius: theme.tooltipStyle === 'auto' && detectedBranding ? (() => {
+            const val = parseFloat(detectedBranding.borderRadius);
+            return isNaN(val) ? '12' : Math.min(Math.max(val, 0), 24).toString();
+        })() : theme.borderRadius,
         tooltipColor: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.primaryColor : (theme.tooltipStyle === 'auto' ? '#495BFD' : theme.tooltipColor),
         textColor: theme.tooltipStyle === 'auto' && detectedBranding
             ? (detectedBranding.textColor === 'black' ? 'black' : 'white')
@@ -183,8 +186,6 @@ export function WidgetTourPlayer() {
                     </defs>
                     <rect
                         x="0"
-                        y="0"
-                        width="100%"
                         height="100%"
                         fill="rgba(0,0,0,0.6)"
                         mask="url(#spotlight-mask)"
