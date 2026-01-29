@@ -124,7 +124,7 @@ export default function SettingsPage() {
                 color: autoBranding?.textColor === 'black' ? '#1a1a1a' : '#fff',
                 border: 'none',
                 boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                borderRadius: `${theme.borderRadius}px`
+                borderRadius: `${autoBranding?.borderRadius || theme.borderRadius}px`
             };
         }
 
@@ -409,7 +409,7 @@ export default function SettingsPage() {
                                     }
                                 }
                             }}
-                            className="rounded-full px-6 font-bold text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="rounded-full px-6 font-bold text-rose-600 hover:bg-rose-50 hover:text-rose-600 active:bg-rose-100 active:text-rose-600 transition-colors"
                         >
                             Delete Project
                         </Button>
