@@ -397,16 +397,14 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                <div className="flex justify-end pt-4">
-                    <Button
-                        onClick={handleSaveSettings}
-                        disabled={isLoading}
-                        className="px-8 h-11 text-sm font-bold bg-[#495BFD] hover:bg-[#495BFD]/90"
-                    >
-                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                        Save Settings
-                    </Button>
-                </div>
+                <Button
+                    onClick={handleSaveSettings}
+                    disabled={isLoading}
+                    className="px-8 h-11 text-sm font-bold"
+                >
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    Save Settings
+                </Button>
 
                 <div className="pt-10 mt-10 border-t border-border space-y-4">
                     <div className="flex items-center gap-2 text-rose-500">
@@ -519,8 +517,8 @@ export default function SettingsPage() {
                                     style={{
                                         backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor :
                                             (theme.tooltipStyle === 'glass' ?
-                                                (isHovered ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)') :
-                                                (isHovered ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.1)')),
+                                                (isHovered ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.1)') :
+                                                (isHovered ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.1)')),
                                         color: 'white',
                                         borderRadius: '24px',
                                         padding: `${theme.paddingV}px ${theme.paddingH}px`,
