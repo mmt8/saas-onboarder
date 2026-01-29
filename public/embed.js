@@ -39128,13 +39128,13 @@ ${suffix}`;
     const [detectedBranding, setDetectedBranding] = reactExports.useState(null);
     const brandingSavedRef = reactExports.useRef(false);
     reactExports.useEffect(() => {
-      const tooltipStyle = theme.tooltipStyle;
-      if (tooltipStyle === "auto" && projectId && !brandingSavedRef.current) {
+      if (projectId && !brandingSavedRef.current) {
         const branding = detectBranding();
         if (branding) {
           setDetectedBranding(branding);
           brandingSavedRef.current = true;
           saveDetectedBranding(projectId, branding);
+          console.log("Product Tour: Detected branding:", branding.primaryColor, branding.fontFamily);
         }
       }
     }, [projectId]);

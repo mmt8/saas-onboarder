@@ -481,18 +481,17 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
     const [detectedBranding, setDetectedBranding] = useState<DetectedBranding | null>(null);
     const brandingSavedRef = useRef(false);
 
-    // Auto-detect branding if needed and save to database (once per session)
+    // Always detect and save branding from the host site (once per session)
+    // This runs regardless of tooltip style so the settings preview can use it
     useEffect(() => {
-        // @ts-ignore - tooltipStyle might not be in type
-        const tooltipStyle = theme.tooltipStyle;
-
-        if (tooltipStyle === 'auto' && projectId && !brandingSavedRef.current) {
+        if (projectId && !brandingSavedRef.current) {
             const branding = detectBranding();
             if (branding) {
                 setDetectedBranding(branding);
-                // Save detected branding to Supabase for preview in settings (only once)
+                // Save detected branding to Supabase for preview in settings
                 brandingSavedRef.current = true;
                 saveDetectedBranding(projectId, branding);
+                console.log('Product Tour: Detected branding:', branding.primaryColor, branding.fontFamily);
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
