@@ -25,8 +25,7 @@ export default function Home() {
 
           <div className="max-w-7xl mx-auto px-6 relative z-10 text-center flex flex-col items-center">
             <h1 className="text-5xl md:text-8xl font-bold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 font-serif max-w-4xl leading-[1.1] z-30 relative pt-12">
-              AI product tours<br />
-              <span className="text-[#E65221]">that drive adoption.</span>
+              AI product tours <span className="text-[#E65221]">driving adoption.</span>
             </h1>
 
             <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 leading-relaxed font-medium z-30 relative">
