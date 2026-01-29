@@ -7,7 +7,6 @@ import { ArrowRight, BarChart3, MousePointerClick, Sparkles, Zap, Lock, Globe, R
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { FeatureTabs } from "@/components/FeatureTabs";
-import { SocialProofWall } from "@/components/SocialProofWall";
 import { FAQ } from "@/components/FAQ";
 import { HeroVisual } from "@/components/HeroVisual";
 
@@ -169,15 +168,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-        {/* Social Proof Wall */}
-        <div className="py-24 bg-transparent">
-          <div className="max-w-7xl mx-auto px-6 text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold font-serif">Enabling SaaS teams crush churn.</h2>
-          </div>
-          <SocialProofWall />
-        </div>
-
 
 
         {/* Coming Soon Section */}
