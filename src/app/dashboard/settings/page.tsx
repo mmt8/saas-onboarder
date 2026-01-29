@@ -130,7 +130,7 @@ export default function SettingsPage() {
             return {
                 ...baseStyle,
                 fontFamily: font,
-                backgroundColor: autoBranding?.primaryColor || '#495BFD',
+                backgroundColor: autoBranding?.primaryColor || theme.primaryColor,
                 color: autoBranding?.textColor === 'black' ? '#1a1a1a' : '#fff',
                 border: 'none',
                 boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
@@ -475,9 +475,9 @@ export default function SettingsPage() {
                     {isDetecting ? (
                         <div className="flex flex-col items-center justify-center gap-4 animate-in fade-in zoom-in duration-500 relative z-10">
                             <div className="relative w-16 h-16">
-                                <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-primary animate-spin" />
-                                <div className="absolute inset-2 rounded-full border-b-2 border-l-2 border-orange-400 animate-spin-slow" />
-                                <Sparkles className="absolute inset-0 m-auto w-6 h-6 text-primary animate-pulse" />
+                                <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-white animate-spin" />
+                                <div className="absolute inset-2 rounded-full border-b-2 border-l-2 border-white/40 animate-spin-slow" />
+                                <Sparkles className="absolute inset-0 m-auto w-6 h-6 text-white animate-pulse" />
                             </div>
                             <p className="text-white/80 font-bold text-sm tracking-widest uppercase">Detecting Brand...</p>
                         </div>
