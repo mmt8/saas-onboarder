@@ -92,6 +92,11 @@ export function WidgetTourPlayer() {
         const step = currentTour.steps[currentStepIndex];
         if (!step) return;
 
+        // Immediately set a default rect so the component renders
+        if (!targetRect) {
+            setTargetRect(new DOMRect(window.innerWidth / 2 - 100, window.innerHeight / 2 - 50, 200, 100));
+        }
+
         const updateTarget = () => {
             const element = document.querySelector(step.target);
             if (element) {
@@ -111,9 +116,13 @@ export function WidgetTourPlayer() {
             window.removeEventListener('resize', updateTarget);
             window.removeEventListener('scroll', updateTarget);
         };
-    }, [currentTour, currentStepIndex, status]);
+    }, [currentTour, currentStepIndex, status, targetRect]);
 
-    if (status !== 'playing' || !currentTour || !targetRect) return null;
+    // Wait for status and tour, but allow null targetRect (will be set by effect)
+    if (status !== 'playing' || !currentTour) return null;
+
+    // If targetRect is null, the effect will set it on next render cycle
+    if (!targetRect) return null;
 
     // Default fallback if project is missing (don't block render)
 

@@ -38379,6 +38379,9 @@ ${suffix}`;
       if (status !== "playing" || !currentTour) return;
       const step = currentTour.steps[currentStepIndex];
       if (!step) return;
+      if (!targetRect) {
+        setTargetRect(new DOMRect(window.innerWidth / 2 - 100, window.innerHeight / 2 - 50, 200, 100));
+      }
       const updateTarget = () => {
         const element = document.querySelector(step.target);
         if (element) {
@@ -38396,8 +38399,9 @@ ${suffix}`;
         window.removeEventListener("resize", updateTarget);
         window.removeEventListener("scroll", updateTarget);
       };
-    }, [currentTour, currentStepIndex, status]);
-    if (status !== "playing" || !currentTour || !targetRect) return null;
+    }, [currentTour, currentStepIndex, status, targetRect]);
+    if (status !== "playing" || !currentTour) return null;
+    if (!targetRect) return null;
     if (!currentTour.steps || currentTour.steps.length === 0) {
       console.warn("WidgetTourPlayer: No steps found for tour", currentTour.title);
       return null;
