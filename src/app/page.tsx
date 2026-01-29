@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BarChart3, MousePointerClick, Sparkles, Zap, Lock, Globe, Rocket, Megaphone, HelpCircle, Layers, MessageSquare, CheckCircle2 } from "lucide-react";
+import { ArrowRight, BarChart3, MousePointerClick, Sparkles, Zap, Lock, Globe, Rocket, Megaphone, HelpCircle, Layers, MessageSquare, CheckCircle2, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { FeatureTabs } from "@/components/FeatureTabs";
@@ -257,11 +257,8 @@ export default function Home() {
             <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-8">
               <div>
                 <Badge variant="outline" className="mb-4 text-white/60 border-white/20">Roadmap</Badge>
-                <h2 className="text-4xl md:text-5xl font-bold font-serif">Shipping soon.</h2>
+                <h2 className="text-4xl md:text-5xl font-bold font-serif">Shipping soon...</h2>
               </div>
-              <p className="text-white/60 max-w-md text-lg text-right md:text-left">
-                We are building features to make your product adoption even faster.
-              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -289,6 +286,11 @@ export default function Home() {
                 icon={<BarChart3 />}
                 title="Reporting"
                 description="Advanced analytics to track tour performance and user engagement."
+              />
+              <ComingSoonCard
+                icon={<Star />}
+                title="NPS and surveys"
+                description="Measure customer satisfaction and gather targeted qualitative feedback."
               />
             </div>
           </div>
