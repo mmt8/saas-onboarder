@@ -61,68 +61,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Bento Grid Features */}
-        <section className="py-24" id="features">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 font-serif">AI-Powered <span className="text-[#E65221]">Precision</span> for every interaction.</h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                Autonomous discovery meets manual polish. Samantha scans your UI to build the perfect draft, while you maintain absolute control.
-              </p>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-6 h-auto md:h-[600px]">
-
-              {/* Large Card: AI Draft */}
-              <div className="md:col-span-2 md:row-span-2 group relative overflow-hidden rounded-[2.5rem] bg-secondary border border-border/50 p-10 hover:shadow-2xl transition-all duration-500">
-                <div className="relative z-10 h-full flex flex-col">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 text-primary">
-                    <Zap className="w-7 h-7" />
-                  </div>
-                  <h3 className="text-3xl font-bold mb-4 font-serif">Pixel Perfect</h3>
-                  <p className="text-muted-foreground text-lg leading-relaxed max-w-md">
-                    Every step is visually verified. Pick elements with surgical precision and customize every pixel of the guide.
-                  </p>
-
-                  {/* Visual Placeholder for Editor UI */}
-                  <div className="mt-auto translate-y-12 translate-x-12 relative">
-                    <div className="bg-background border border-border shadow-2xl rounded-tl-2xl p-6 w-full h-64 opacity-90 group-hover:scale-[1.02] transition-transform duration-500">
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-3 h-3 rounded-full bg-red-400" />
-                        <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                        <div className="w-3 h-3 rounded-full bg-green-400" />
-                      </div>
-                      <div className="space-y-3">
-                        <div className="h-4 bg-muted/20 rounded w-3/4" />
-                        <div className="h-4 bg-muted/20 rounded w-1/2" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              </div>
-
-              {/* Card: No Code */}
-              <div className="group relative overflow-hidden rounded-[2.5rem] bg-white border border-border/50 p-8 hover:shadow-xl transition-all duration-300 md:row-span-2 flex flex-col h-full">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 text-primary">
-                  <MousePointerClick className="w-6 h-6" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3 font-serif">No-Code Visual Editor</h3>
-                <p className="text-muted-foreground mb-8">
-                  Point and click to attach steps to any element. CSS selectors are handled automatically.
-                </p>
-                <div className="mt-auto -mx-8 -mb-8 overflow-hidden rounded-b-[2.5rem]">
-                  <img
-                    src="/landing/no-code-editor.png"
-                    alt="No-Code Visual Editor"
-                    className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </section>
 
         {/* Feature Tabs Section */}
         <section className="bg-transparent">
@@ -299,7 +238,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-pattern-toast opacity-20 pointer-events-none" />
           <div className="max-w-3xl mx-auto space-y-8 relative z-10">
             <h2 className="text-4xl md:text-6xl font-bold font-serif tracking-tight leading-tight">
-              Your Entire Onboarding Flow. <span className="text-[#E65221]">Done in Seconds.</span>
+              Your entire onboarding flow. <span className="text-[#E65221]">Done in seconds.</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Turn new signups into power users automatically. Just connect your web-app and let our AI build your product tour instantly.
