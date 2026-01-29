@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BarChart3, MousePointerClick, Sparkles, Zap, Lock, Globe } from "lucide-react";
+import { ArrowRight, BarChart3, MousePointerClick, Sparkles, Zap, Lock, Globe, Rocket, Megaphone, HelpCircle, Layers } from "lucide-react";
+import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { FeatureTabs } from "@/components/FeatureTabs";
 import { SocialProofWall } from "@/components/SocialProofWall";
@@ -169,22 +170,60 @@ export default function Home() {
         </section>
 
         {/* Use Cases Section */}
-        <section className="py-20 border-y border-border/10 bg-secondary/30 relative overflow-hidden">
+        <section className="py-24 bg-secondary/20 relative overflow-hidden border-y border-border/10">
           <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-12">
-              <div className="max-w-md">
-                <h2 className="text-3xl font-bold font-serif mb-4">Contextual Relevance.</h2>
-                <p className="text-muted-foreground text-lg">
-                  Deliver the right guidance at the right time throughout the entire customer lifecycle.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3 justify-center md:justify-end">
-                {["Onboarding", "Feature adoption", "Release announcements", "Self-serve guidance"].map((useCase) => (
-                  <Badge key={useCase} variant="secondary" className="py-2 px-6 rounded-full text-base border border-primary/10 bg-background shadow-sm">
-                    {useCase}
-                  </Badge>
-                ))}
-              </div>
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold font-serif mb-6">Use cases</h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                Deliver the right guidance at the right time throughout the entire customer lifecycle.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                {
+                  title: "User Onboarding",
+                  description: "Guide new users through the critical first steps of your product.",
+                  icon: <Rocket className="w-6 h-6 text-primary" />,
+                  delay: 0.1
+                },
+                {
+                  title: "Feature adoption",
+                  description: "Introduce new functionalities and ensure your users get the most value.",
+                  icon: <Zap className="w-6 h-6 text-primary" />,
+                  delay: 0.2
+                },
+                {
+                  title: "Release announcements",
+                  description: "Highlight important updates and changes directly within the app.",
+                  icon: <Megaphone className="w-6 h-6 text-primary" />,
+                  delay: 0.3
+                },
+                {
+                  title: "Self-serve guidance",
+                  description: "Empower users to find answers and solve problems autonomously.",
+                  icon: <HelpCircle className="w-6 h-6 text-primary" />,
+                  delay: 0.4
+                }
+              ].map((item, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: item.delay }}
+                  whileHover={{ y: -5 }}
+                  className="bg-white border border-border/50 p-8 rounded-[2rem] flex flex-col items-start text-left shadow-sm hover:shadow-xl transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    {item.icon}
+                  </div>
+                  <h3 className="text-xl font-bold mb-3 font-serif">{item.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {item.description}
+                  </p>
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>
