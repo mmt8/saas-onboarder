@@ -38320,7 +38320,10 @@ ${suffix}`;
     var _a2, _b, _c, _d, _e, _f, _g, _h;
     const { currentTour, status, setStatus, tours, setTour, projects, currentProjectId, pingProject } = useTourStore();
     const [currentStepIndex, setCurrentStepIndex] = reactExports.useState(0);
-    const [targetRect, setTargetRect] = reactExports.useState(null);
+    const [targetRect, setTargetRect] = reactExports.useState(() => {
+      if (typeof window === "undefined") return null;
+      return new DOMRect(window.innerWidth / 2 - 100, 100, 200, 100);
+    });
     const [detectedBranding, setDetectedBranding] = reactExports.useState(() => detectBranding());
     const projectIdForTheme = (currentTour == null ? void 0 : currentTour.project_id) || currentProjectId;
     const currentProject = projects.find((p) => p.id === projectIdForTheme);
@@ -38399,9 +38402,8 @@ ${suffix}`;
         window.removeEventListener("resize", updateTarget);
         window.removeEventListener("scroll", updateTarget);
       };
-    }, [currentTour, currentStepIndex, status, targetRect]);
-    if (status !== "playing" || !currentTour) return null;
-    if (!targetRect) return null;
+    }, [currentTour, currentStepIndex, status]);
+    if (status !== "playing" || !currentTour || !targetRect) return null;
     if (!currentTour.steps || currentTour.steps.length === 0) {
       console.warn("WidgetTourPlayer: No steps found for tour", currentTour.title);
       return null;

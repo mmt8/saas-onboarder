@@ -9,8 +9,11 @@ import { detectBranding, DetectedBranding } from "./utils/branding-detector";
 export function WidgetTourPlayer() {
     const { currentTour, status, setStatus, tours, setTour, projects, currentProjectId, pingProject } = useTourStore();
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
-    // Initialize with centered rect to ensure we don't return null and keep the player visible
-    const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+    // Initialize with centered rect using lazy initializer for SSR safety
+    const [targetRect, setTargetRect] = useState<DOMRect | null>(() => {
+        if (typeof window === 'undefined') return null;
+        return new DOMRect(window.innerWidth / 2 - 100, 100, 200, 100);
+    });
 
     // Lazy init branding to have it on first frame
     const [detectedBranding, setDetectedBranding] = useState<DetectedBranding | null>(() => detectBranding());
@@ -116,13 +119,9 @@ export function WidgetTourPlayer() {
             window.removeEventListener('resize', updateTarget);
             window.removeEventListener('scroll', updateTarget);
         };
-    }, [currentTour, currentStepIndex, status, targetRect]);
+    }, [currentTour, currentStepIndex, status]);
 
-    // Wait for status and tour, but allow null targetRect (will be set by effect)
-    if (status !== 'playing' || !currentTour) return null;
-
-    // If targetRect is null, the effect will set it on next render cycle
-    if (!targetRect) return null;
+    if (status !== 'playing' || !currentTour || !targetRect) return null;
 
     // Default fallback if project is missing (don't block render)
 

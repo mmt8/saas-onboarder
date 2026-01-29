@@ -12,7 +12,11 @@ import { cn } from "@/lib/utils";
 export function TourPlayer() {
     const { currentTour, status, setStatus, tours, setTour, projects, currentProjectId } = useTourStore();
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
-    const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+    // Initialize with centered rect using lazy initializer for SSR safety
+    const [targetRect, setTargetRect] = useState<DOMRect | null>(() => {
+        if (typeof window === 'undefined') return null;
+        return new DOMRect(window.innerWidth / 2 - 150, 200, 300, 100);
+    });
     const searchParams = useSearchParams();
 
     // Auto-start tour from URL param
