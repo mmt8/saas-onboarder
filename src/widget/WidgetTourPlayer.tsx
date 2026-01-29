@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useLayoutEffect } from "react";
 import { useTourStore } from "@/store/tour-store";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -11,46 +11,39 @@ export function WidgetTourPlayer() {
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     // Initialize with centered rect to ensure we don't return null and keep the player visible
     const [targetRect, setTargetRect] = useState<DOMRect>(new DOMRect(window.innerWidth / 2 - 100, 100, 200, 100));
-    const [detectedBranding, setDetectedBranding] = useState<DetectedBranding | null>(null);
+
+    // Lazy init branding to have it on first frame
+    const [detectedBranding, setDetectedBranding] = useState<DetectedBranding | null>(() => detectBranding());
 
     // Find the project for theme settings
     const projectIdForTheme = currentTour?.project_id || currentProjectId;
     const currentProject = projects.find(p => p.id === projectIdForTheme);
 
-
+    // DEBUG: Log theme resolution for FOUC tracking
     useEffect(() => {
-        console.log('WidgetTourPlayer: Theme Lookup', {
-            tourProjectId: currentTour?.project_id,
-            storeProjectId: currentProjectId,
-            resolvedProjectId: projectIdForTheme,
-            projectFound: !!currentProject,
-            themeSettings: currentProject?.themeSettings,
-            detectedBranding
-        });
-    }, [currentTour, currentProjectId, projects, currentProject, detectedBranding]);
+        if (!currentProject) {
+            console.warn('WidgetTourPlayer: currentProject is undefined. Using defaults (Orange/Solid). projects.length:', projects.length, 'ID:', projectIdForTheme);
+        }
+    }, [currentProject, projects.length, projectIdForTheme]);
 
     const theme = {
         fontFamily: currentProject?.themeSettings?.fontFamily ?? 'Inter, sans-serif',
         darkMode: currentProject?.themeSettings?.darkMode ?? false,
-        primaryColor: currentProject?.themeSettings?.primaryColor ?? '#E65221',
+        primaryColor: currentProject?.themeSettings?.primaryColor ?? '#495BFD',
         borderRadius: currentProject?.themeSettings?.borderRadius ?? '20',
         paddingV: currentProject?.themeSettings?.paddingV ?? '10',
         paddingH: currentProject?.themeSettings?.paddingH ?? '20',
-        tooltipStyle: currentProject?.themeSettings?.tooltipStyle ?? ('solid' as const),
-        tooltipColor: currentProject?.themeSettings?.tooltipColor ?? '#E65221',
+        tooltipStyle: currentProject?.themeSettings?.tooltipStyle ?? ('auto' as const),
+        tooltipColor: currentProject?.themeSettings?.tooltipColor ?? '#495BFD',
         textColor: 'white'
     };
 
-    // Update auto-branding on mount or style change
-    useEffect(() => {
+    // Use LayoutEffect to prevent FOUC (Flash of Unstyled Content)
+    // Updates branding synchronously before paint
+    useLayoutEffect(() => {
         if (theme.tooltipStyle === 'auto') {
-            const timer = setTimeout(() => {
-                const branding = detectBranding();
-                if (branding) {
-                    setDetectedBranding(branding);
-                }
-            }, 500);
-            return () => clearTimeout(timer);
+            const branding = detectBranding();
+            if (branding) setDetectedBranding(branding);
         }
     }, [theme.tooltipStyle]);
 
@@ -70,9 +63,7 @@ export function WidgetTourPlayer() {
     };
 
     // Auto-start tour from URL param
-    // ... (rest of the effects remain the same)
     useEffect(() => {
-        // Native URLSearchParams for Widget
         const params = new URLSearchParams(window.location.search);
         const playTourId = params.get('playTour');
 
@@ -94,6 +85,7 @@ export function WidgetTourPlayer() {
         }
     }, [tours, status, setTour, setStatus]);
 
+    // Track target element position
     useEffect(() => {
         if (status !== 'playing' || !currentTour) return;
 
@@ -121,11 +113,21 @@ export function WidgetTourPlayer() {
         };
     }, [currentTour, currentStepIndex, status]);
 
-    if (status !== 'playing' || !currentTour) {
-        return null;
+    if (status !== 'playing' || !currentTour) return null;
+
+    // Default fallback if project is missing (don't block render)
+
+    if (!currentTour.steps || currentTour.steps.length === 0) {
+        console.warn('WidgetTourPlayer: No steps found for tour', currentTour.title);
+        return null; // Or show a toast?
     }
 
     const currentStep = currentTour.steps[currentStepIndex];
+    if (!currentStep) {
+        console.error('WidgetTourPlayer: Step not found at index', currentStepIndex);
+        return null;
+    }
+
     const isLastStep = currentStepIndex === currentTour.steps.length - 1;
 
     const handleNext = () => {

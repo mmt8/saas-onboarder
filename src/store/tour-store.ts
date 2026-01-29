@@ -104,6 +104,15 @@ interface TourState {
     deleteProject: (id: string) => Promise<void>;
 }
 
+// Helper for consistent URL matching
+const normalizeUrl = (url?: string) => {
+    if (!url) return '/';
+    let clean = url.trim();
+    if (!clean.startsWith('/')) clean = '/' + clean;
+    if (clean !== '/' && clean.endsWith('/')) clean = clean.slice(0, -1);
+    return clean || '/';
+};
+
 export const useTourStore = create<TourState>()(
     persist(
         (set, get) => ({
@@ -121,6 +130,62 @@ export const useTourStore = create<TourState>()(
             language: 'en-US',
             user: null,
             isAuthLoading: true,
+
+            setTour: (tour) => set({ currentTour: tour }),
+            setStatus: (status) => set({ status }),
+
+            checkAuth: async () => {
+                set({ isAuthLoading: true });
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    set({ user: session?.user ?? null });
+
+                    supabase.auth.onAuthStateChange((_event, session) => {
+                        set({ user: session?.user ?? null });
+                    });
+                } catch (error) {
+                    console.error('Error checking auth:', error);
+                } finally {
+                    set({ isAuthLoading: false });
+                }
+            },
+
+            signUp: async (email, password) => {
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                return { data, error };
+            },
+
+            signIn: async (email, password) => {
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                return { error };
+            },
+
+            signInWithGoogle: async () => {
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `${window.location.origin}/dashboard`
+                    }
+                });
+                return { error };
+            },
+
+            signOut: async () => {
+                await supabase.auth.signOut();
+                set({ user: null, currentProjectId: null });
+            },
+
+            resetPassword: async (email) => {
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/reset-password`,
+                });
+                return { error };
+            },
+
+            updatePassword: async (password) => {
+                const { error } = await supabase.auth.updateUser({ password });
+                return { error };
+            },
 
             fetchProjects: async () => {
                 set({ isLoading: true });
@@ -362,6 +427,7 @@ export const useTourStore = create<TourState>()(
                 });
             },
 
+
             saveTour: async (title, pageUrl = '/') => {
                 const { recordedSteps, tours, editingTourId, currentProjectId } = get();
 
@@ -375,13 +441,32 @@ export const useTourStore = create<TourState>()(
                     return;
                 }
 
-                // Normalize pageUrl (strip trailing slash except for root)
-                const normalizedPageUrl = pageUrl === '/' ? '/' : pageUrl.replace(/\/$/, '') || '/';
+                // Strictly normalize URL
+                const normalizedPageUrl = normalizeUrl(pageUrl);
 
                 set({ isLoading: true });
 
                 try {
                     let tourId = editingTourId;
+
+                    // If creating/updating active, ensure we deactivate others on this new path
+                    const existingTour = editingTourId ? tours.find(t => t.id === editingTourId) : null;
+                    const willBeActive = existingTour ? existingTour.isActive : true; // Default true for new
+
+                    if (willBeActive) {
+                        try {
+                            const { error: deactivateError } = await supabase
+                                .from('tours')
+                                .update({ is_active: false })
+                                .eq('project_id', currentProjectId)
+                                .eq('page_url', normalizedPageUrl)
+                                .neq('id', editingTourId || 'new'); // 'new' is dummy, works safely
+
+                            if (deactivateError) console.warn('Auto-deactivation failed', deactivateError);
+                        } catch (e) {
+                            console.warn('Auto-deactivation exception', e);
+                        }
+                    }
 
                     if (editingTourId) {
                         // Update existing tour
@@ -390,15 +475,13 @@ export const useTourStore = create<TourState>()(
                             .update({
                                 title,
                                 page_url: normalizedPageUrl,
-                                is_active: tours.find(t => t.id === editingTourId)?.isActive ?? true,
-                                play_behavior: tours.find(t => t.id === editingTourId)?.playBehavior ?? 'first_time',
+                                // is_active preserves current state, logic above handled deactivation of others if this is active
                                 updated_at: new Date().toISOString()
                             })
                             .eq('id', editingTourId);
 
                         if (tourError) throw tourError;
 
-                        // Delete existing steps and re-insert (simplest for reordering)
                         const { error: deleteStepsError } = await supabase
                             .from('steps')
                             .delete()
@@ -439,7 +522,6 @@ export const useTourStore = create<TourState>()(
 
                     if (stepsError) throw stepsError;
 
-                    // Refresh local state from DB
                     const { fetchTours } = get();
                     await fetchTours();
 
@@ -452,58 +534,13 @@ export const useTourStore = create<TourState>()(
                     });
                 } catch (error) {
                     console.error('Error saving tour:', error);
+                    toast.error('Failed to save tour');
                 } finally {
                     set({ isLoading: false });
                 }
             },
 
-            setTour: (tour) => set({ currentTour: tour }),
-
-            setStatus: (status) => set({ status }),
-
-            signUp: async (email, password) => {
-                const { data, error } = await supabase.auth.signUp({ email, password });
-                if (!error && data.user) set({ user: data.user });
-                return { data, error };
-            },
-
-            signIn: async (email, password) => {
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                if (!error) set({ user: data.user });
-                return { error };
-            },
-
-            signInWithGoogle: async () => {
-                const { error } = await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                        redirectTo: `${window.location.origin}/dashboard`,
-                    },
-                });
-                return { error };
-            },
-
-            signOut: async () => {
-                await supabase.auth.signOut();
-                set({ user: null, projects: [], tours: [], currentProjectId: null });
-            },
-
-            checkAuth: async () => {
-                const { data: { user } } = await supabase.auth.getUser();
-                set({ user, isAuthLoading: false });
-            },
-
-            resetPassword: async (email: string) => {
-                const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${window.location.origin}/reset-password`,
-                });
-                return { error };
-            },
-
-            updatePassword: async (password: string) => {
-                const { error } = await supabase.auth.updateUser({ password });
-                return { error };
-            },
+            // ... (other methods) ...
 
             toggleTourActivation: async (tourId: string) => {
                 const { tours } = get();
@@ -511,14 +548,14 @@ export const useTourStore = create<TourState>()(
                 if (!tour) return;
 
                 const newState = !tour.isActive;
-                const normalizedPath = (tour.pageUrl || '/').replace(/\/$/, '') || '/';
+                const normalizedPath = normalizeUrl(tour.pageUrl);
 
                 // Optimistic update
                 const updatedTours = tours.map(t => {
                     if (t.id === tourId) return { ...t, isActive: newState };
-                    // If we are activating this one, deactivate others on the same page
+                    // If we are activating this one, deactivate others on the same normalized page path
                     if (newState) {
-                        const tPath = (t.pageUrl || '/').replace(/\/$/, '') || '/';
+                        const tPath = normalizeUrl(t.pageUrl);
                         if (tPath === normalizedPath) return { ...t, isActive: false };
                     }
                     return t;
@@ -529,20 +566,22 @@ export const useTourStore = create<TourState>()(
                     console.log('Store: Toggling tour', tourId, 'to', newState, 'path:', normalizedPath);
                     if (newState) {
                         // If activating, deactivate others on the same page
+                        // Using normalized URL comparison in DB might be tricky if data is dirty, 
+                        // so we try fairly robust logic or assume DB data is growing cleaner.
+                        // Ideally, we'd update all where normalize(page_url) matches, but SQL doesn't have that function easily visible here.
+                        // We rely on 'saveTour' enforcing clean URLs now. For legacy, we might miss some non-normalized ones.
                         let query = supabase
                             .from('tours')
                             .update({ is_active: false })
                             .eq('project_id', tour.project_id);
 
                         if (normalizedPath === '/') {
-                            // If root, deactivate those with '/', null, or ''
                             query = query.or('page_url.eq."/",page_url.is.null,page_url.eq.""');
                         } else {
-                            // Otherwise, just deactivate matches for this specific path
-                            query = query.eq('page_url', tour.pageUrl);
+                            // Try to catch exact match or variations if imperative, but mostly exact match after save fix
+                            query = query.eq('page_url', normalizedPath);
                         }
 
-                        // CRITICAL: Exclusion to avoid deactivating the one we are about to activate
                         const { error: deactivateError } = await query.neq('id', tourId);
                         if (deactivateError) throw deactivateError;
                     }
@@ -553,12 +592,10 @@ export const useTourStore = create<TourState>()(
                         .eq('id', tourId);
 
                     if (updateError) throw updateError;
-
-                    // Feedback handled via callback in Widget UI
                 } catch (error) {
                     console.error('Error toggling tour activation:', error);
-                    // Rollback on error
-                    set({ tours });
+                    set({ tours }); // Rollback
+                    toast.error("Failed to toggle tour status");
                 }
             },
 

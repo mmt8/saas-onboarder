@@ -119,7 +119,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                     saveTour(tourTitle, window.location.pathname);
                                 }}
                                 disabled={isLoading}
-                                className="h-8 px-4 text-xs shadow-blue-500/20 transition-all active:scale-95 bg-[#E65221] text-white hover:bg-[#3749d0] rounded-xl font-medium"
+                                className="h-8 px-4 text-xs shadow-blue-500/20 transition-all active:scale-95 bg-[#495BFD] text-white hover:bg-[#3749d0] rounded-xl font-medium"
                             >
                                 {isLoading ? "Saving..." : "Save Tour"}
                             </Button>

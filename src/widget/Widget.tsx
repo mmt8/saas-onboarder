@@ -4,6 +4,7 @@ import { useTourStore } from '@/store/tour-store';
 import { StepEditor } from '@/components/admin/StepEditor';
 import { RecordingOverlay } from '@/components/admin/RecordingOverlay';
 import { WidgetTourPlayer } from './WidgetTourPlayer';
+import { detectBranding, DetectedBranding } from "./utils/branding-detector";
 import { Button } from '@/components/ui/button';
 import { Play, Plus, X, HelpCircle, Layout, ExternalLink, Trash2, Zap, Check, ChevronDown } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
@@ -76,7 +77,7 @@ const TourCard = ({ tour, onEdit, onPlay, onDelete, toggleTourActivation, update
                         <span className="text-sm font-bold text-slate-700 truncate pt-0.5">
                             {tour.title}
                         </span>
-                        <span className="text-[10px] text-[#E65221] font-mono opacity-60 truncate">
+                        <span className="text-[10px] text-[#495BFD] font-mono opacity-60 truncate">
                             {tour.pageUrl || '/'}
                         </span>
                     </div>
@@ -92,7 +93,7 @@ const TourCard = ({ tour, onEdit, onPlay, onDelete, toggleTourActivation, update
                         <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 bg-blue-100/50 hover:bg-blue-100 text-[#E65221] border-none transition-colors active:scale-95"
+                            className="h-7 w-7 bg-blue-100/50 hover:bg-blue-100 text-[#495BFD] border-none transition-colors active:scale-95"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onPlay();
@@ -114,7 +115,7 @@ const TourCard = ({ tour, onEdit, onPlay, onDelete, toggleTourActivation, update
                             className="w-full h-8 flex items-center justify-between bg-white border-solid border border-slate-200 hover:border-blue-400/30 rounded-md px-2 text-sm font-bold text-slate-600 outline-none transition-all shadow-sm"
                         >
                             <div className="flex items-center gap-1.5">
-                                <Zap className="w-3 h-3 text-[#E65221]" />
+                                <Zap className="w-3 h-3 text-[#495BFD]" />
                                 <span>
                                     {tour.playBehavior === 'first_time' && 'Show once'}
                                     {tour.playBehavior === 'weekly' && 'Weekly (2x max)'}
@@ -149,14 +150,14 @@ const TourCard = ({ tour, onEdit, onPlay, onDelete, toggleTourActivation, update
                                                 className={cn(
                                                     "relative flex items-center h-8 px-8 text-sm font-bold rounded-md select-none cursor-pointer transition-colors",
                                                     tour.playBehavior === item.value
-                                                        ? "bg-slate-50 text-[#E65221]"
+                                                        ? "bg-slate-50 text-[#495BFD]"
                                                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                                                 )}
                                             >
                                                 <span>{item.label}</span>
                                                 {tour.playBehavior === item.value && (
                                                     <div className="absolute left-2 flex items-center justify-center">
-                                                        <Check className="w-3 h-3 text-[#E65221]" />
+                                                        <Check className="w-3 h-3 text-[#495BFD]" />
                                                     </div>
                                                 )}
                                             </div>
@@ -388,7 +389,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
     const themeStyles = {
         '--background': '#FAF9F5',
         '--foreground': '#1a1a1a',
-        '--primary': '#E65221',
+        '--primary': '#495BFD',
         '--primary-foreground': '#ffffff',
         '--secondary': '#ffffff',
         '--secondary-foreground': '#1a1a1a',
@@ -404,7 +405,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
         '--destructive-foreground': '#ffffff',
         '--border': '#e5e5e5',
         '--input': '#e5e5e5',
-        '--ring': '#E65221',
+        '--ring': '#495BFD',
         '--radius': '0.75rem',
     } as React.CSSProperties;
 
@@ -449,19 +450,38 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
     const theme = currentProject?.themeSettings || {
         fontFamily: 'Inter, sans-serif',
         darkMode: false,
-        primaryColor: '#E65221',
+        primaryColor: '#495BFD',
         borderRadius: '12',
         paddingV: '10',
-        paddingH: '20'
+        paddingH: '20',
+        tooltipStyle: 'solid',
+        tooltipColor: '#495BFD'
     };
 
     // Debug logging
     console.log('Widget render:', { status, showAdminPanel, shouldShowAdmin, launcherText, toursCount: tours.length, currentPath });
 
+    const [detectedBranding, setDetectedBranding] = useState<DetectedBranding | null>(null);
+
+    // Auto-detect branding if needed
+    useEffect(() => {
+        // @ts-ignore
+        if (theme.tooltipStyle === 'auto') {
+            const branding = detectBranding();
+            if (branding) setDetectedBranding(branding);
+        }
+    }, [theme]);
+
+    const activeTheme = {
+        ...theme,
+        // @ts-ignore
+        primaryColor: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.primaryColor : (theme.tooltipStyle === 'auto' ? '#495BFD' : theme.primaryColor),
+    };
+
     return (
         <div
             className="w-full h-full pointer-events-none font-sans text-base antialiased"
-            style={{ ...themeStyles, color: '#0f172a', fontFamily: '"Gabarito", sans-serif' }}
+            style={{ ...themeStyles, '--primary': activeTheme.primaryColor, color: '#0f172a', fontFamily: '"Gabarito", sans-serif' } as React.CSSProperties}
         >
             <Toaster position="top-center" />
 
@@ -512,7 +532,8 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                                                     <a
                                                         href="https://producttour.app/dashboard"
                                                         target="_blank"
-                                                        className="flex items-center gap-1.5 text-[10px] font-bold text-[#E65221] hover:text-[#3749d0] transition-colors bg-[#E65221]/5 px-2 py-1 rounded-full uppercase tracking-wider group/link"
+                                                        className="flex items-center gap-1.5 text-[10px] font-bold hover:text-[#3749d0] transition-colors px-2 py-1 rounded-full uppercase tracking-wider group/link"
+                                                        style={{ color: '#495BFD', backgroundColor: '#495BFD0d' }}
                                                     >
                                                         Dashboard
                                                         <ExternalLink className="w-3 h-3 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
@@ -588,7 +609,12 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                                                                     key={tour.id}
                                                                     tour={tour}
                                                                     onEdit={() => { setAdminListOpen(false); editTour(tour); }}
-                                                                    onPlay={() => { setAdminListOpen(false); setTour(tour); setStatus('playing'); }}
+                                                                    onPlay={() => {
+                                                                        console.log('Widget: Play clicked for', tour.title);
+                                                                        setAdminListOpen(false);
+                                                                        setTour(tour);
+                                                                        setStatus('playing');
+                                                                    }}
                                                                     onDelete={() => setTourToDelete(tour)}
                                                                     toggleTourActivation={toggleTourActivation}
                                                                     updateTourBehavior={updateTourBehavior}
@@ -664,20 +690,6 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
                 </div>
             )}
 
-            {/* ===================== */}
-            {/* USER WIDGET - Help Button (bottom-right, for end-users to replay tours) */}
-            {/* ===================== */}
-            {status === 'idle' && tours.length > 0 && (
-                <div className="fixed bottom-6 right-6 z-[2147483646] pointer-events-auto">
-                    <button
-                        onClick={handleUserStartTour}
-                        className="w-14 h-14 bg-[#E65221] rounded-full shadow-lg flex items-center justify-center hover:scale-110 hover:shadow-xl transition-all duration-200"
-                        title="Need help? Start a guided tour"
-                    >
-                        <HelpCircle className="w-7 h-7 text-white" />
-                    </button>
-                </div>
-            )}
 
             {/* Recording Mode */}
             {status === 'recording' && (

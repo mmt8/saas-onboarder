@@ -47,12 +47,8 @@ export default function ToursPage() {
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
     const handlePlay = (tour: Tour) => {
-        if (tour.pageUrl && tour.pageUrl !== window.location.pathname) {
-            router.push(`${tour.pageUrl}?playTour=${tour.id}`);
-            return;
-        }
-        setTour(tour);
-        setStatus('playing');
+        const url = `${tour.pageUrl || '/'}?playTour=${tour.id}`;
+        window.open(url, '_blank');
     };
 
     const handleDelete = async () => {

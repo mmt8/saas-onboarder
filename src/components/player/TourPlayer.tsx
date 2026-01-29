@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 export function TourPlayer() {
     const { currentTour, status, setStatus, tours, setTour, projects, currentProjectId } = useTourStore();
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
-    const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+    const [targetRect, setTargetRect] = useState<DOMRect | null>(new DOMRect(window.innerWidth / 2 - 150, 200, 300, 100));
     const searchParams = useSearchParams();
 
     // Auto-start tour from URL param
@@ -70,6 +70,10 @@ export function TourPlayer() {
                 // Highlight effect
                 element.classList.add('ring-4', 'ring-primary', 'ring-offset-4', 'transition-all', 'duration-500');
                 return () => element.classList.remove('ring-4', 'ring-primary', 'ring-offset-4', 'transition-all', 'duration-500');
+            } else {
+                // Fallback to center if target not found
+                console.warn("TourPlayer: Target not found:", step.target);
+                setTargetRect(new DOMRect(window.innerWidth / 2 - 150, window.innerHeight / 2 - 100, 300, 200));
             }
         };
 
