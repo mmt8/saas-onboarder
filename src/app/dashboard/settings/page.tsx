@@ -11,6 +11,19 @@ import { getGoogleFontUrls } from "@/lib/fonts";
 import { detectBranding, DetectedBranding } from "@/widget/utils/branding-detector";
 import { AlertCircle } from "lucide-react";
 
+function getContrastColor(hexColor: string): 'white' | 'black' {
+    try {
+        const hex = hexColor.startsWith('#') ? hexColor : '#495BFD';
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        return (yiq >= 128) ? 'black' : 'white';
+    } catch (e) {
+        return 'white';
+    }
+}
+
 export default function SettingsPage() {
     const {
         projects,
@@ -58,12 +71,18 @@ export default function SettingsPage() {
             setIsDetecting(true);
             setDetectionFailed(false);
 
-            // Artificial delay to show loading animation and ensure DOM is ready
             const timer = setTimeout(() => {
                 const result = detectBranding();
                 if (result) {
                     setAutoBranding(result);
                     setDetectionFailed(false);
+                    // Populate theme with detected values to allow customization
+                    setTheme(prev => ({
+                        ...prev,
+                        primaryColor: result.primaryColor,
+                        fontFamily: result.fontFamily,
+                        borderRadius: result.borderRadius
+                    }));
                 } else {
                     setDetectionFailed(true);
                     toast.error("Auto-detection failed. Falling back to Solid style.");
@@ -126,12 +145,10 @@ export default function SettingsPage() {
         }
 
         if (theme.tooltipStyle === 'auto') {
-            const font = autoBranding?.fontFamily || theme.fontFamily;
             return {
                 ...baseStyle,
-                fontFamily: font,
-                backgroundColor: autoBranding?.primaryColor || '#495BFD',
-                color: autoBranding?.textColor === 'black' ? '#1a1a1a' : '#fff',
+                backgroundColor: theme.primaryColor || '#495BFD',
+                color: getContrastColor(theme.primaryColor || '#495BFD') === 'black' ? '#1a1a1a' : '#fff',
                 borderRadius: '24px'
             };
         }
@@ -315,7 +332,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
-                    {/* Theme Mode - Hidden for Color/Glass as they use Playground behavior */}
+                    {/* Theme Mode - Enabled for Auto too */}
                     {theme.tooltipStyle !== 'color' && theme.tooltipStyle !== 'glass' && (
                         <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Theme Mode</label>
@@ -342,8 +359,8 @@ export default function SettingsPage() {
                         />
                     </div>
 
-                    {/* Primary Color - Hidden for Color/Glass as they use Playground behavior */}
-                    {theme.tooltipStyle === 'solid' && (
+                    {/* Primary Color - Enabled for Auto too */}
+                    {(theme.tooltipStyle === 'solid' || theme.tooltipStyle === 'auto') && (
                         <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Button Color</label>
                             <div className="flex gap-3">
