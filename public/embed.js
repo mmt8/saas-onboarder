@@ -38935,6 +38935,18 @@ ${suffix}`;
           return;
         }
       }
+      const editTourId = params.get("editTour");
+      if (editTourId && tours.length > 0 && status === "idle") {
+        const tour = tours.find((t) => t.id === editTourId);
+        if (tour) {
+          console.log("Widget: Auto-editing tour from URL param", tour.title);
+          editTour(tour);
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete("editTour");
+          window.history.replaceState({}, "", newUrl.toString());
+          return;
+        }
+      }
       if (params.get("createTour") === "true") {
         setIsCreateTourDialogOpen(true);
         const newUrl = new URL(window.location.href);
@@ -38942,7 +38954,7 @@ ${suffix}`;
         newUrl.searchParams.set("projectId", projectId);
         window.history.replaceState({}, "", newUrl.toString());
       }
-    }, [projectId, tours, status, setTour, setStatus]);
+    }, [projectId, tours, status, setTour, setStatus, editTour]);
     reactExports.useEffect(() => {
       if (showAdminPanel) {
         localStorage.setItem("producttour-admin-mode", "true");

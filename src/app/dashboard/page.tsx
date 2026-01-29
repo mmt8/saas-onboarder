@@ -145,7 +145,7 @@ export default function ToursPage() {
                                                     setOpenDropdownId(null);
                                                 }}
                                             />
-                                            <div className="absolute top-full left-0 right-0 mt-1 bg-popover text-popover-foreground rounded-lg shadow-md border border-border z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="absolute top-full left-0 right-0 mt-1 bg-white text-slate-900 rounded-lg shadow-md border border-border z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                                                 <div className="p-1">
                                                     {[
                                                         { value: 'first_time', label: 'Show once (first visit)' },
@@ -197,7 +197,8 @@ export default function ToursPage() {
                                 <Button
                                     variant="outline"
                                     onClick={() => {
-                                        editTour(tour);
+                                        const url = `${tour.pageUrl || '/'}?editTour=${tour.id}`;
+                                        window.open(url, '_blank');
                                     }}
                                     className="flex-1 font-semibold rounded-xl border-border hover:bg-secondary transition-colors"
                                 >

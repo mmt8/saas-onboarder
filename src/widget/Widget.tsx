@@ -238,6 +238,21 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
             }
         }
 
+        // Handle Edit from Dashboard
+        const editTourId = params.get('editTour');
+        if (editTourId && tours.length > 0 && status === 'idle') {
+            const tour = tours.find(t => t.id === editTourId);
+            if (tour) {
+                console.log('Widget: Auto-editing tour from URL param', tour.title);
+                editTour(tour);
+                // Clear the param
+                const newUrl = new URL(window.location.href);
+                newUrl.searchParams.delete('editTour');
+                window.history.replaceState({}, '', newUrl.toString());
+                return;
+            }
+        }
+
         if (params.get('createTour') === 'true') {
             setIsCreateTourDialogOpen(true);
             // Clear the param
@@ -246,7 +261,8 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
             newUrl.searchParams.set('projectId', projectId); // Keep project ID just in case
             window.history.replaceState({}, '', newUrl.toString());
         }
-    }, [projectId, tours, status, setTour, setStatus]);
+    }, [projectId, tours, status, setTour, setStatus, editTour]);
+
 
     // Track admin mode to suppress auto-start for regular users vs admins
     useEffect(() => {
