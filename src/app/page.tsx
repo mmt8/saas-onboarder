@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BarChart3, MousePointerClick, Sparkles, Zap, Lock, Globe, Rocket, Megaphone, HelpCircle, Layers } from "lucide-react";
+import { ArrowRight, BarChart3, MousePointerClick, Sparkles, Zap, Lock, Globe, Rocket, Megaphone, HelpCircle, Layers, MessageSquare, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { FeatureTabs } from "@/components/FeatureTabs";
@@ -264,21 +264,31 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <ComingSoonCard
                 icon={<Globe />}
                 title="Multi-language Support"
                 description="Automatically translate your tours into 30+ languages to capture global markets."
               />
               <ComingSoonCard
-                icon={<Lock />}
-                title="Advanced Team Permissions"
-                description="Granular control over who can create, edit, and publish tours."
+                icon={<Megaphone />}
+                title="In app announcements"
+                description="Pop-ups, banners to keep your users informed"
               />
               <ComingSoonCard
-                icon={<Zap />}
-                title="Performance Analytics"
-                description="Detailed insights into exactly where users drop off in your tours."
+                icon={<CheckCircle2 />}
+                title="Onboarding checklist"
+                description="Turn complex onboarding into a step by step journey"
+              />
+              <ComingSoonCard
+                icon={<MessageSquare />}
+                title="Feedback"
+                description="Gather direct insights from your users while they explore your product."
+              />
+              <ComingSoonCard
+                icon={<BarChart3 />}
+                title="Reporting"
+                description="Advanced analytics to track tour performance and user engagement."
               />
             </div>
           </div>
