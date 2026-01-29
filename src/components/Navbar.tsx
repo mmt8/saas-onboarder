@@ -59,7 +59,7 @@ export function Navbar() {
                     )}
                 >
                     <NavLink href="/#features">Features</NavLink>
-                    <Link href="/pricing" className="px-6 py-2 flex items-center text-[15px] font-bold text-primary transition-all hover:bg-primary/10 rounded-full">
+                    <Link href="/pricing" className="px-6 py-2 flex items-center text-base font-bold text-primary transition-all hover:bg-primary/10 rounded-full">
                         Pricing
                     </Link>
                     <NavLink href="/resources">Resources</NavLink>
@@ -70,7 +70,7 @@ export function Navbar() {
                     {/* Desktop Actions */}
                     <div className="hidden md:flex items-center gap-3">
                         {user ? (
-                            <Button asChild className="px-8 h-14 font-bold text-[15px] shadow-sm flex items-center gap-2 rounded-full">
+                            <Button asChild className="px-8 h-14 font-bold text-base shadow-sm flex items-center gap-2 rounded-full">
                                 <Link href="/dashboard">
                                     <LayoutDashboard className="w-4 h-4" />
                                     Dashboard
@@ -79,11 +79,11 @@ export function Navbar() {
                         ) : (
                             <>
                                 <Link href="/login">
-                                    <Button variant="ghost" className="h-14 rounded-full font-bold text-[15px] text-muted-foreground hover:text-primary">
+                                    <Button variant="ghost" className="h-14 rounded-full font-bold text-base text-muted-foreground hover:text-primary">
                                         Sign In
                                     </Button>
                                 </Link>
-                                <Button asChild className="px-8 h-14 font-bold text-[15px] shadow-sm flex items-center rounded-full">
+                                <Button asChild className="px-8 h-14 font-bold text-base shadow-sm flex items-center rounded-full">
                                     <Link href="/signup">Get Started</Link>
                                 </Button>
                             </>
@@ -175,7 +175,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
     return (
         <Link
             href={href}
-            className="px-6 py-2 flex items-center text-[15px] font-bold text-muted-foreground hover:text-primary transition-all hover:bg-primary/10 rounded-full"
+            className="px-6 py-2 flex items-center text-base font-bold text-muted-foreground hover:text-primary transition-all hover:bg-primary/10 rounded-full"
         >
             {children}
         </Link>
