@@ -10,7 +10,7 @@ export function WidgetTourPlayer() {
     const { currentTour, status, setStatus, tours, setTour, projects, currentProjectId, pingProject } = useTourStore();
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     // Initialize with centered rect to ensure we don't return null and keep the player visible
-    const [targetRect, setTargetRect] = useState<DOMRect>(new DOMRect(window.innerWidth / 2 - 100, 100, 200, 100));
+    const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
 
     // Lazy init branding to have it on first frame
     const [detectedBranding, setDetectedBranding] = useState<DetectedBranding | null>(() => detectBranding());
@@ -113,7 +113,7 @@ export function WidgetTourPlayer() {
         };
     }, [currentTour, currentStepIndex, status]);
 
-    if (status !== 'playing' || !currentTour) return null;
+    if (status !== 'playing' || !currentTour || !targetRect) return null;
 
     // Default fallback if project is missing (don't block render)
 

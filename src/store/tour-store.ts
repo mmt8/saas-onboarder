@@ -140,7 +140,7 @@ export const useTourStore = create<TourState>()(
                     const { data: { session } } = await supabase.auth.getSession();
                     set({ user: session?.user ?? null });
 
-                    supabase.auth.onAuthStateChange((_event, session) => {
+                    supabase.auth.onAuthStateChange((_event: string, session: { user: any } | null) => {
                         set({ user: session?.user ?? null });
                     });
                 } catch (error) {

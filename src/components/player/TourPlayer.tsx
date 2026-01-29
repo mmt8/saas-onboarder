@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 export function TourPlayer() {
     const { currentTour, status, setStatus, tours, setTour, projects, currentProjectId } = useTourStore();
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
-    const [targetRect, setTargetRect] = useState<DOMRect | null>(new DOMRect(window.innerWidth / 2 - 150, 200, 300, 100));
+    const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
     const searchParams = useSearchParams();
 
     // Auto-start tour from URL param
