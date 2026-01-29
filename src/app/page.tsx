@@ -299,8 +299,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-pattern-toast opacity-20 pointer-events-none" />
           <div className="max-w-3xl mx-auto space-y-8 relative z-10">
             <h2 className="text-4xl md:text-6xl font-bold font-serif tracking-tight leading-tight">
-              Your Entire Onboarding Flow. <br />
-              <span className="text-[#E65221]">Done in Seconds.</span>
+              Your Entire Onboarding Flow. <span className="text-[#E65221]">Done in Seconds.</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Turn new signups into power users automatically. Just connect your web-app and let our AI build your product tour instantly.
