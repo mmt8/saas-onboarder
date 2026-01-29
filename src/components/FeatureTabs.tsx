@@ -11,7 +11,7 @@ const features = [
         title: "Auto-styled to your product",
         description: "One click. Your colors, fonts, and spacing, applied for you.",
         icon: <Wand2 className="w-5 h-5" />,
-        image: "/features/auto-style.png",
+        image: "/images/product-tour-1-autostyle.png",
         color: "bg-[#E65221]"
     },
     {
@@ -19,7 +19,7 @@ const features = [
         title: "Native dark & light themes",
         description: "Tooltips that look right, day or night.",
         icon: <SunMoon className="w-5 h-5" />,
-        image: "/features/themes.png",
+        image: "/images/product-tour-2-light-dark.png",
         color: "bg-orange-500"
     },
     {
@@ -27,7 +27,7 @@ const features = [
         title: "Modern glassmorphism",
         description: "Elegant, frosted-glass tooltips that feel modern and lightweight.",
         icon: <Layers className="w-5 h-5" />,
-        image: "/features/glassmorphism.png",
+        image: "/images/product-tour-3-glass.png",
         color: "bg-indigo-500"
     },
     {
@@ -35,35 +35,22 @@ const features = [
         title: "On brand tooltips",
         description: "Fine-tune colors, spacing and typography without touching code.",
         icon: <Palette className="w-5 h-5" />,
-        image: "/features/custom.png",
+        image: "/images/product-tour-4-onbrand.png",
         color: "bg-pink-500"
     }
 ];
 
 const FeatureVisual = ({ feature, isActive = true }: { feature: typeof features[0], isActive?: boolean }) => (
     <div className="w-full h-full rounded-[2rem] bg-background border border-border/50 flex items-center justify-center relative overflow-hidden shadow-sm">
-        {/* Abstract Representation of Feature */}
-        <div className="relative z-10 text-center p-10">
-            <div className={cn(
-                "w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl transition-transform duration-500",
-                isActive ? "skew-y-3 scale-100" : "scale-90 opacity-50",
-                feature.color
-            )}>
-                {/* Icon scaled up */}
-                <div className="scale-[2.5] text-white">
-                    {feature.icon}
-                </div>
-            </div>
-            <h4 className="text-3xl font-bold text-foreground mb-4 font-serif">{feature.title}</h4>
-            <div className="flex gap-2 justify-center">
-                <div className="w-2 h-2 rounded-full bg-foreground/20 animate-pulse" />
-                <div className="w-2 h-2 rounded-full bg-foreground/20 animate-pulse delay-75" />
-                <div className="w-2 h-2 rounded-full bg-foreground/20 animate-pulse delay-150" />
-            </div>
-        </div>
-
-        {/* Decorative Background Elements */}
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary to-transparent" />
+        {/* Feature Image */}
+        <img
+            src={feature.image}
+            alt={feature.title}
+            className={cn(
+                "w-full h-full object-cover transition-all duration-500",
+                isActive ? "scale-100 opacity-100" : "scale-95 opacity-70"
+            )}
+        />
     </div>
 );
 
