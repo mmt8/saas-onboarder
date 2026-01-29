@@ -29,7 +29,7 @@ export default function SettingsPage() {
     const [theme, setTheme] = useState({
         fontFamily: 'Inter',
         darkMode: false,
-        primaryColor: '#495BFD',
+        primaryColor: '#E65221',
         borderRadius: '20',
         paddingV: '10',
         paddingH: '20',
@@ -454,6 +454,13 @@ export default function SettingsPage() {
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,#a78bfa,transparent)]" />
                         <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] animate-spin-slower" style={{ background: 'conic-gradient(from 0deg, transparent 0 340deg, #fff 360deg)', opacity: 0.1 }} />
                         <div
+                            className="absolute inset-0 transition-colors duration-1000"
+                            style={{
+                                backgroundColor: isDetecting ? 'transparent' : (autoBranding?.backgroundColor || 'transparent'),
+                                opacity: autoBranding?.backgroundColor ? 1 : 0
+                            }}
+                        />
+                        <div
                             className="absolute inset-0"
                             style={{
                                 backgroundImage: `
@@ -466,7 +473,7 @@ export default function SettingsPage() {
                                     radial-gradient(at 79% 53%, hsla(343, 68%, 79%, 1) 0px, transparent 50%)
                                 `,
                                 filter: 'blur(40px)',
-                                opacity: 0.8
+                                opacity: autoBranding?.backgroundColor ? 0.3 : 0.8
                             }}
                         />
                     </div>

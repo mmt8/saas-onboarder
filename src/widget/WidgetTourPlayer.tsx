@@ -158,7 +158,7 @@ export function WidgetTourPlayer() {
     const [isHovered, setIsHovered] = useState(false);
 
     return (
-        <div className="fixed inset-0 z-[2147483645] pointer-events-none" style={{ fontFamily: activeTheme.fontFamily }}>
+        <div className="fixed inset-0 z-[2147483645] pointer-events-none product-tour-widget-root" style={{ fontFamily: activeTheme.fontFamily }}>
             {/* Spotlight Overlay */}
             {activeTheme.tooltipStyle !== 'glass' && (
                 <svg

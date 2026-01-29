@@ -9,27 +9,34 @@ export interface DetectedBranding {
     fontFamily: string;
     borderRadius: string;
     textColor: 'white' | 'black';
+    backgroundColor: string;
 }
 
-export function detectBranding(): DetectedBranding | null {
+export function detectBranding(ignoreSelector?: string): DetectedBranding | null {
     if (typeof window === 'undefined') return null;
 
-    let primaryColor = '#495BFD'; // Fallback will be handled by the caller too
+    let primaryColor = '#495BFD'; // Temporary internal default
     let fontFamily = 'Inter, sans-serif';
     let borderRadius = '12';
+    let backgroundColor = '#ffffff';
 
     try {
-        // 1. Detect Font Family FIRST (Headings usually define the brand)
+        // 1. Detect Background Color (from body or first large container)
+        const bodyStyle = window.getComputedStyle(document.body);
+        if (bodyStyle.backgroundColor && bodyStyle.backgroundColor !== 'transparent' && bodyStyle.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+            backgroundColor = rgbToHex(bodyStyle.backgroundColor);
+        }
+
+        // 2. Detect Font Family (Heading prioritization)
         const heading = document.querySelector('h1, h2, h3');
         if (heading) {
             const style = window.getComputedStyle(heading);
-            const font = style.fontFamily;
-            if (font && font !== 'inherit') {
-                fontFamily = font;
+            if (style.fontFamily && style.fontFamily !== 'inherit') {
+                fontFamily = style.fontFamily;
             }
         }
 
-        // 2. Detect Primary Color & Radius
+        // 3. Detect Primary Color & Radius
         const primarySelectors = [
             'button[type="submit"]',
             'button.btn-primary',
@@ -37,18 +44,19 @@ export function detectBranding(): DetectedBranding | null {
             '.bg-primary',
             'a.btn-primary',
             '.cta',
-            '.action-button',
             'button',
-            '[role="button"]',
-            'button' // Fallback to any button
+            'a.button',
+            'a.btn',
+            '[role="button"]'
         ];
 
         let foundColor = false;
-
-        // Find the most prominent non-neutral button
         for (const selector of primarySelectors) {
             const elements = document.querySelectorAll(selector);
             for (const el of Array.from(elements)) {
+                // Ignore our own widget
+                if (ignoreSelector && el.closest(ignoreSelector)) continue;
+
                 const style = window.getComputedStyle(el);
                 const bg = style.backgroundColor;
 
@@ -65,12 +73,9 @@ export function detectBranding(): DetectedBranding | null {
                             borderRadius = firstRadius.replace('px', '').replace('%', '');
                         }
 
-                        // If we didn't get a font from heading, try from button
+                        // Font if not yet found
                         if (fontFamily === 'Inter, sans-serif') {
-                            const btnFont = style.fontFamily;
-                            if (btnFont && btnFont !== 'inherit') {
-                                fontFamily = btnFont;
-                            }
+                            fontFamily = style.fontFamily;
                         }
 
                         break;
@@ -80,15 +85,15 @@ export function detectBranding(): DetectedBranding | null {
             if (foundColor) break;
         }
 
-        // 3. Look for CSS variables if still no luck
+        // 4. Check CSS Variables for primary/accent
         if (!foundColor) {
             const rootStyle = window.getComputedStyle(document.documentElement);
-            const colorVars = ['--primary', '--accent', '--brand-color', '--main-color', '--primary-600', '--blue-600', '--indigo-600'];
+            const colorVars = ['--primary', '--accent', '--brand-color', '--main-color', '--primary-600', '--blue-600'];
             for (const v of colorVars) {
                 const val = rootStyle.getPropertyValue(v).trim();
                 if (val) {
                     const hex = val.startsWith('#') ? val : rgbToHex(val);
-                    if (!isNeutral(hex)) {
+                    if (!isNeutral(hex, true)) {
                         primaryColor = hex;
                         foundColor = true;
                         break;
@@ -97,22 +102,15 @@ export function detectBranding(): DetectedBranding | null {
             }
         }
 
-        // 4. Fallback font from body if still Inter
-        if (fontFamily === 'Inter, sans-serif') {
-            const bodyStyle = window.getComputedStyle(document.body);
-            if (bodyStyle.fontFamily && bodyStyle.fontFamily !== 'inherit') {
-                fontFamily = bodyStyle.fontFamily;
-            }
-        }
-
-        // 5. Determine Text Color (Contrast)
+        // 5. Contrast & Text Color
         const textColor = getContrastColor(primaryColor);
 
         return {
-            primaryColor,
+            primaryColor: foundColor ? primaryColor : '#495BFD', // Keep internal but mark as found
             fontFamily,
             borderRadius: borderRadius || '12',
-            textColor
+            textColor,
+            backgroundColor
         };
     } catch (e) {
         console.warn('Product Tour: Branding detection failed', e);
@@ -120,7 +118,7 @@ export function detectBranding(): DetectedBranding | null {
     }
 }
 
-function isNeutral(color: string): boolean {
+function isNeutral(color: string, strict = false): boolean {
     try {
         const hex = color.startsWith('#') ? color : rgbToHex(color);
         if (!hex || hex.length < 7) return true;
@@ -133,9 +131,13 @@ function isNeutral(color: string): boolean {
         const diff2 = Math.abs(g - b);
         const diff3 = Math.abs(r - b);
 
-        const isGrey = diff1 < 15 && diff2 < 15 && diff3 < 15;
-        const isTooLight = r > 248 && g > 248 && b > 248;
-        const isTooDark = r < 15 && g < 15 && b < 15;
+        // Brownish colors have higher diffs, so they aren't grey.
+        // Strict mode (for CSS vars) is more lenient.
+        const tolerance = strict ? 10 : 20;
+        const isGrey = diff1 < tolerance && diff2 < tolerance && diff3 < tolerance;
+
+        const isTooLight = r > 250 && g > 250 && b > 250;
+        const isTooDark = r < 10 && g < 10 && b < 10;
 
         return isGrey || isTooLight || isTooDark;
     } catch (e) {
@@ -146,7 +148,7 @@ function isNeutral(color: string): boolean {
 function rgbToHex(rgb: string): string {
     if (rgb.startsWith('#')) return rgb;
     const match = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/);
-    if (!match) return '#495BFD';
+    if (!match) return '#495BFD'; // Still internal default, but we'll try to find better
     function hex(x: string) {
         return ("0" + parseInt(x).toString(16)).slice(-2);
     }
