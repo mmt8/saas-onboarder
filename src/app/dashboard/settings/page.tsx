@@ -132,7 +132,7 @@ export default function SettingsPage() {
                 fontFamily: font,
                 backgroundColor: autoBranding?.primaryColor || '#495BFD',
                 color: autoBranding?.textColor === 'black' ? '#1a1a1a' : '#fff',
-                borderRadius: '32px'
+                borderRadius: '24px'
             };
         }
 
@@ -522,7 +522,7 @@ export default function SettingsPage() {
                                                 (isHovered ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)') :
                                                 (isHovered ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.1)')),
                                         color: 'white',
-                                        borderRadius: `${theme.borderRadius}px`,
+                                        borderRadius: '24px',
                                         padding: `${theme.paddingV}px ${theme.paddingH}px`,
                                         fontSize: theme.tooltipStyle === 'glass' ? '0.8rem' : '0.9rem',
                                         border: theme.tooltipStyle === 'glass' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',

@@ -44,10 +44,13 @@ export function WidgetTourPlayer() {
     // Update auto-branding on mount or style change
     useEffect(() => {
         if (theme.tooltipStyle === 'auto') {
-            const branding = detectBranding();
-            if (branding) {
-                setDetectedBranding(branding);
-            }
+            const timer = setTimeout(() => {
+                const branding = detectBranding();
+                if (branding) {
+                    setDetectedBranding(branding);
+                }
+            }, 500);
+            return () => clearTimeout(timer);
         }
     }, [theme.tooltipStyle]);
 
@@ -241,7 +244,7 @@ export function WidgetTourPlayer() {
                             : targetRect.bottom + 20;
                         return Math.min(window.innerHeight - 250, Math.max(marginY, potentialTop));
                     })(),
-                    borderRadius: '32px',
+                    borderRadius: '24px',
                     ...((activeTheme.tooltipStyle === 'color' || activeTheme.tooltipStyle === 'auto') ? { backgroundColor: activeTheme.tooltipColor, color: activeTheme.textColor, border: 'none' } : {}),
                     ...(activeTheme.tooltipStyle === 'glass' ? {
                         backgroundColor: 'rgba(15, 15, 15, 0.4)',
