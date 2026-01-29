@@ -62,9 +62,9 @@ export default function Home() {
         <section className="py-24" id="features">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 font-serif">Manual <span className="text-[#E65221]">Precision</span> for your product walkthroughs.</h2>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 font-serif">AI-Powered <span className="text-[#E65221]">Precision</span> for every interaction.</h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                No automatic guesswork. You record the path, and we ensure it looks pixel-perfect and on-brand every single time.
+                Autonomous discovery meets manual polish. Samantha scans your UI to build the perfect draft, while you maintain absolute control.
               </p>
             </div>
 
