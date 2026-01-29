@@ -43,14 +43,7 @@ export function detectBranding(): DetectedBranding | null {
                     // Also grab radius while we're at it
                     const br = style.borderRadius;
                     if (br && br !== '0px') {
-                        const firstRadius = br.split(' ')[0];
-                        const parsedRadius = parseFloat(firstRadius);
-                        // Sanitize and clamp radius to reasonable values (0-24px)
-                        if (!isNaN(parsedRadius) && parsedRadius < 1000) {
-                            borderRadius = Math.min(Math.max(parsedRadius, 0), 24).toString();
-                        } else {
-                            borderRadius = '4'; // Safe default
-                        }
+                        borderRadius = br.replace('px', '');
                     }
                     break;
                 }
