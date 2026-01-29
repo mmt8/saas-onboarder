@@ -76,6 +76,7 @@ interface TourState {
         launcherText?: string,
         themeSettings?: Project['themeSettings']
     }) => Promise<void>;
+    saveDetectedBranding: (projectId: string, branding: { primaryColor: string; fontFamily: string; borderRadius: string; textColor: 'white' | 'black' }) => Promise<void>;
     pingProject: (id: string | null) => Promise<void>;
     fetchTours: () => Promise<void>;
     startRecording: (mode: 'manual' | 'auto', title?: string) => void;
@@ -279,6 +280,41 @@ export const useTourStore = create<TourState>()(
                     console.error('Error updating project settings:', error);
                 } finally {
                     set({ isLoading: false });
+                }
+            },
+
+            saveDetectedBranding: async (projectId: string, branding: { primaryColor: string; fontFamily: string; borderRadius: string; textColor: 'white' | 'black' }) => {
+                if (!projectId || !branding) return;
+                try {
+                    // Fetch current theme settings
+                    const { data: project, error: fetchError } = await supabase
+                        .from('projects')
+                        .select('theme_settings')
+                        .eq('id', projectId)
+                        .single();
+
+                    if (fetchError) throw fetchError;
+
+                    const currentSettings = project?.theme_settings || {};
+
+                    // Merge detected branding into theme settings
+                    const updatedSettings = {
+                        ...currentSettings,
+                        detectedBranding: branding
+                    };
+
+                    const { error } = await supabase
+                        .from('projects')
+                        .update({ theme_settings: updatedSettings })
+                        .eq('id', projectId);
+
+                    if (error) throw error;
+                    console.log('Product Tour: Detected branding saved for project', projectId);
+
+                    // Refresh projects to get updated data
+                    await get().fetchProjects();
+                } catch (error) {
+                    console.error('Error saving detected branding:', error);
                 }
             },
 

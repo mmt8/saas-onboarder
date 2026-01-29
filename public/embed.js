@@ -26288,6 +26288,24 @@ ${suffix}`;
             set({ isLoading: false });
           }
         },
+        saveDetectedBranding: async (projectId, branding) => {
+          if (!projectId || !branding) return;
+          try {
+            const { data: project, error: fetchError } = await supabase.from("projects").select("theme_settings").eq("id", projectId).single();
+            if (fetchError) throw fetchError;
+            const currentSettings = (project == null ? void 0 : project.theme_settings) || {};
+            const updatedSettings = {
+              ...currentSettings,
+              detectedBranding: branding
+            };
+            const { error } = await supabase.from("projects").update({ theme_settings: updatedSettings }).eq("id", projectId);
+            if (error) throw error;
+            console.log("Product Tour: Detected branding saved for project", projectId);
+            await get2().fetchProjects();
+          } catch (error) {
+            console.error("Error saving detected branding:", error);
+          }
+        },
         pingProject: async (id2) => {
           if (!id2) return;
           try {
@@ -38902,7 +38920,8 @@ ${suffix}`;
       toggleTourActivation,
       updateTourBehavior,
       deleteTour,
-      pingProject
+      pingProject,
+      saveDetectedBranding
     } = useTourStore();
     reactExports.useEffect(() => {
       var _a2;
@@ -39103,11 +39122,14 @@ ${suffix}`;
     console.log("Widget render:", { status, showAdminPanel, shouldShowAdmin, launcherText, toursCount: tours.length, currentPath });
     const [detectedBranding, setDetectedBranding] = reactExports.useState(null);
     reactExports.useEffect(() => {
-      if (theme.tooltipStyle === "auto") {
+      if (theme.tooltipStyle === "auto" && projectId) {
         const branding = detectBranding();
-        if (branding) setDetectedBranding(branding);
+        if (branding) {
+          setDetectedBranding(branding);
+          saveDetectedBranding(projectId, branding);
+        }
       }
-    }, [theme]);
+    }, [theme, projectId, saveDetectedBranding]);
     const activeTheme = {
       ...theme,
       // @ts-ignore

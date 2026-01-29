@@ -191,7 +191,8 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
         toggleTourActivation,
         updateTourBehavior,
         deleteTour,
-        pingProject
+        pingProject,
+        saveDetectedBranding
     } = useTourStore();
 
     // Dynamically load theme font
@@ -479,14 +480,18 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = true }: W
 
     const [detectedBranding, setDetectedBranding] = useState<DetectedBranding | null>(null);
 
-    // Auto-detect branding if needed
+    // Auto-detect branding if needed and save to database
     useEffect(() => {
         // @ts-ignore
-        if (theme.tooltipStyle === 'auto') {
+        if (theme.tooltipStyle === 'auto' && projectId) {
             const branding = detectBranding();
-            if (branding) setDetectedBranding(branding);
+            if (branding) {
+                setDetectedBranding(branding);
+                // Save detected branding to Supabase for preview in settings
+                saveDetectedBranding(projectId, branding);
+            }
         }
-    }, [theme]);
+    }, [theme, projectId, saveDetectedBranding]);
 
     const activeTheme = {
         ...theme,

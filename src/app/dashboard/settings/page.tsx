@@ -66,27 +66,33 @@ export default function SettingsPage() {
     }, [theme.fontFamily]);
 
     // Handle Auto Detection Preview
-    // Note: Auto styling is detected at RUNTIME on the target site, not here
+    // Uses stored detected branding from the target site (saved by widget when it loads)
     useEffect(() => {
         if (theme.tooltipStyle === 'auto') {
             setIsDetecting(true);
             setDetectionFailed(false);
 
-            // Simulate brief detection animation, then show rainbow preview
+            // Brief animation, then show stored branding from database
             const timer = setTimeout(() => {
-                // Auto branding detection runs at runtime on target site
-                // Preview shows rainbow gradient to indicate dynamic behavior
-                setAutoBranding(null);
-                setDetectionFailed(false);
+                // Check for stored detected branding in the project
+                const storedBranding = (currentProject?.themeSettings as any)?.detectedBranding;
+                if (storedBranding) {
+                    setAutoBranding(storedBranding);
+                    setDetectionFailed(false);
+                } else {
+                    // No branding detected yet - widget hasn't run on target site
+                    setAutoBranding(null);
+                    setDetectionFailed(false);
+                }
                 setIsDetecting(false);
-            }, 800);
+            }, 400);
 
             return () => clearTimeout(timer);
         } else {
             setDetectionFailed(false);
             setIsDetecting(false);
         }
-    }, [theme.tooltipStyle]);
+    }, [theme.tooltipStyle, currentProject]);
 
     useEffect(() => {
         if (currentProject) {
@@ -135,15 +141,25 @@ export default function SettingsPage() {
         }
 
         if (theme.tooltipStyle === 'auto') {
-            // Rainbow gradient for Auto preview
+            // Use stored detected branding if available
+            if (autoBranding) {
+                return {
+                    ...baseStyle,
+                    backgroundColor: autoBranding.primaryColor,
+                    color: autoBranding.textColor === 'white' ? '#fff' : '#1a1a1a',
+                    borderRadius: `${autoBranding.borderRadius}px`,
+                    fontFamily: autoBranding.fontFamily
+                };
+            }
+            // Fallback: Rainbow gradient with subtle animation to indicate "not yet detected"
             return {
                 ...baseStyle,
                 background: `linear-gradient(135deg, 
-                    #43A047 0%, 
-                    #2E7D32 25%, 
-                    #1B5E20 50%, 
-                    #4CAF50 75%, 
-                    #66BB6A 100%)`,
+                    #E65221 0%, 
+                    #FF7043 25%, 
+                    #495BFD 50%, 
+                    #3D4FCE 75%, 
+                    #E65221 100%)`,
                 color: 'white',
                 borderRadius: '24px'
             };
@@ -294,7 +310,7 @@ export default function SettingsPage() {
                             >
                                 <Sparkles className="w-3.5 h-3.5 text-white drop-shadow-sm animate-pulse" />
                             </div>
-                            <span className="text-xs font-bold">Auto</span>
+                            <span className="text-xs font-bold">Auto-detect</span>
                         </div>
                     </div>
 
@@ -308,7 +324,9 @@ export default function SettingsPage() {
                     {theme.tooltipStyle === 'auto' && !isDetecting && (
                         <p className="text-[10px] text-emerald-600 font-medium px-2 flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
                             <Sparkles className="w-3 h-3" />
-                            Styling auto-detected from your site at runtime.
+                            {autoBranding
+                                ? `Detected: ${autoBranding.fontFamily.split(',')[0]} • ${autoBranding.primaryColor}`
+                                : 'Visit your site to detect branding'}
                         </p>
                     )}
 
