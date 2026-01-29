@@ -258,9 +258,9 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                 </Button>
                                 <Button
                                     size="sm"
-                                    variant="destructive"
+                                    variant="ghost"
                                     onClick={handleDelete}
-                                    className="flex-1"
+                                    className="flex-1 rounded-full font-bold text-rose-600 hover:bg-rose-50 hover:text-rose-600 active:bg-rose-100 active:text-rose-600 transition-colors"
                                 >
                                     Delete
                                 </Button>
