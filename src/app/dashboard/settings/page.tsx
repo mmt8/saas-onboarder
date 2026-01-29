@@ -30,7 +30,13 @@ export default function SettingsPage() {
         currentProjectId,
         isLoading,
         updateProjectSettings,
+        fetchProjects,
     } = useTourStore();
+
+    // Fetch fresh project data on mount to get latest detected branding
+    useEffect(() => {
+        fetchProjects();
+    }, [fetchProjects]);
 
     const currentProject = projects.find(p => p.id === currentProjectId);
 
@@ -76,6 +82,7 @@ export default function SettingsPage() {
             const timer = setTimeout(() => {
                 // Check for stored detected branding in the project
                 const storedBranding = (currentProject?.themeSettings as any)?.detectedBranding;
+                console.log('Settings: Checking for detected branding', { storedBranding, themeSettings: currentProject?.themeSettings });
                 if (storedBranding) {
                     setAutoBranding(storedBranding);
                     setDetectionFailed(false);
