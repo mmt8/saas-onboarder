@@ -24,6 +24,7 @@ export default function SettingsPage() {
     const [projectName, setProjectName] = useState("");
     const [projectDomain, setProjectDomain] = useState("");
     const [autoBranding, setAutoBranding] = useState<DetectedBranding | null>(null);
+    const [isDetecting, setIsDetecting] = useState(false);
     const [detectionFailed, setDetectionFailed] = useState(false);
     const [theme, setTheme] = useState({
         fontFamily: 'Inter',
@@ -54,18 +55,27 @@ export default function SettingsPage() {
     // Handle Auto Detection Preview
     useEffect(() => {
         if (theme.tooltipStyle === 'auto') {
-            const result = detectBranding();
-            if (result) {
-                setAutoBranding(result);
-                setDetectionFailed(false);
-            } else {
-                setDetectionFailed(true);
-                // Fallback to Solid after a delay if detection failed
-                toast.error("Auto-detection failed. Falling back to Solid style.");
-                setTheme(prev => ({ ...prev, tooltipStyle: 'solid' }));
-            }
+            setIsDetecting(true);
+            setDetectionFailed(false);
+
+            // Artificial delay to show loading animation and ensure DOM is ready
+            const timer = setTimeout(() => {
+                const result = detectBranding();
+                if (result) {
+                    setAutoBranding(result);
+                    setDetectionFailed(false);
+                } else {
+                    setDetectionFailed(true);
+                    toast.error("Auto-detection failed. Falling back to Solid style.");
+                    setTheme(prev => ({ ...prev, tooltipStyle: 'solid' }));
+                }
+                setIsDetecting(false);
+            }, 1200);
+
+            return () => clearTimeout(timer);
         } else {
             setDetectionFailed(false);
+            setIsDetecting(false);
         }
     }, [theme.tooltipStyle]);
 
@@ -462,52 +472,62 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Mock Tooltip */}
-                    <div
-                        className={getPreviewClassNames()}
-                        style={getPreviewStyle()}
-                    >
-                        <div className="flex items-start justify-end -mr-2 -mt-2 mb-2">
-                            <div className={cn("h-6 w-6 rounded-full flex items-center justify-center",
-                                theme.tooltipStyle === 'glass' ? "hover:bg-white/10 text-white" : "hover:bg-black/5 text-muted-foreground"
-                            )}>
-                                <X className="w-4 h-4" />
+                    {isDetecting ? (
+                        <div className="flex flex-col items-center justify-center gap-4 animate-in fade-in zoom-in duration-500 relative z-10">
+                            <div className="relative w-16 h-16">
+                                <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-primary animate-spin" />
+                                <div className="absolute inset-2 rounded-full border-b-2 border-l-2 border-orange-400 animate-spin-slow" />
+                                <Sparkles className="absolute inset-0 m-auto w-6 h-6 text-primary animate-pulse" />
+                            </div>
+                            <p className="text-white/80 font-bold text-sm tracking-widest uppercase">Detecting Brand...</p>
+                        </div>
+                    ) : (
+                        <div
+                            className={getPreviewClassNames()}
+                            style={getPreviewStyle()}
+                        >
+                            <div className="flex items-start justify-end -mr-2 -mt-2 mb-2">
+                                <div className={cn("h-6 w-6 rounded-full flex items-center justify-center",
+                                    theme.tooltipStyle === 'glass' ? "hover:bg-white/10 text-white" : "hover:bg-black/5 text-muted-foreground"
+                                )}>
+                                    <X className="w-4 h-4" />
+                                </div>
+                            </div>
+
+                            <p className="text-sm mb-6 leading-relaxed">
+                                This is how your product tours will look to users with your current branding.
+                            </p>
+
+                            <div className="flex justify-end items-center gap-4">
+                                <span className={cn("text-[10px] font-bold uppercase tracking-widest",
+                                    theme.tooltipStyle === 'glass' ? "text-white/40" : "text-muted-foreground/40"
+                                )}>
+                                    1 of 3
+                                </span>
+                                <button
+                                    onMouseEnter={() => setIsHovered(true)}
+                                    onMouseLeave={() => setIsHovered(false)}
+                                    className={cn(
+                                        "text-sm font-bold shadow-sm active:scale-[0.985] transition-all outline-none active:bg-black/10 [backface-visibility:hidden] transform-gpu",
+                                        theme.tooltipStyle === 'glass' ? "hover:bg-white/10" : "hover:bg-black/5"
+                                    )}
+                                    style={{
+                                        backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor :
+                                            (theme.tooltipStyle === 'glass' ?
+                                                (isHovered ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)') :
+                                                (isHovered ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.1)')),
+                                        color: 'white',
+                                        borderRadius: `${theme.borderRadius}px`,
+                                        padding: `${theme.paddingV}px ${theme.paddingH}px`,
+                                        fontSize: theme.tooltipStyle === 'glass' ? '0.8rem' : '0.9rem',
+                                        border: theme.tooltipStyle === 'glass' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                                        fontFamily: theme.fontFamily
+                                    }}
+                                >
+                                    Next Step
+                                </button>
                             </div>
                         </div>
-
-                        <p className="text-sm mb-6 leading-relaxed">
-                            This is how your product tours will look to users with your current branding.
-                        </p>
-
-                        <div className="flex justify-end items-center gap-4">
-                            <span className={cn("text-[10px] font-bold uppercase tracking-widest",
-                                theme.tooltipStyle === 'glass' ? "text-white/40" : "text-muted-foreground/40"
-                            )}>
-                                1 of 3
-                            </span>
-                            <button
-                                onMouseEnter={() => setIsHovered(true)}
-                                onMouseLeave={() => setIsHovered(false)}
-                                className={cn(
-                                    "text-sm font-bold shadow-sm active:scale-[0.985] transition-all outline-none active:bg-black/10 [backface-visibility:hidden] transform-gpu",
-                                    theme.tooltipStyle === 'glass' ? "hover:bg-white/10" : "hover:bg-black/5"
-                                )}
-                                style={{
-                                    backgroundColor: theme.tooltipStyle === 'solid' ? theme.primaryColor :
-                                        (theme.tooltipStyle === 'glass' ?
-                                            (isHovered ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)') :
-                                            (isHovered ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.1)')),
-                                    color: 'white',
-                                    borderRadius: `${theme.borderRadius}px`,
-                                    padding: `${theme.paddingV}px ${theme.paddingH}px`,
-                                    fontSize: theme.tooltipStyle === 'glass' ? '0.8rem' : '0.9rem',
-                                    border: theme.tooltipStyle === 'glass' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
-                                    fontFamily: theme.fontFamily
-                                }}
-                            >
-                                Next Step
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

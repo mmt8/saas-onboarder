@@ -41,64 +41,53 @@ export function detectBranding(): DetectedBranding | null {
                 const bg = style.backgroundColor;
 
                 // Skip if transparent or neutral (to avoid grabbing background colors)
-                if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)' && !isNeutral(bg)) {
-                    primaryColor = rgbToHex(bg);
-                    foundColor = true;
 
-                    // Grab radius from the same element
-                    const br = style.borderRadius;
-                    if (br && br !== '0px') {
-                        // Handle multiple radii (e.g. "4px 8px")
-                        const firstRadius = br.split(' ')[0];
-                        borderRadius = firstRadius.replace('px', '').replace('%', '');
-                    }
-
-                    // Grab font if possible
-                    const font = style.fontFamily;
-                    if (font && font !== 'inherit') {
-                        fontFamily = font;
-                    }
-
-                    break;
+                // Grab font if possible
+                const font = style.fontFamily;
+                if (font && font !== 'inherit') {
+                    fontFamily = font;
                 }
+
+                break;
             }
-            if (foundColor) break;
         }
+        if (foundColor) break;
+    }
 
         // If no button found, look for accent color in CSS vars
         if (!foundColor) {
-            const rootStyle = window.getComputedStyle(document.documentElement);
-            const colorVars = ['--primary', '--accent', '--brand-color', '--main-color'];
-            for (const v of colorVars) {
-                const val = rootStyle.getPropertyValue(v).trim();
-                if (val && !isNeutral(val)) {
-                    primaryColor = val.startsWith('#') ? val : rgbToHex(val);
-                    foundColor = true;
-                    break;
-                }
+        const rootStyle = window.getComputedStyle(document.documentElement);
+        const colorVars = ['--primary', '--accent', '--brand-color', '--main-color'];
+        for (const v of colorVars) {
+            const val = rootStyle.getPropertyValue(v).trim();
+            if (val && !isNeutral(val)) {
+                primaryColor = val.startsWith('#') ? val : rgbToHex(val);
+                foundColor = true;
+                break;
             }
         }
-
-        // 2. Detect Font Family
-        const bodyStyle = window.getComputedStyle(document.body);
-        const bodyFont = bodyStyle.fontFamily;
-        if (bodyFont) {
-            fontFamily = bodyFont;
-        }
-
-        // 3. Determine Text Color (Contrast)
-        const textColor = getContrastColor(primaryColor);
-
-        return {
-            primaryColor,
-            fontFamily,
-            borderRadius: borderRadius || '12',
-            textColor
-        };
-    } catch (e) {
-        console.warn('Product Tour: Branding detection failed', e);
-        return null;
     }
+
+    // 2. Detect Font Family
+    const bodyStyle = window.getComputedStyle(document.body);
+    const bodyFont = bodyStyle.fontFamily;
+    if (bodyFont) {
+        fontFamily = bodyFont;
+    }
+
+    // 3. Determine Text Color (Contrast)
+    const textColor = getContrastColor(primaryColor);
+
+    return {
+        primaryColor,
+        fontFamily,
+        borderRadius: borderRadius || '12',
+        textColor
+    };
+} catch (e) {
+    console.warn('Product Tour: Branding detection failed', e);
+    return null;
+}
 }
 
 function isNeutral(color: string): boolean {
