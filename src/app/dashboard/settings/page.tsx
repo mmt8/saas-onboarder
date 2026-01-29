@@ -540,7 +540,7 @@ export default function SettingsPage() {
                                                 (isHovered ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.1)') :
                                                 (isHovered ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.1)')),
                                         color: 'white',
-                                        borderRadius: '24px',
+                                        borderRadius: `${theme.borderRadius}px`,
                                         padding: `${theme.paddingV}px ${theme.paddingH}px`,
                                         fontSize: theme.tooltipStyle === 'glass' ? '0.8rem' : '0.9rem',
                                         border: theme.tooltipStyle === 'glass' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',

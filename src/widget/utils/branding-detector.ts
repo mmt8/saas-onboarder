@@ -79,7 +79,13 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
                         const br = style.borderRadius;
                         if (br && br !== '0px') {
                             const firstRadius = br.split(' ')[0];
-                            borderRadius = firstRadius.replace('px', '').replace('%', '');
+                            const parsedRadius = parseFloat(firstRadius);
+                            // Sanitize and clamp radius to reasonable values (0-24px) to avoid erratic inputs
+                            if (!isNaN(parsedRadius) && parsedRadius < 1000) {
+                                borderRadius = Math.min(Math.max(parsedRadius, 0), 24).toString();
+                            } else {
+                                borderRadius = '4'; // Safe default
+                            }
                         }
 
                         if (!foundFont) {
