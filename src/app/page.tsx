@@ -186,7 +186,7 @@ export default function Home() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-[0.03]" />
           </div>
           <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-8">
+            <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-16 gap-8">
               <div>
                 <Badge variant="outline" className="mb-4 text-white/60 border-white/20">Roadmap</Badge>
                 <h2 className="text-4xl md:text-5xl font-bold font-serif">Shipping soon...</h2>
