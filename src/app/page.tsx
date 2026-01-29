@@ -240,8 +240,6 @@ export default function Home() {
         </div>
 
 
-        {/* FAQ Section */}
-        <FAQ />
 
         {/* Coming Soon Section */}
         {/* Coming Soon Section */}
@@ -319,6 +317,9 @@ export default function Home() {
       </main>
 
       {/* Footer */}
+      {/* FAQ Section */}
+      <FAQ />
+
       {/* Footer */}
       {/* Footer */}
       <footer className="border-t border-white/10 pt-16 pb-8 bg-[#421d24] text-white/80 relative overflow-hidden">
