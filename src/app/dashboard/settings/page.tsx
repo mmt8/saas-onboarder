@@ -220,7 +220,7 @@ export default function SettingsPage() {
                 {/* Tooltip Style Section */}
                 <div className="space-y-4">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Tooltip Style</label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-4 gap-3">
                         <div
                             onClick={() => setTheme({ ...theme, tooltipStyle: 'solid' })}
                             className={cn(

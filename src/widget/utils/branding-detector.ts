@@ -22,32 +22,47 @@ export function detectBranding(): DetectedBranding | null {
         // 1. Detect Primary Color
         // Strategy: Look for the first prominent button or a major CSS variable
         const primarySelectors = [
+            'button[type="submit"]',
             'button.btn-primary',
             'button.primary',
             '.bg-primary',
-            'button[type="submit"]',
             'a.btn-primary',
             '.cta',
-            'button'
+            '.action-button',
+            'button',
+            '[role="button"]'
         ];
 
         let foundColor = false;
         for (const selector of primarySelectors) {
-            const el = document.querySelector(selector);
-            if (el) {
+            const elements = document.querySelectorAll(selector);
+            for (const el of Array.from(elements)) {
                 const style = window.getComputedStyle(el);
                 const bg = style.backgroundColor;
+
+                // Skip if transparent or neutral (to avoid grabbing background colors)
                 if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)' && !isNeutral(bg)) {
                     primaryColor = rgbToHex(bg);
                     foundColor = true;
-                    // Also grab radius while we're at it
+
+                    // Grab radius from the same element
                     const br = style.borderRadius;
                     if (br && br !== '0px') {
-                        borderRadius = br.replace('px', '');
+                        // Handle multiple radii (e.g. "4px 8px")
+                        const firstRadius = br.split(' ')[0];
+                        borderRadius = firstRadius.replace('px', '').replace('%', '');
                     }
+
+                    // Grab font if possible
+                    const font = style.fontFamily;
+                    if (font && font !== 'inherit') {
+                        fontFamily = font;
+                    }
+
                     break;
                 }
             }
+            if (foundColor) break;
         }
 
         // If no button found, look for accent color in CSS vars
