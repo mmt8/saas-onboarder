@@ -251,6 +251,18 @@ export default function SettingsPage() {
                             <div className="w-full h-8 rounded-lg shadow-sm bg-black/20 backdrop-blur-sm border border-white/20" />
                             <span className="text-xs font-bold">Glass</span>
                         </div>
+                        <div
+                            onClick={() => setTheme({ ...theme, tooltipStyle: 'auto' })}
+                            className={cn(
+                                "cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all hover:bg-secondary/10",
+                                theme.tooltipStyle === 'auto' ? "border-primary bg-primary/5" : "border-border bg-card"
+                            )}
+                        >
+                            <div className="w-full h-8 rounded-lg shadow-sm bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center">
+                                <Sparkles className="w-4 h-4 text-white animate-pulse" />
+                            </div>
+                            <span className="text-xs font-bold">Auto</span>
+                        </div>
                     </div>
 
                     {detectionFailed && (
