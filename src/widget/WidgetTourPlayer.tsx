@@ -54,13 +54,13 @@ export function WidgetTourPlayer() {
     // Merge auto-detected values into the functional theme
     const activeTheme = {
         ...theme,
-        primaryColor: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.primaryColor : theme.primaryColor,
+        primaryColor: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.primaryColor : (theme.tooltipStyle === 'auto' ? '#495BFD' : theme.primaryColor),
         fontFamily: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.fontFamily : theme.fontFamily,
         borderRadius: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.borderRadius : theme.borderRadius,
-        tooltipColor: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.primaryColor : theme.tooltipColor,
+        tooltipColor: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.primaryColor : (theme.tooltipStyle === 'auto' ? '#495BFD' : theme.tooltipColor),
         textColor: theme.tooltipStyle === 'auto' && detectedBranding
             ? (detectedBranding.textColor === 'black' ? 'black' : 'white')
-            : (theme.darkMode ? 'white' : 'black')
+            : (theme.tooltipStyle === 'auto' ? 'white' : (theme.darkMode ? 'white' : 'black'))
     };
 
     // Auto-start tour from URL param

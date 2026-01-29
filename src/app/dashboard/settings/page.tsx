@@ -29,7 +29,7 @@ export default function SettingsPage() {
     const [theme, setTheme] = useState({
         fontFamily: 'Inter',
         darkMode: false,
-        primaryColor: '#E65221',
+        primaryColor: '#495BFD',
         borderRadius: '20',
         paddingV: '10',
         paddingH: '20',
@@ -130,11 +130,9 @@ export default function SettingsPage() {
             return {
                 ...baseStyle,
                 fontFamily: font,
-                backgroundColor: autoBranding?.primaryColor || theme.primaryColor,
+                backgroundColor: autoBranding?.primaryColor || '#495BFD',
                 color: autoBranding?.textColor === 'black' ? '#1a1a1a' : '#fff',
-                border: 'none',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                borderRadius: `${autoBranding?.borderRadius || theme.borderRadius}px`
+                borderRadius: '32px'
             };
         }
 
@@ -403,7 +401,7 @@ export default function SettingsPage() {
                     <Button
                         onClick={handleSaveSettings}
                         disabled={isLoading}
-                        className="px-8 h-11 text-sm font-bold"
+                        className="px-8 h-11 text-sm font-bold bg-[#495BFD] hover:bg-[#495BFD]/90"
                     >
                         {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                         Save Settings

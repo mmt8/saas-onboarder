@@ -19,7 +19,7 @@ export interface DetectedBranding {
 export function detectBranding(ignoreSelector?: string): DetectedBranding | null {
     if (typeof window === 'undefined') return null;
 
-    let primaryColor = '#E65221'; // Internal default (Guidemark Orange)
+    let primaryColor = '#495BFD'; // Intentional Blue Fallback
     let fontFamily = 'Inter, sans-serif';
     let borderRadius = '12';
     let backgroundColor = '#ffffff';
@@ -27,23 +27,25 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
     let foundFont = false;
 
     try {
-        // 1. Detect Background Color (Improves preview realism)
+        // 1. Detect Background Color
         const bodyStyle = window.getComputedStyle(document.body);
         if (bodyStyle.backgroundColor && bodyStyle.backgroundColor !== 'transparent' && bodyStyle.backgroundColor !== 'rgba(0, 0, 0, 0)') {
             backgroundColor = rgbToHex(bodyStyle.backgroundColor);
         }
 
-        // 2. Detect Typography (Prioritize Headings)
-        const heading = document.querySelector('h1, h2, h3, h4');
-        if (heading) {
-            const style = window.getComputedStyle(heading);
-            if (style.fontFamily && style.fontFamily !== 'inherit') {
-                fontFamily = style.fontFamily;
+        // 2. Detect Typography (Prioritize serif headings for "Earthy" feel)
+        const headings = document.querySelectorAll('h1, h2, h3, h4, .site-title, [class*="title"]');
+        for (const h of Array.from(headings)) {
+            const style = window.getComputedStyle(h);
+            const font = style.fontFamily;
+            if (font && font !== 'inherit' && !font.includes('Inter')) {
+                fontFamily = font;
                 foundFont = true;
+                break;
             }
         }
 
-        // 3. Detect Primary Color & Radius (Aggressive Scrape)
+        // 3. Detect Primary Color & Radius
         const primarySelectors = [
             'button[type="submit"]',
             'button.btn-primary',
@@ -61,7 +63,6 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
         for (const selector of primarySelectors) {
             const elements = document.querySelectorAll(selector);
             for (const el of Array.from(elements)) {
-                // Ignore widget elements to prevent "detecting self"
                 if (ignoreSelector && (el.closest(ignoreSelector) || el.className?.includes?.('product-tour'))) continue;
 
                 const style = window.getComputedStyle(el);
@@ -70,19 +71,17 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
                 if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
                     const hex = rgbToHex(bg);
 
-                    // Earthy colors might have lower saturation, so we adjust neutral checks
+                    // Accept any non-neutral color as a brand color
                     if (!isNeutral(hex)) {
                         primaryColor = hex;
                         foundColor = true;
 
-                        // Grab border radius
                         const br = style.borderRadius;
                         if (br && br !== '0px') {
                             const firstRadius = br.split(' ')[0];
                             borderRadius = firstRadius.replace('px', '').replace('%', '');
                         }
 
-                        // Font if not yet found
                         if (!foundFont) {
                             fontFamily = style.fontFamily;
                             foundFont = true;
@@ -95,30 +94,7 @@ export function detectBranding(ignoreSelector?: string): DetectedBranding | null
             if (foundColor) break;
         }
 
-        // 4. Fallback to CSS Variables (Common for modern brands)
-        if (!foundColor) {
-            const rootStyle = window.getComputedStyle(document.documentElement);
-            const colorVars = ['--primary', '--brand', '--accent', '--main-color', '--primary-600', '--blue-600', '--indigo-600'];
-            for (const v of colorVars) {
-                const val = rootStyle.getPropertyValue(v).trim();
-                if (val) {
-                    const hex = val.startsWith('#') ? val : rgbToHex(val);
-                    if (!isNeutral(hex)) {
-                        primaryColor = hex;
-                        foundColor = true;
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Final font fallback
-        if (!foundFont && bodyStyle.fontFamily && bodyStyle.fontFamily !== 'inherit') {
-            fontFamily = bodyStyle.fontFamily;
-        }
-
-        // CRITICAL: If no vibrant "brand" color was found, return null.
-        // This prevents returning a default blue/orange and forces the caller to use its OWN brand.
+        // 4. Return null if no vibrant color found to allow fallback to intentional Blue
         if (!foundColor) return null;
 
         const textColor = getContrastColor(primaryColor);
@@ -149,12 +125,12 @@ function isNeutral(color: string): boolean {
         const diff2 = Math.abs(g - b);
         const diff3 = Math.abs(r - b);
 
-        // Very tight tolerance for neutrals, allowing earthy/saturated colors to pass
-        const tolerance = 10;
+        // Brown/Tan colors are non-neutral. Neutral colors have very similar RGB values.
+        const tolerance = 8;
         const isGrey = diff1 < tolerance && diff2 < tolerance && diff3 < tolerance;
 
         const isTooLight = r > 248 && g > 248 && b > 248;
-        const isTooDark = r < 20 && g < 20 && b < 20;
+        const isTooDark = r < 22 && g < 22 && b < 22;
 
         return isGrey || isTooLight || isTooDark;
     } catch (e) {
@@ -165,7 +141,7 @@ function isNeutral(color: string): boolean {
 function rgbToHex(rgb: string): string {
     if (rgb.startsWith('#')) return rgb;
     const match = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/);
-    if (!match) return '#E65221'; // Default to Brand Orange
+    if (!match) return '#495BFD'; // Restore Blue Fallback
     function hex(x: string) {
         return ("0" + parseInt(x).toString(16)).slice(-2);
     }
