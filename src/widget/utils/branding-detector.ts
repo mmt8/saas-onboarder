@@ -24,6 +24,8 @@ export function detectBranding(): DetectedBranding | null {
         const primarySelectors = [
             'button.btn-primary',
             'button.primary',
+            '.btn',
+            '[class*="btn-"]',
             '.bg-primary',
             'button[type="submit"]',
             'a.btn-primary',
