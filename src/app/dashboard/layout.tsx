@@ -9,7 +9,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { CreateProjectDialog } from "@/components/admin/CreateProjectDialog";
 import { DashboardNav } from "@/components/admin/DashboardNav";
 import { InstallationTutorialModal } from "@/components/admin/InstallationTutorialModal";
-import { RefreshCw, Play, Circle, AlertCircle, LogOut, User } from "lucide-react";
+import { RefreshCw, Play, Circle, AlertCircle, LogOut, User, Shield } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -219,6 +219,15 @@ export default function DashboardLayout({
                                 <User className="w-4 h-4 transition-transform group-hover:scale-110" />
                                 Account
                             </Link>
+                            {user?.email && ['mehmet@producttour.app', 'mehmetperk@gmail.com'].includes(user.email) && (
+                                <Link
+                                    href="/dashboard/superadmin"
+                                    className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 active:bg-primary/10 transition-all rounded-full uppercase tracking-widest group"
+                                >
+                                    <Shield className="w-4 h-4 transition-transform group-hover:scale-110" />
+                                    Admin
+                                </Link>
+                            )}
                             <button
                                 onClick={() => signOut()}
                                 className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-muted-foreground hover:text-destructive hover:bg-black/5 active:bg-black/10 transition-all rounded-full group uppercase tracking-widest"
