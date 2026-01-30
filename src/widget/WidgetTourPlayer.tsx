@@ -288,7 +288,8 @@ export function WidgetTourPlayer() {
     // Get caret color based on tooltip style
     const getCaretColor = () => {
         if (activeTheme.tooltipStyle === 'glass') {
-            return 'rgba(30, 30, 30, 0.85)';
+            // Match glass tooltip background color
+            return 'rgba(120, 120, 120, 0.6)';
         } else if (activeTheme.tooltipStyle === 'color' || activeTheme.tooltipStyle === 'auto') {
             return activeTheme.tooltipColor;
         } else {
