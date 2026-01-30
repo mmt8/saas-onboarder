@@ -126,8 +126,44 @@ BEGIN
 END;
 $$;
 
+-- 7. Create function to delete a customer and all their data (superadmin only)
+CREATE OR REPLACE FUNCTION admin_delete_customer(customer_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    caller_email TEXT;
+BEGIN
+    -- Get caller's email
+    SELECT email INTO caller_email
+    FROM auth.users
+    WHERE id = auth.uid();
+    
+    -- Check if superadmin
+    IF caller_email NOT IN ('mehmet@producttour.app', 'mehmetperk@gmail.com') THEN
+        RAISE EXCEPTION 'Unauthorized: Superadmin access only';
+    END IF;
+    
+    -- Delete tours for all projects owned by this user
+    DELETE FROM tours WHERE project_id IN (SELECT id FROM projects WHERE user_id = customer_id);
+    
+    -- Delete projects owned by this user
+    DELETE FROM projects WHERE user_id = customer_id;
+    
+    -- Delete the profile
+    DELETE FROM profiles WHERE id = customer_id;
+    
+    -- Delete the auth user (this is permanent!)
+    DELETE FROM auth.users WHERE id = customer_id;
+    
+    RETURN TRUE;
+END;
+$$;
+
 -- Grant execute permissions
 GRANT EXECUTE ON FUNCTION admin_get_all_data() TO authenticated;
 GRANT EXECUTE ON FUNCTION admin_toggle_tour(UUID, BOOLEAN) TO authenticated;
 GRANT EXECUTE ON FUNCTION increment_tour_impressions(UUID) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION update_last_login() TO authenticated;
+GRANT EXECUTE ON FUNCTION admin_delete_customer(UUID) TO authenticated;

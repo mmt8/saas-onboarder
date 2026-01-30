@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useTourStore } from "@/store/tour-store";
 import { Button } from "@/components/ui/button";
-import { Loader2, Users, Building, MapPin, Clock, Eye, ToggleLeft, ToggleRight, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
+import { Loader2, Users, Building, MapPin, Clock, Eye, ToggleLeft, ToggleRight, ChevronDown, ChevronRight, RefreshCw, Trash2, AlertTriangle, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +42,8 @@ export default function SuperadminPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [expandedCustomers, setExpandedCustomers] = useState<Set<string>>(new Set());
     const [togglingTour, setTogglingTour] = useState<string | null>(null);
+    const [deleteModal, setDeleteModal] = useState<{ open: boolean; customer: CustomerData | null }>({ open: false, customer: null });
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Check superadmin access
     useEffect(() => {
@@ -124,6 +126,28 @@ export default function SuperadminPage() {
             hour: "2-digit",
             minute: "2-digit"
         });
+    };
+
+    // Delete customer and all their data
+    const deleteCustomer = async () => {
+        if (!deleteModal.customer) return;
+
+        setIsDeleting(true);
+        try {
+            const { error } = await supabase.rpc('admin_delete_customer', {
+                customer_id: deleteModal.customer.id
+            });
+            if (error) throw error;
+
+            // Remove from local state
+            setCustomers(prev => prev.filter(c => c.id !== deleteModal.customer!.id));
+            toast.success(`Deleted customer: ${deleteModal.customer.email}`);
+            setDeleteModal({ open: false, customer: null });
+        } catch (error: any) {
+            toast.error("Failed to delete customer: " + error.message);
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     // Check authorization
@@ -234,6 +258,16 @@ export default function SuperadminPage() {
                                                 <div className="text-lg font-bold text-primary">{totalImpressions}</div>
                                                 <div className="text-[10px] uppercase text-muted-foreground">Impressions</div>
                                             </div>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDeleteModal({ open: true, customer });
+                                                }}
+                                                className="ml-2 p-2 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-500 transition-colors"
+                                                title="Delete customer"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -323,6 +357,61 @@ export default function SuperadminPage() {
                             No customers found
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteModal.open && deleteModal.customer && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-card rounded-2xl border border-border shadow-2xl p-6 max-w-md w-full mx-4">
+                        <div className="flex items-start gap-4">
+                            <div className="p-3 rounded-full bg-red-100">
+                                <AlertTriangle className="w-6 h-6 text-red-600" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-foreground mb-1">
+                                    Delete Customer
+                                </h3>
+                                <p className="text-sm text-muted-foreground mb-4">
+                                    Are you sure you want to permanently delete <span className="font-semibold text-foreground">{deleteModal.customer.email}</span> and all their data?
+                                </p>
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                                    <p className="text-xs text-red-700">
+                                        <strong>This will permanently delete:</strong>
+                                    </p>
+                                    <ul className="text-xs text-red-600 mt-1 space-y-0.5">
+                                        <li>• User account and profile</li>
+                                        <li>• {deleteModal.customer.projects?.length || 0} project(s)</li>
+                                        <li>• {deleteModal.customer.projects?.reduce((sum, p) => sum + (p.tours?.length || 0), 0) || 0} tour(s)</li>
+                                    </ul>
+                                </div>
+                                <div className="flex gap-3">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setDeleteModal({ open: false, customer: null })}
+                                        disabled={isDeleting}
+                                        className="flex-1"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={deleteCustomer}
+                                        disabled={isDeleting}
+                                        className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                                    >
+                                        {isDeleting ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                                Deleting...
+                                            </>
+                                        ) : (
+                                            "Delete Customer"
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
