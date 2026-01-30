@@ -393,26 +393,27 @@ export function WidgetTourPlayer() {
                     fontFamily: activeTheme.fontFamily
                 }}
             >
-                {/* Caret / Arrow pointing to target */}
-                <svg
-                    className="absolute"
-                    style={{
-                        left: tooltipPlacement.caretLeft - 2,
-                        top: tooltipPlacement.caretTop + (tooltipPlacement.position === 'bottom' ? 2 : tooltipPlacement.position === 'top' ? -2 : 0),
-                        width: 24,
-                        height: 12,
-                        transform: `rotate(${caretRotation[tooltipPlacement.position]}deg)`,
-                        transformOrigin: '12px 6px',
-                        overflow: 'visible',
-                        // No filter/shadow - caret should blend seamlessly
-                    }}
-                    viewBox="0 0 24 12"
-                >
-                    <polygon
-                        points="12,0 24,12 0,12"
-                        fill={getCaretColor()}
-                    />
-                </svg>
+                {/* Caret / Arrow pointing to target - skip for glass style */}
+                {activeTheme.tooltipStyle !== 'glass' && (
+                    <svg
+                        className="absolute"
+                        style={{
+                            left: tooltipPlacement.caretLeft - 2,
+                            top: tooltipPlacement.caretTop + (tooltipPlacement.position === 'bottom' ? 2 : tooltipPlacement.position === 'top' ? -2 : 0),
+                            width: 24,
+                            height: 12,
+                            transform: `rotate(${caretRotation[tooltipPlacement.position]}deg)`,
+                            transformOrigin: '12px 6px',
+                            overflow: 'visible',
+                        }}
+                        viewBox="0 0 24 12"
+                    >
+                        <polygon
+                            points="12,0 24,12 0,12"
+                            fill={getCaretColor()}
+                        />
+                    </svg>
+                )}
 
                 <div className="flex items-start justify-end -mr-2 -mt-2 mb-2">
                     <button
