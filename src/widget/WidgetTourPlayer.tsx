@@ -393,21 +393,25 @@ export function WidgetTourPlayer() {
                 }}
             >
                 {/* Caret / Arrow pointing to target */}
-                <div
-                    className="absolute"
+                <svg
+                    className="absolute z-50"
                     style={{
-                        left: tooltipPlacement.caretLeft,
+                        left: tooltipPlacement.caretLeft - 2,
                         top: tooltipPlacement.caretTop,
-                        width: 0,
-                        height: 0,
-                        borderLeft: '10px solid transparent',
-                        borderRight: '10px solid transparent',
-                        borderBottom: `10px solid ${getCaretColor()}`,
+                        width: 24,
+                        height: 12,
                         transform: `rotate(${caretRotation[tooltipPlacement.position]}deg)`,
-                        transformOrigin: 'center center',
-                        filter: activeTheme.tooltipStyle === 'glass' ? 'none' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+                        transformOrigin: '12px 6px',
+                        overflow: 'visible',
+                        filter: activeTheme.tooltipStyle === 'glass' ? 'none' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))'
                     }}
-                />
+                    viewBox="0 0 24 12"
+                >
+                    <polygon
+                        points="12,0 24,12 0,12"
+                        fill={getCaretColor()}
+                    />
+                </svg>
 
                 <div className="flex items-start justify-end -mr-2 -mt-2 mb-2">
                     <button
