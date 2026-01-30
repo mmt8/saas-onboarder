@@ -47,6 +47,16 @@ export type Project = {
 
 export type TourStatus = 'idle' | 'recording' | 'playing' | 'editing';
 
+export type Profile = {
+    id: string;
+    email: string;
+    fullName?: string;
+    companyName?: string;
+    country?: string;
+    createdAt: Date;
+    updatedAt: Date;
+};
+
 interface TourState {
     tours: Tour[];
     projects: Project[];
@@ -64,6 +74,7 @@ interface TourState {
     // Auth State
     user: any | null;
     isAuthLoading: boolean;
+    profile: Profile | null;
 
     // Actions
     fetchProjects: () => Promise<Project[]>;
@@ -103,6 +114,10 @@ interface TourState {
     resetPassword: (email: string) => Promise<{ error: any }>;
     updatePassword: (password: string) => Promise<{ error: any }>;
     deleteProject: (id: string) => Promise<void>;
+
+    // Profile Actions
+    fetchProfile: () => Promise<void>;
+    updateProfile: (updates: { fullName?: string; companyName?: string; country?: string }) => Promise<{ error: any } | void>;
 }
 
 // Helper for consistent URL matching
@@ -131,6 +146,7 @@ export const useTourStore = create<TourState>()(
             language: 'en-US',
             user: null,
             isAuthLoading: true,
+            profile: null,
 
             setTour: (tour) => set({ currentTour: tour }),
             setStatus: (status) => set({ status }),
@@ -683,6 +699,77 @@ export const useTourStore = create<TourState>()(
                     toast.error('Failed to delete project');
                 } finally {
                     set({ isLoading: false });
+                }
+            },
+
+            fetchProfile: async () => {
+                const { user } = get();
+                if (!user) return;
+
+                try {
+                    const { data, error } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', user.id)
+                        .single();
+
+                    if (error) {
+                        console.error('Error fetching profile:', error);
+                        return;
+                    }
+
+                    if (data) {
+                        set({
+                            profile: {
+                                id: data.id,
+                                email: data.email || user.email,
+                                fullName: data.full_name,
+                                companyName: data.company_name,
+                                country: data.country,
+                                createdAt: new Date(data.created_at),
+                                updatedAt: new Date(data.updated_at)
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error fetching profile:', error);
+                }
+            },
+
+            updateProfile: async (updates) => {
+                const { user, profile } = get();
+                if (!user) return { error: 'Not authenticated' };
+
+                try {
+                    const { error } = await supabase
+                        .from('profiles')
+                        .upsert({
+                            id: user.id,
+                            email: user.email,
+                            full_name: updates.fullName,
+                            company_name: updates.companyName,
+                            country: updates.country,
+                            updated_at: new Date().toISOString()
+                        });
+
+                    if (error) throw error;
+
+                    // Update local state
+                    set({
+                        profile: {
+                            ...profile!,
+                            fullName: updates.fullName ?? profile?.fullName,
+                            companyName: updates.companyName ?? profile?.companyName,
+                            country: updates.country ?? profile?.country,
+                            updatedAt: new Date()
+                        }
+                    });
+
+                    toast.success('Profile updated successfully');
+                } catch (error) {
+                    console.error('Error updating profile:', error);
+                    toast.error('Failed to update profile');
+                    return { error };
                 }
             },
         }),

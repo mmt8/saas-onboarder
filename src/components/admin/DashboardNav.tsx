@@ -8,6 +8,7 @@ const tabs = [
     { label: "Tours", href: "/dashboard" },
     { label: "Installation", href: "/dashboard/installation" },
     { label: "Customize", href: "/dashboard/settings" },
+    { label: "Account", href: "/dashboard/account" },
 ];
 
 export function DashboardNav() {
