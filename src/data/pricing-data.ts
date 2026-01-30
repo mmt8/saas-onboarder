@@ -22,7 +22,6 @@ export const PRICING_CONFIG = {
         "High-Fidelity Guidance Engine",
         "No-Code Visual Editor",
         "Smart Element Targeting",
-        "Analytics & Conversion Tracking",
         "Multi-domain Support",
         "Custom Branding & Themes",
         "Priority Support",
