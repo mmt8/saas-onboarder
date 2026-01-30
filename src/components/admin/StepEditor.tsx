@@ -271,7 +271,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
             }
 
             <div className="flex-1 overflow-y-auto pl-5 pr-1 py-2 space-y-1.5 [scrollbar-gutter:stable]">
-                <Reorder.Group axis="y" values={recordedSteps} onReorder={reorderSteps} className="space-y-1.5">
+                <Reorder.Group axis="y" values={recordedSteps} onReorder={reorderSteps} className="space-y-2" layoutScroll>
                     <AnimatePresence initial={false}>
                         {recordedSteps.map((step, index) => (
                             <Reorder.Item
@@ -280,7 +280,14 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                className="group relative bg-white rounded-xl p-1.5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:z-10 transition-all"
+                                whileDrag={{
+                                    scale: 1.02,
+                                    boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+                                    zIndex: 50
+                                }}
+                                layout
+                                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                className="group relative bg-white rounded-xl p-2 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-shadow"
                                 style={{
                                     border: '1px solid #CBD5E1'
                                 }}
@@ -310,12 +317,12 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                                 onPointerDownCapture={(e) => e.stopPropagation()}
                                                 onMouseDown={(e) => e.stopPropagation()}
                                                 onMouseDownCapture={(e) => e.stopPropagation()}
-                                                className="flex-1 min-w-0 bg-slate-100 border border-slate-200 rounded-md px-2 py-0.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 placeholder:text-muted-foreground/50"
+                                                className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 placeholder:text-muted-foreground/50"
                                                 placeholder="Step name..."
                                             />
                                         </div>
 
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                        <div className="flex items-center gap-1 shrink-0">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
