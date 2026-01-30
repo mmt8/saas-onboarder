@@ -1,4 +1,5 @@
 
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useTourStore } from '@/store/tour-store';
 import { StepEditor } from '@/components/admin/StepEditor';
@@ -12,6 +13,7 @@ import { CreateTourDialog } from '@/components/admin/CreateTourDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Tour } from '@/store/tour-store';
+import { supabase } from '@/lib/supabase';
 
 interface WidgetProps {
     projectId: string;
@@ -217,9 +219,27 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = false }: 
     const [currentPath, setCurrentPath] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
     const [feedback, setFeedback] = useState<string | null>(null);
     const [tourToDelete, setTourToDelete] = useState<Tour | null>(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const prevLoadingRef = useRef(isLoading);
     const prevStatusRef = useRef(status);
     const hasAutoStartedOnPage = useRef<Record<string, boolean>>({});
+
+    // Check if user is authenticated (for showing admin panel)
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data } = await supabase.auth.getSession();
+            console.log('Widget auth check:', { hasSession: !!data.session, user: data.session?.user?.email });
+            setIsAuthenticated(!!data.session);
+        };
+        checkAuth();
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+            checkAuth();
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
 
     // Auto-start creation mode from URL param
     useEffect(() => {
@@ -465,7 +485,7 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = false }: 
     // Get current project settings
     const currentProject = projects.find(p => p.id === projectId);
     const launcherText = currentProject?.launcherText || 'Product Tour';
-    const shouldShowAdmin = showAdminPanel && (currentProject?.showLauncher !== false);
+    const shouldShowAdmin = (showAdminPanel || isAuthenticated) && (currentProject?.showLauncher !== false);
 
     const theme = currentProject?.themeSettings || {
         fontFamily: 'Inter, sans-serif',
