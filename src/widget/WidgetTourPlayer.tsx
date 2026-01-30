@@ -307,36 +307,34 @@ export function WidgetTourPlayer() {
 
     return (
         <div className="fixed inset-0 z-[2147483645] pointer-events-none product-tour-widget-root" style={{ fontFamily: activeTheme.fontFamily }}>
-            {/* Spotlight Overlay */}
-            {activeTheme.tooltipStyle !== 'glass' && (
-                <svg
-                    className="absolute inset-0 z-0"
-                    style={{ width: '100%', height: '100%' }}
-                >
-                    <defs>
-                        <mask id="spotlight-mask">
-                            <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                            <rect
-                                x={targetRect.left - 4}
-                                y={targetRect.top - 4}
-                                width={targetRect.width + 8}
-                                height={targetRect.height + 8}
-                                rx="8"
-                                fill="black"
-                            />
-                        </mask>
-                    </defs>
-                    <rect
-                        x="0"
-                        y="0"
-                        width="100%"
-                        height="100%"
-                        fill="rgba(0,0,0,0.6)"
-                        mask="url(#spotlight-mask)"
-                        className="transition-all duration-500"
-                    />
-                </svg>
-            )}
+            {/* Spotlight Overlay - lighter for glass (20%), darker for others (60%) */}
+            <svg
+                className="absolute inset-0 z-0"
+                style={{ width: '100%', height: '100%' }}
+            >
+                <defs>
+                    <mask id="spotlight-mask">
+                        <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                        <rect
+                            x={targetRect.left - 4}
+                            y={targetRect.top - 4}
+                            width={targetRect.width + 8}
+                            height={targetRect.height + 8}
+                            rx="8"
+                            fill="black"
+                        />
+                    </mask>
+                </defs>
+                <rect
+                    x="0"
+                    y="0"
+                    width="100%"
+                    height="100%"
+                    fill={activeTheme.tooltipStyle === 'glass' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.6)'}
+                    mask="url(#spotlight-mask)"
+                    className="transition-all duration-500"
+                />
+            </svg>
 
             {/* Blinking/Pulsing Highlight Border */}
             {activeTheme.tooltipStyle !== 'glass' && (
