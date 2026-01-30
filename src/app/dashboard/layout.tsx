@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CreateTourDialog } from "@/components/admin/CreateTourDialog";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { CreateProjectDialog } from "@/components/admin/CreateProjectDialog";
 import { DashboardNav } from "@/components/admin/DashboardNav";
 import { InstallationTutorialModal } from "@/components/admin/InstallationTutorialModal";
@@ -60,6 +60,8 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
+    const pathname = usePathname();
+    const isSuperadmin = pathname === '/dashboard/superadmin';
     const {
         projects,
         currentProjectId,
@@ -227,54 +229,56 @@ export default function DashboardLayout({
                         </div>
                     </div>
 
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-2 pl-4 bg-card/40 border border-border rounded-[2rem] backdrop-blur-xl shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 bg-background/50 p-1.5 rounded-2xl border border-border">
-                                <div className="relative flex items-center">
-                                    <select
-                                        value={currentProjectId || ""}
-                                        onChange={(e) => setCurrentProject(e.target.value)}
-                                        className="bg-transparent border-none pl-3 pr-2 py-1 text-sm focus:outline-none cursor-pointer hover:bg-secondary/40 rounded-lg transition-all font-bold text-foreground appearance-none min-w-[120px]"
-                                    >
-                                        {projects.map(p => (
-                                            <option key={p.id} value={p.id}>{p.name}</option>
-                                        ))}
-                                    </select>
-                                    <div className="pointer-events-none ml-[-20px] mr-2">
-                                        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className="text-muted-foreground">
-                                            <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
+                    {!isSuperadmin && (
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-2 pl-4 bg-card/40 border border-border rounded-[2rem] backdrop-blur-xl shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 bg-background/50 p-1.5 rounded-2xl border border-border">
+                                    <div className="relative flex items-center">
+                                        <select
+                                            value={currentProjectId || ""}
+                                            onChange={(e) => setCurrentProject(e.target.value)}
+                                            className="bg-transparent border-none pl-3 pr-2 py-1 text-sm focus:outline-none cursor-pointer hover:bg-secondary/40 rounded-lg transition-all font-bold text-foreground appearance-none min-w-[120px]"
+                                        >
+                                            {projects.map(p => (
+                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                            ))}
+                                        </select>
+                                        <div className="pointer-events-none ml-[-20px] mr-2">
+                                            <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className="text-muted-foreground">
+                                                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        </div>
                                     </div>
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        onClick={() => setIsCreateProjectOpen(true)}
+                                        className="w-8 h-8 rounded-xl hover:bg-primary/10 text-primary"
+                                        title="Create New Project"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                    </Button>
                                 </div>
+                                <ConnectionStatus
+                                    lastSeenAt={currentProject?.lastSeenAt}
+                                    onCheck={handleRefreshConnection}
+                                    isChecking={isCheckingConnection}
+                                />
+                            </div>
+
+                            <div className="flex items-center gap-8">
+                                <DashboardNav />
+                                <div className="w-px h-6 bg-border/60 hidden md:block" />
                                 <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => setIsCreateProjectOpen(true)}
-                                    className="w-8 h-8 rounded-xl hover:bg-primary/10 text-primary"
-                                    title="Create New Project"
+                                    onClick={handleCreateTour}
+                                    className="px-6 py-6 font-bold"
                                 >
-                                    <Plus className="w-4 h-4" />
+                                    {isInstalled ? <Plus className="w-4 h-4 mr-2" /> : <AlertCircle className="w-4 h-4 mr-2" />}
+                                    {isInstalled ? "Create New Tour" : "Setup Product Tour"}
                                 </Button>
                             </div>
-                            <ConnectionStatus
-                                lastSeenAt={currentProject?.lastSeenAt}
-                                onCheck={handleRefreshConnection}
-                                isChecking={isCheckingConnection}
-                            />
                         </div>
-
-                        <div className="flex items-center gap-8">
-                            <DashboardNav />
-                            <div className="w-px h-6 bg-border/60 hidden md:block" />
-                            <Button
-                                onClick={handleCreateTour}
-                                className="px-6 py-6 font-bold"
-                            >
-                                {isInstalled ? <Plus className="w-4 h-4 mr-2" /> : <AlertCircle className="w-4 h-4 mr-2" />}
-                                {isInstalled ? "Create New Tour" : "Setup Product Tour"}
-                            </Button>
-                        </div>
-                    </div>
+                    )}
                 </div>
 
                 {children}
