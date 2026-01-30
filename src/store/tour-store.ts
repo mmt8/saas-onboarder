@@ -781,12 +781,27 @@ export const useTourStore = create<TourState>()(
             deleteProject: async (id: string) => {
                 set({ isLoading: true });
                 try {
-                    const { error } = await supabase
+                    const { error, count } = await supabase
                         .from('projects')
                         .delete()
-                        .eq('id', id);
+                        .eq('id', id)
+                        .select();
 
                     if (error) throw error;
+
+                    // RLS may silently block deletes - verify the project was actually deleted
+                    const { data: checkData } = await supabase
+                        .from('projects')
+                        .select('id')
+                        .eq('id', id)
+                        .single();
+
+                    if (checkData) {
+                        // Project still exists - RLS blocked the delete
+                        console.error('Delete blocked by RLS - project still exists');
+                        toast.error('Unable to delete project. You may not have permission.');
+                        return;
+                    }
 
                     set((state) => ({
                         projects: state.projects.filter(p => p.id !== id),
