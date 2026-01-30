@@ -178,6 +178,10 @@ export const useTourStore = create<TourState>()(
 
             signIn: async (email, password) => {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
+                // Update last_login timestamp on successful login
+                if (!error) {
+                    supabase.rpc('update_last_login').catch(() => { });
+                }
                 return { error };
             },
 

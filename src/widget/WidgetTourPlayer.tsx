@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useLayoutEffect, useMemo } from "react";
+import React, { useEffect, useState, useLayoutEffect, useMemo, useRef } from "react";
 import { useTourStore } from "@/store/tour-store";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { detectBranding, DetectedBranding } from "./utils/branding-detector";
+import { supabase } from "@/lib/supabase";
 
 // Types for tooltip positioning
 type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -142,6 +143,23 @@ export function WidgetTourPlayer() {
             }
         }
     }, [tours, status, setTour, setStatus]);
+
+    // Track tour impressions when a tour starts playing
+    const lastTrackedTourRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (status === 'playing' && currentTour && currentTour.id !== lastTrackedTourRef.current) {
+            lastTrackedTourRef.current = currentTour.id;
+            // Increment impressions in database
+            supabase.rpc('increment_tour_impressions', { tour_id: currentTour.id })
+                .then(({ error }: { error: any }) => {
+                    if (error) console.warn('Failed to track impression:', error.message);
+                });
+        }
+        // Reset when not playing
+        if (status !== 'playing') {
+            lastTrackedTourRef.current = null;
+        }
+    }, [status, currentTour]);
 
     // Track target element position
     useEffect(() => {
