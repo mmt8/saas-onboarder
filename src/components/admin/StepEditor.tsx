@@ -285,10 +285,10 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                     border: '1px solid #CBD5E1'
                                 }}
                             >
-                                <div className="space-y-1">
-                                    {/* Top Row: Meta & Actions */}
+                                <div className="space-y-1.5">
+                                    {/* Top Row: Step number, grip, and actions */}
                                     <div className="flex items-center justify-between gap-1.5">
-                                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5">
                                             <div
                                                 className="text-slate-400 hover:text-[#E65221] transition-colors cursor-grab active:cursor-grabbing"
                                                 style={{ touchAction: 'none' }}
@@ -298,20 +298,6 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                             <span className="shrink-0 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0 rounded-full uppercase tracking-wider leading-relaxed">
                                                 {index + 1}
                                             </span>
-                                            <input
-                                                type="text"
-                                                value={step.name || step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ').trim() || 'Element'}
-                                                onChange={(e) => updateStep(step.id, { name: e.target.value })}
-                                                onClick={(e) => e.stopPropagation()}
-                                                onPointerDown={(e) => e.stopPropagation()}
-                                                onPointerDownCapture={(e) => e.stopPropagation()}
-                                                onMouseDown={(e) => e.stopPropagation()}
-                                                onMouseDownCapture={(e) => e.stopPropagation()}
-                                                onTouchStart={(e) => e.stopPropagation()}
-                                                onDragStart={(e) => e.preventDefault()}
-                                                className="text-xs font-bold text-slate-700 truncate pt-0.5 bg-transparent border-none outline-none focus:bg-slate-100 focus:rounded px-1 -ml-1 flex-1 min-w-0 cursor-text"
-                                                placeholder="Step name..."
-                                            />
                                         </div>
 
                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -337,8 +323,26 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                         </div>
                                     </div>
 
-                                    {/* Bottom Row: Input - Styled with background/border */}
-                                    <div className="relative group/input bg-slate-50 border-solid border border-slate-200 rounded-lg p-1.5">
+                                    {/* Step Name Input */}
+                                    <div className="relative bg-slate-50 border-solid border border-slate-200 rounded-lg p-1.5">
+                                        <input
+                                            type="text"
+                                            value={step.name || step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ').trim() || 'Element'}
+                                            onChange={(e) => {
+                                                const value = e.target.value.trim() || step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ').trim() || 'Element';
+                                                updateStep(step.id, { name: value });
+                                            }}
+                                            onPointerDown={(e) => e.stopPropagation()}
+                                            onPointerDownCapture={(e) => e.stopPropagation()}
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            onMouseDownCapture={(e) => e.stopPropagation()}
+                                            className="w-full bg-transparent border-none text-sm font-semibold text-slate-700 focus:outline-none focus:ring-0 placeholder:text-muted-foreground/50 p-0"
+                                            placeholder="Step name..."
+                                        />
+                                    </div>
+
+                                    {/* Tooltip Content Textarea */}
+                                    <div className="relative bg-slate-50 border-solid border border-slate-200 rounded-lg p-1.5">
                                         <textarea
                                             value={step.content}
                                             onChange={(e) => updateStep(step.id, { content: e.target.value })}
@@ -347,8 +351,8 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                             onMouseDown={(e) => e.stopPropagation()}
                                             onMouseDownCapture={(e) => e.stopPropagation()}
                                             className="w-full bg-transparent border-none text-sm text-foreground focus:outline-none focus:ring-0 resize-none placeholder:text-muted-foreground/50 p-0 leading-relaxed"
-                                            rows={3}
-                                            placeholder="What should the user do?"
+                                            rows={2}
+                                            placeholder="Tooltip text..."
                                         />
                                     </div>
 
