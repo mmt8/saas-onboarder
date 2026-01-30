@@ -1,10 +1,21 @@
-import React, { useEffect, useState, useLayoutEffect } from "react";
+import React, { useEffect, useState, useLayoutEffect, useMemo } from "react";
 import { useTourStore } from "@/store/tour-store";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { detectBranding, DetectedBranding } from "./utils/branding-detector";
+
+// Types for tooltip positioning
+type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
+
+interface TooltipPlacement {
+    position: TooltipPosition;
+    top: number;
+    left: number;
+    caretTop: number;
+    caretLeft: number;
+}
 
 export function WidgetTourPlayer() {
     const { currentTour, status, setStatus, tours, setTour, projects, currentProjectId, pingProject } = useTourStore();
@@ -121,7 +132,108 @@ export function WidgetTourPlayer() {
         };
     }, [currentTour, currentStepIndex, status]);
 
-    if (status !== 'playing' || !currentTour || !targetRect) return null;
+    // Calculate optimal tooltip position with caret
+    const tooltipPlacement = useMemo((): TooltipPlacement | null => {
+        if (!targetRect || typeof window === 'undefined') return null;
+
+        const TOOLTIP_WIDTH = 320;
+        const TOOLTIP_HEIGHT = 180;
+        const SAFE_MARGIN = Math.max(window.innerWidth, window.innerHeight) * 0.01; // 1% safe area
+        const GAP = 16; // Gap between tooltip and target
+        const CARET_SIZE = 10;
+
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        // Target center
+        const targetCenterX = targetRect.left + targetRect.width / 2;
+        const targetCenterY = targetRect.top + targetRect.height / 2;
+
+        // Calculate available space in each direction
+        const spaceTop = targetRect.top - SAFE_MARGIN;
+        const spaceBottom = viewportHeight - targetRect.bottom - SAFE_MARGIN;
+        const spaceLeft = targetRect.left - SAFE_MARGIN;
+        const spaceRight = viewportWidth - targetRect.right - SAFE_MARGIN;
+
+        // Determine best position based on available space
+        let position: TooltipPosition;
+
+        // Prefer bottom, then top, then right, then left
+        if (spaceBottom >= TOOLTIP_HEIGHT + GAP) {
+            position = 'bottom';
+        } else if (spaceTop >= TOOLTIP_HEIGHT + GAP) {
+            position = 'top';
+        } else if (spaceRight >= TOOLTIP_WIDTH + GAP) {
+            position = 'right';
+        } else if (spaceLeft >= TOOLTIP_WIDTH + GAP) {
+            position = 'left';
+        } else {
+            // Default to bottom with clamping
+            position = 'bottom';
+        }
+
+        let top: number;
+        let left: number;
+        let caretTop: number;
+        let caretLeft: number;
+
+        switch (position) {
+            case 'bottom':
+                top = targetRect.bottom + GAP;
+                left = targetCenterX - TOOLTIP_WIDTH / 2;
+                // Clamp horizontal position
+                left = Math.max(SAFE_MARGIN, Math.min(viewportWidth - TOOLTIP_WIDTH - SAFE_MARGIN, left));
+                // Clamp vertical position
+                top = Math.min(viewportHeight - TOOLTIP_HEIGHT - SAFE_MARGIN, top);
+                // Caret points up to target
+                caretTop = -CARET_SIZE;
+                caretLeft = targetCenterX - left - CARET_SIZE;
+                // Clamp caret to tooltip width
+                caretLeft = Math.max(20, Math.min(TOOLTIP_WIDTH - 40, caretLeft));
+                break;
+
+            case 'top':
+                top = targetRect.top - TOOLTIP_HEIGHT - GAP;
+                left = targetCenterX - TOOLTIP_WIDTH / 2;
+                // Clamp horizontal position
+                left = Math.max(SAFE_MARGIN, Math.min(viewportWidth - TOOLTIP_WIDTH - SAFE_MARGIN, left));
+                // Clamp vertical position
+                top = Math.max(SAFE_MARGIN, top);
+                // Caret points down to target
+                caretTop = TOOLTIP_HEIGHT - 1;
+                caretLeft = targetCenterX - left - CARET_SIZE;
+                caretLeft = Math.max(20, Math.min(TOOLTIP_WIDTH - 40, caretLeft));
+                break;
+
+            case 'right':
+                left = targetRect.right + GAP;
+                top = targetCenterY - TOOLTIP_HEIGHT / 2;
+                // Clamp positions
+                left = Math.min(viewportWidth - TOOLTIP_WIDTH - SAFE_MARGIN, left);
+                top = Math.max(SAFE_MARGIN, Math.min(viewportHeight - TOOLTIP_HEIGHT - SAFE_MARGIN, top));
+                // Caret points left to target
+                caretLeft = -CARET_SIZE;
+                caretTop = targetCenterY - top - CARET_SIZE;
+                caretTop = Math.max(20, Math.min(TOOLTIP_HEIGHT - 40, caretTop));
+                break;
+
+            case 'left':
+                left = targetRect.left - TOOLTIP_WIDTH - GAP;
+                top = targetCenterY - TOOLTIP_HEIGHT / 2;
+                // Clamp positions
+                left = Math.max(SAFE_MARGIN, left);
+                top = Math.max(SAFE_MARGIN, Math.min(viewportHeight - TOOLTIP_HEIGHT - SAFE_MARGIN, top));
+                // Caret points right to target
+                caretLeft = TOOLTIP_WIDTH - 1;
+                caretTop = targetCenterY - top - CARET_SIZE;
+                caretTop = Math.max(20, Math.min(TOOLTIP_HEIGHT - 40, caretTop));
+                break;
+        }
+
+        return { position, top, left, caretTop, caretLeft };
+    }, [targetRect]);
+
+    if (status !== 'playing' || !currentTour || !targetRect || !tooltipPlacement) return null;
 
     // Default fallback if project is missing (don't block render)
 
@@ -172,6 +284,25 @@ export function WidgetTourPlayer() {
     };
 
     const [isHovered, setIsHovered] = useState(false);
+
+    // Get caret color based on tooltip style
+    const getCaretColor = () => {
+        if (activeTheme.tooltipStyle === 'glass') {
+            return 'rgba(30, 30, 30, 0.85)';
+        } else if (activeTheme.tooltipStyle === 'color' || activeTheme.tooltipStyle === 'auto') {
+            return activeTheme.tooltipColor;
+        } else {
+            return activeTheme.darkMode ? '#1e293b' : '#ffffff';
+        }
+    };
+
+    // Caret rotation based on position
+    const caretRotation = {
+        top: 180,    // Points down
+        bottom: 0,   // Points up
+        left: 90,    // Points right
+        right: -90   // Points left
+    };
 
     return (
         <div className="fixed inset-0 z-[2147483645] pointer-events-none product-tour-widget-root" style={{ fontFamily: activeTheme.fontFamily }}>
@@ -231,13 +362,13 @@ export function WidgetTourPlayer() {
                 />
             )}
 
-            {/* Step Card */}
+            {/* Step Card with Caret */}
             <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 key={currentStep.id}
                 className={cn(
-                    "absolute z-20 p-6 border max-w-sm transition-all duration-300 pointer-events-auto overflow-hidden",
+                    "absolute z-20 p-6 border max-w-sm transition-all duration-300 pointer-events-auto overflow-visible",
                     activeTheme.tooltipStyle === 'glass'
                         ? "backdrop-blur-[20px] saturate-[180%] border-white/5 text-white"
                         : (activeTheme.tooltipStyle === 'auto' || activeTheme.tooltipStyle === 'color')
@@ -245,18 +376,9 @@ export function WidgetTourPlayer() {
                             : (activeTheme.darkMode ? "bg-[#1e293b] border-slate-700 text-white shadow-2xl" : "bg-white border-slate-100 text-slate-900 shadow-2xl")
                 )}
                 style={{
-                    left: (() => {
-                        const marginX = window.innerWidth * 0.01;
-                        const tooltipWidth = 384; // max-w-sm
-                        return Math.min(window.innerWidth - tooltipWidth - marginX, Math.max(marginX, targetRect.left));
-                    })(),
-                    top: (() => {
-                        const marginY = window.innerHeight * 0.01;
-                        const potentialTop = targetRect.bottom + 40 > window.innerHeight - 250
-                            ? targetRect.top - 240
-                            : targetRect.bottom + 20;
-                        return Math.min(window.innerHeight - 250, Math.max(marginY, potentialTop));
-                    })(),
+                    left: tooltipPlacement.left,
+                    top: tooltipPlacement.top,
+                    width: 320,
                     borderRadius: '24px',
                     ...((activeTheme.tooltipStyle === 'color' || activeTheme.tooltipStyle === 'auto') ? { backgroundColor: activeTheme.tooltipColor, color: activeTheme.textColor, border: 'none' } : {}),
                     ...(activeTheme.tooltipStyle === 'glass' ? {
@@ -270,6 +392,23 @@ export function WidgetTourPlayer() {
                     fontFamily: activeTheme.fontFamily
                 }}
             >
+                {/* Caret / Arrow pointing to target */}
+                <div
+                    className="absolute"
+                    style={{
+                        left: tooltipPlacement.caretLeft,
+                        top: tooltipPlacement.caretTop,
+                        width: 0,
+                        height: 0,
+                        borderLeft: '10px solid transparent',
+                        borderRight: '10px solid transparent',
+                        borderBottom: `10px solid ${getCaretColor()}`,
+                        transform: `rotate(${caretRotation[tooltipPlacement.position]}deg)`,
+                        transformOrigin: 'center center',
+                        filter: activeTheme.tooltipStyle === 'glass' ? 'none' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+                    }}
+                />
+
                 <div className="flex items-start justify-end -mr-2 -mt-2 mb-2">
                     <button
                         className={cn(
@@ -328,3 +467,4 @@ export function WidgetTourPlayer() {
         </div >
     );
 }
+
