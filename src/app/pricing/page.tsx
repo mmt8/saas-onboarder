@@ -74,7 +74,7 @@ export default function PricingPage() {
 
                             {/* Right Column: Pricing Card */}
                             <div className="relative">
-                                <ProCard price={displayPrice} isAnnual={isAnnual} onToggle={setIsAnnual} />
+                                <ProCard price={displayPrice} monthlyPrice={currentTier.monthlyPrice} isAnnual={isAnnual} onToggle={setIsAnnual} />
                             </div>
                         </div>
                     </div>

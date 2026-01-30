@@ -10,12 +10,19 @@ import { PricingToggle } from "./PricingToggle";
 
 interface ProCardProps {
     price: number | string;
+    monthlyPrice: number | string;
     isAnnual: boolean;
     onToggle: (val: boolean) => void;
 }
 
-export function ProCard({ price, isAnnual, onToggle }: ProCardProps) {
+export function ProCard({ price, monthlyPrice, isAnnual, onToggle }: ProCardProps) {
     const isCustomPrice = typeof price === "string";
+
+    // Calculate actual discount percentage
+    const discountPercent = !isCustomPrice && typeof monthlyPrice === "number" && typeof price === "number"
+        ? Math.round(((monthlyPrice - price) / monthlyPrice) * 100)
+        : 20; // fallback
+    const discountLabel = `Save ${discountPercent}%`;
 
     return (
         <div className="relative group">
@@ -67,7 +74,7 @@ export function ProCard({ price, isAnnual, onToggle }: ProCardProps) {
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 className="text-[10px] font-black text-[#E65221] bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100 uppercase tracking-wider h-fit"
                                             >
-                                                {PRICING_CONFIG.discountLabel}
+                                                {discountLabel}
                                             </motion.span>
                                             <span className="text-sm text-emerald-600 font-bold whitespace-nowrap">Billed annually</span>
                                         </div>
