@@ -299,9 +299,14 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                                 type="text"
                                                 value={step.name || step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ').trim() || 'Element'}
                                                 onChange={(e) => updateStep(step.id, { name: e.target.value })}
+                                                onClick={(e) => e.stopPropagation()}
                                                 onPointerDown={(e) => e.stopPropagation()}
+                                                onPointerDownCapture={(e) => e.stopPropagation()}
                                                 onMouseDown={(e) => e.stopPropagation()}
-                                                className="text-xs font-bold text-slate-700 truncate pt-0.5 bg-transparent border-none outline-none focus:bg-slate-100 focus:rounded px-1 -ml-1 w-full min-w-0"
+                                                onMouseDownCapture={(e) => e.stopPropagation()}
+                                                onTouchStart={(e) => e.stopPropagation()}
+                                                onDragStart={(e) => e.preventDefault()}
+                                                className="text-xs font-bold text-slate-700 truncate pt-0.5 bg-transparent border-none outline-none focus:bg-slate-100 focus:rounded px-1 -ml-1 flex-1 min-w-0 cursor-text"
                                                 placeholder="Step name..."
                                             />
                                         </div>
