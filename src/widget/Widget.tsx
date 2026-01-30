@@ -180,6 +180,8 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = false }: 
         setCurrentProject,
         fetchProjects,
         fetchTours,
+        fetchProjectById,
+        fetchToursForWidget,
         projects,
         currentProjectId,
         tours,
@@ -293,10 +295,11 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = false }: 
                 pingProject(projectId);
             }
 
-            fetchProjects();
-            fetchTours();
+            // Use RPC-based fetch functions for widget (works for anonymous users)
+            fetchProjectById(projectId);
+            fetchToursForWidget(projectId);
         }
-    }, [projectId, setCurrentProject, fetchProjects, fetchTours, pingProject]);
+    }, [projectId, setCurrentProject, fetchProjectById, fetchToursForWidget, pingProject]);
 
     // Listen for forced ping requests from Dashboard (same domain only)
     useEffect(() => {
