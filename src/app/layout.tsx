@@ -5,8 +5,6 @@ import { Navbar } from "@/components/Navbar";
 import { AdminToolbar } from "@/components/admin/AdminToolbar";
 import { RecordingOverlay } from "@/components/admin/RecordingOverlay";
 import { StepEditor } from "@/components/admin/StepEditor";
-import { TourPlayer } from "@/components/player/TourPlayer";
-import { Suspense } from "react";
 import { AuthProvider } from "@/components/AuthProvider";
 import { cn } from "@/lib/utils";
 
@@ -44,9 +42,6 @@ export default function RootLayout({
           <AdminToolbar />
           <RecordingOverlay />
           <StepEditor />
-          <Suspense fallback={null}>
-            <TourPlayer />
-          </Suspense>
           <main className="min-h-screen">
             {children}
           </main>
@@ -61,3 +56,4 @@ export default function RootLayout({
     </html>
   );
 }
+
