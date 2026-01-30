@@ -6,6 +6,7 @@ import { PricingToggle } from "@/components/pricing/PricingToggle";
 import { MauSlider } from "@/components/pricing/MauSlider";
 import { ProCard } from "@/components/pricing/ProCard";
 import { FAQ } from "@/components/FAQ";
+import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
 
 export default function PricingPage() {
@@ -84,26 +85,8 @@ export default function PricingPage() {
                 <section className="bg-secondary/20 py-24">
                     <FAQ />
                 </section>
-
-                {/* Bottom Contact CTA if they need enterprise */}
-                <section className="py-24 text-center px-6">
-                    <div className="max-w-4xl mx-auto bg-primary text-white p-12 rounded-[3.5rem] shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-                        <h2 className="text-3xl md:text-5xl font-bold font-serif mb-6 relative z-10">Need more than 20k MAU?</h2>
-                        <p className="text-white/80 text-xl mb-10 max-w-2xl mx-auto relative z-10">
-                            We offer custom enterprise plans with white-labeling, SSO, and dedicated success managers.
-                        </p>
-                        <motion.a
-                            href="mailto:mehmet@producttour.app"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="inline-block bg-white text-primary px-10 py-5 rounded-2xl font-bold text-lg shadow-lg relative z-10"
-                        >
-                            Contact Sales
-                        </motion.a>
-                    </div>
-                </section>
             </main>
+            <Footer />
         </div>
     );
 }
