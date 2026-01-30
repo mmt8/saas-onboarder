@@ -33,6 +33,6 @@ export default defineConfig({
         rollupOptions: {
             external: [], // Bundle everything
         },
-        minify: false, // For debugging initially
+        minify: true, // Production: minify for smaller bundle
     },
 });

@@ -51,6 +51,12 @@ export default function RootLayout({
             {children}
           </main>
         </AuthProvider>
+        {/* Product Tour Widget - dogfooding our own product */}
+        <script
+          src="https://naiuhnzdampxdewizhin.supabase.co/storage/v1/object/public/widgets/embed.js"
+          data-project-id="9d388f42-fafb-4a64-b1bd-c9254e38bb8c"
+          defer
+        />
       </body>
     </html>
   );
