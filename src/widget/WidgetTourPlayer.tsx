@@ -395,16 +395,16 @@ export function WidgetTourPlayer() {
             >
                 {/* Caret / Arrow pointing to target */}
                 <svg
-                    className="absolute z-50"
+                    className="absolute"
                     style={{
                         left: tooltipPlacement.caretLeft - 2,
-                        top: tooltipPlacement.caretTop,
+                        top: tooltipPlacement.caretTop + (tooltipPlacement.position === 'bottom' ? 2 : tooltipPlacement.position === 'top' ? -2 : 0),
                         width: 24,
                         height: 12,
                         transform: `rotate(${caretRotation[tooltipPlacement.position]}deg)`,
                         transformOrigin: '12px 6px',
                         overflow: 'visible',
-                        filter: activeTheme.tooltipStyle === 'glass' ? 'none' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))'
+                        // No filter/shadow - caret should blend seamlessly
                     }}
                     viewBox="0 0 24 12"
                 >
