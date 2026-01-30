@@ -6,7 +6,7 @@ import { useTourStore } from "@/store/tour-store";
 import { Button } from "@/components/ui/button";
 import { X, GripVertical, Trash2, Loader2, Play, ArrowLeft, Code, Check, ChevronDown } from "lucide-react";
 import * as Select from "@radix-ui/react-select";
-import { Reorder, AnimatePresence, motion } from "framer-motion";
+import { Reorder, AnimatePresence, motion, useDragControls } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -280,7 +280,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                className="group relative bg-white rounded-xl p-1.5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:z-10 transition-all cursor-grab active:cursor-grabbing"
+                                className="group relative bg-white rounded-xl p-1.5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:z-10 transition-all"
                                 style={{
                                     border: '1px solid #CBD5E1'
                                 }}
@@ -289,7 +289,10 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                     {/* Top Row: Meta & Actions */}
                                     <div className="flex items-center justify-between gap-1.5">
                                         <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                            <div className="text-slate-400 hover:text-[#E65221] transition-colors cursor-grab active:cursor-grabbing">
+                                            <div
+                                                className="text-slate-400 hover:text-[#E65221] transition-colors cursor-grab active:cursor-grabbing"
+                                                style={{ touchAction: 'none' }}
+                                            >
                                                 <GripVertical className="w-3.5 h-3.5" />
                                             </div>
                                             <span className="shrink-0 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0 rounded-full uppercase tracking-wider leading-relaxed">
