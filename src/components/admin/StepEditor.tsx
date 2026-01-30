@@ -317,7 +317,7 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                                 onPointerDownCapture={(e) => e.stopPropagation()}
                                                 onMouseDown={(e) => e.stopPropagation()}
                                                 onMouseDownCapture={(e) => e.stopPropagation()}
-                                                className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 placeholder:text-muted-foreground/50"
+                                                className="flex-1 min-w-0 bg-slate-50 border-solid border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 placeholder:text-muted-foreground/50"
                                                 placeholder="Step name..."
                                             />
                                         </div>
