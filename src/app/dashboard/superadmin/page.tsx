@@ -9,7 +9,7 @@ import { Loader2, Users, Building, MapPin, Clock, Eye, ToggleLeft, ToggleRight, 
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-const SUPERADMIN_EMAIL = "mehmet@producttour.app";
+const SUPERADMIN_EMAILS = ["mehmet@producttour.app", "mehmetperk@gmail.com"];
 
 type CustomerData = {
     id: string;
@@ -46,7 +46,7 @@ export default function SuperadminPage() {
     // Check superadmin access
     useEffect(() => {
         if (!isAuthLoading && user) {
-            if (user.email !== SUPERADMIN_EMAIL) {
+            if (!SUPERADMIN_EMAILS.includes(user.email)) {
                 toast.error("Unauthorized access");
                 router.push("/dashboard");
             }
@@ -69,7 +69,7 @@ export default function SuperadminPage() {
     };
 
     useEffect(() => {
-        if (user?.email === SUPERADMIN_EMAIL) {
+        if (user?.email && SUPERADMIN_EMAILS.includes(user.email)) {
             fetchData();
         }
     }, [user]);
@@ -135,7 +135,7 @@ export default function SuperadminPage() {
         );
     }
 
-    if (!user || user.email !== SUPERADMIN_EMAIL) {
+    if (!user || !SUPERADMIN_EMAILS.includes(user.email)) {
         return null;
     }
 

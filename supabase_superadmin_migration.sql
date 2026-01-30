@@ -23,7 +23,7 @@ BEGIN
     WHERE id = auth.uid();
     
     -- Check if superadmin (hardcoded email)
-    IF caller_email != 'mehmet@producttour.app' THEN
+    IF caller_email NOT IN ('mehmet@producttour.app', 'mehmetperk@gmail.com') THEN
         RAISE EXCEPTION 'Unauthorized: Superadmin access only';
     END IF;
     
@@ -89,7 +89,7 @@ BEGIN
     WHERE id = auth.uid();
     
     -- Check if superadmin
-    IF caller_email != 'mehmet@producttour.app' THEN
+    IF caller_email NOT IN ('mehmet@producttour.app', 'mehmetperk@gmail.com') THEN
         RAISE EXCEPTION 'Unauthorized: Superadmin access only';
     END IF;
     
