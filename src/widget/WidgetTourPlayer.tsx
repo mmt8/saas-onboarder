@@ -380,30 +380,7 @@ export function WidgetTourPlayer() {
                 />
             </svg>
 
-            {/* Blinking/Pulsing Highlight Border */}
-            {activeTheme.tooltipStyle !== 'glass' && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{
-                        opacity: [0.4, 1, 0.4],
-                        scale: [1, 1.02, 1],
-                    }}
-                    transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
-                    className="absolute z-10 border-2 rounded-lg"
-                    style={{
-                        left: targetRect.left - 6,
-                        top: targetRect.top - 6,
-                        width: targetRect.width + 12,
-                        height: targetRect.height + 12,
-                        borderColor: activeTheme.primaryColor,
-                        boxShadow: `0 0 15px ${activeTheme.primaryColor}80`
-                    }}
-                />
-            )}
+
 
             {/* Step Card with Caret */}
             <motion.div
@@ -481,9 +458,13 @@ export function WidgetTourPlayer() {
                 </p>
 
                 <div className="flex justify-end items-center gap-4 mt-3">
-                    <span className={cn("text-[10px] font-bold uppercase tracking-widest",
-                        activeTheme.tooltipStyle === 'glass' ? "text-white/40" : "text-muted-foreground/40"
-                    )}>
+                    <span
+                        className="text-[10px] font-semibold uppercase tracking-widest"
+                        style={{
+                            color: activeTheme.textColor,
+                            opacity: 0.7
+                        }}
+                    >
                         {currentStepIndex + 1} of {currentTour.steps.length}
                     </span>
                     <button
