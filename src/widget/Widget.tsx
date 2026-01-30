@@ -531,7 +531,6 @@ export function Widget({ projectId, autoStart = true, showAdminPanel = false }: 
             className="w-full h-full pointer-events-none font-sans text-base antialiased"
             style={{ ...themeStyles, '--primary': activeTheme.primaryColor, color: '#0f172a', fontFamily: '"Gabarito", sans-serif' } as React.CSSProperties}
         >
-            <Toaster position="top-center" />
 
             {/* ===================== */}
             {/* ADMIN WIDGET - Floating Admin Panel */}
