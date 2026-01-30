@@ -17,6 +17,33 @@ interface TooltipPlacement {
     caretLeft: number;
 }
 
+// Helper function to get luminance (L) from hex color
+function getLuminanceFromHex(hex: string): number {
+    // Remove # if present
+    const cleanHex = hex.replace('#', '');
+
+    // Parse RGB values
+    const r = parseInt(cleanHex.substring(0, 2), 16) / 255;
+    const g = parseInt(cleanHex.substring(2, 4), 16) / 255;
+    const b = parseInt(cleanHex.substring(4, 6), 16) / 255;
+
+    // Find max and min values for HSL conversion
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+
+    // Calculate lightness (L in HSL)
+    const l = (max + min) / 2;
+
+    // Return as percentage (0-100)
+    return l * 100;
+}
+
+// Determine text color based on background luminance
+function getTextColorForBackground(bgColor: string): 'black' | 'white' {
+    const luminance = getLuminanceFromHex(bgColor);
+    return luminance > 70 ? 'black' : 'white';
+}
+
 export function WidgetTourPlayer() {
     const { currentTour, status, setStatus, tours, setTour, projects, currentProjectId, pingProject } = useTourStore();
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -62,19 +89,36 @@ export function WidgetTourPlayer() {
     }, [theme.tooltipStyle]);
 
     // Merge auto-detected values into the functional theme
-    const activeTheme = {
-        ...theme,
-        primaryColor: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.primaryColor : (theme.tooltipStyle === 'auto' ? '#495BFD' : theme.primaryColor),
-        fontFamily: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.fontFamily : theme.fontFamily,
-        borderRadius: theme.tooltipStyle === 'auto' && detectedBranding ? (() => {
-            const val = parseFloat(detectedBranding.borderRadius);
-            return isNaN(val) ? '12' : Math.min(Math.max(val, 0), 24).toString();
-        })() : theme.borderRadius,
-        tooltipColor: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.primaryColor : (theme.tooltipStyle === 'auto' ? '#495BFD' : theme.tooltipColor),
-        textColor: theme.tooltipStyle === 'auto' && detectedBranding
-            ? (detectedBranding.textColor === 'black' ? 'black' : 'white')
-            : (theme.tooltipStyle === 'auto' ? 'white' : (theme.darkMode ? 'white' : 'black'))
-    };
+    const activeTheme = (() => {
+        const resolvedTooltipColor = theme.tooltipStyle === 'auto' && detectedBranding
+            ? detectedBranding.primaryColor
+            : (theme.tooltipStyle === 'auto' ? '#495BFD' : theme.tooltipColor);
+
+        // Determine text color based on tooltip style and background luminance
+        let resolvedTextColor: 'black' | 'white';
+        if (theme.tooltipStyle === 'color' || theme.tooltipStyle === 'auto') {
+            // For color/auto styles, use luminance-based text color
+            resolvedTextColor = getTextColorForBackground(resolvedTooltipColor);
+        } else if (theme.tooltipStyle === 'glass') {
+            // Glass always uses white text
+            resolvedTextColor = 'white';
+        } else {
+            // Solid style uses theme dark mode setting
+            resolvedTextColor = theme.darkMode ? 'white' : 'black';
+        }
+
+        return {
+            ...theme,
+            primaryColor: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.primaryColor : (theme.tooltipStyle === 'auto' ? '#495BFD' : theme.primaryColor),
+            fontFamily: theme.tooltipStyle === 'auto' && detectedBranding ? detectedBranding.fontFamily : theme.fontFamily,
+            borderRadius: theme.tooltipStyle === 'auto' && detectedBranding ? (() => {
+                const val = parseFloat(detectedBranding.borderRadius);
+                return isNaN(val) ? '12' : Math.min(Math.max(val, 0), 24).toString();
+            })() : theme.borderRadius,
+            tooltipColor: resolvedTooltipColor,
+            textColor: resolvedTextColor
+        };
+    })();
 
     // Auto-start tour from URL param
     useEffect(() => {
