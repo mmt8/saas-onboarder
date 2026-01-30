@@ -82,7 +82,7 @@ export default function PricingPage() {
                 </section>
 
                 {/* Existing FAQ component for general questions */}
-                <section className="bg-secondary/20 py-24">
+                <section className="bg-secondary/20 pt-24 pb-0">
                     <FAQ />
                 </section>
             </main>
