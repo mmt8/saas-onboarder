@@ -28,7 +28,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL('https://producttour.app'),
   title: "Product Tour",
-  description: "The easiest way to create interactive high-fidelity tours.",
+  description: "AI-powered product tour software that auto-generates on-brand walkthroughs from your UI in seconds. Install with one line of code. No complex setup required.",
 };
 
 export default function RootLayout({

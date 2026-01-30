@@ -59,9 +59,7 @@ export function Navbar() {
                     )}
                 >
                     <NavLink href="/#features">Features</NavLink>
-                    <Link href="/pricing" className="px-6 py-2 flex items-center text-base font-bold text-primary transition-all hover:bg-primary/10 rounded-full">
-                        Pricing
-                    </Link>
+                    <NavLink href="/pricing">Pricing</NavLink>
                 </nav>
 
                 {/* 3. Right: Actions & Mobile Toggle */}

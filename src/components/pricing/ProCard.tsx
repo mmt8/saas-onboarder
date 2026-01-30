@@ -82,7 +82,7 @@ export function ProCard({ price, isAnnual, onToggle }: ProCardProps) {
                         className="w-full rounded-2xl h-14 text-lg shadow-xl mb-12 shadow-primary/20"
                         asChild
                     >
-                        <Link href={isCustomPrice ? "mailto:hi@productapp.com" : "/signup"}>
+                        <Link href={isCustomPrice ? "mailto:mehmet@producttour.app" : "/signup"}>
                             {isCustomPrice ? "Contact Sales" : "Start 14-day free trial"}
                         </Link>
                     </Button>

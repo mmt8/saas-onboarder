@@ -6,15 +6,15 @@ export interface PricingTier {
 }
 
 export const PRICING_CONFIG = {
-    currency: "$",
-    discountLabel: "Save 25%",
+    currency: "€",
+    discountLabel: "Save 20%",
     tiers: [
-        { mau: 1500, label: "1.5k", monthlyPrice: 199, annualPricePerMonth: 149 },
-        { mau: 3000, label: "3k", monthlyPrice: 299, annualPricePerMonth: 224 },
-        { mau: 5000, label: "5k", monthlyPrice: 349, annualPricePerMonth: 262 },
-        { mau: 10000, label: "10k", monthlyPrice: 499, annualPricePerMonth: 374 },
-        { mau: 25000, label: "25k", monthlyPrice: 799, annualPricePerMonth: 599 },
-        { mau: 50000, label: "50k", monthlyPrice: 1299, annualPricePerMonth: 974 },
+        { mau: 1500, label: "1.5k", monthlyPrice: 24, annualPricePerMonth: 19 },
+        { mau: 3000, label: "3k", monthlyPrice: 39, annualPricePerMonth: 29 },
+        { mau: 5000, label: "5k", monthlyPrice: 49, annualPricePerMonth: 39 },
+        { mau: 10000, label: "10k", monthlyPrice: 69, annualPricePerMonth: 49 },
+        { mau: 20000, label: "20k", monthlyPrice: 89, annualPricePerMonth: 69 },
+        { mau: 50000, label: "50k", monthlyPrice: "Let's Talk", annualPricePerMonth: "Let's Talk" },
         { mau: 100000, label: "100k+", monthlyPrice: "Let's Talk", annualPricePerMonth: "Let's Talk" },
     ] as PricingTier[],
     features: [
