@@ -286,11 +286,11 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                 }}
                             >
                                 <div className="space-y-1.5">
-                                    {/* Top Row: Step number, grip, and actions */}
+                                    {/* Top Row: Step number, name input, and actions */}
                                     <div className="flex items-center justify-between gap-1.5">
-                                        <div className="flex items-center gap-1.5">
+                                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
                                             <div
-                                                className="text-slate-400 hover:text-[#E65221] transition-colors cursor-grab active:cursor-grabbing"
+                                                className="text-slate-400 hover:text-[#E65221] transition-colors cursor-grab active:cursor-grabbing shrink-0"
                                                 style={{ touchAction: 'none' }}
                                             >
                                                 <GripVertical className="w-3.5 h-3.5" />
@@ -298,9 +298,24 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                             <span className="shrink-0 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0 rounded-full uppercase tracking-wider leading-relaxed">
                                                 {index + 1}
                                             </span>
+                                            {/* Inline Name Input */}
+                                            <input
+                                                type="text"
+                                                value={step.name || step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ').trim() || 'Element'}
+                                                onChange={(e) => {
+                                                    const value = e.target.value || step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ').trim() || 'Element';
+                                                    updateStep(step.id, { name: value });
+                                                }}
+                                                onPointerDown={(e) => e.stopPropagation()}
+                                                onPointerDownCapture={(e) => e.stopPropagation()}
+                                                onMouseDown={(e) => e.stopPropagation()}
+                                                onMouseDownCapture={(e) => e.stopPropagation()}
+                                                className="flex-1 min-w-0 bg-slate-100 border border-slate-200 rounded-md px-2 py-0.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 placeholder:text-muted-foreground/50"
+                                                placeholder="Step name..."
+                                            />
                                         </div>
 
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
@@ -321,24 +336,6 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </Button>
                                         </div>
-                                    </div>
-
-                                    {/* Step Name Input */}
-                                    <div className="relative bg-slate-50 border-solid border border-slate-200 rounded-lg p-1.5">
-                                        <input
-                                            type="text"
-                                            value={step.name || step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ').trim() || 'Element'}
-                                            onChange={(e) => {
-                                                const value = e.target.value.trim() || step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ').trim() || 'Element';
-                                                updateStep(step.id, { name: value });
-                                            }}
-                                            onPointerDown={(e) => e.stopPropagation()}
-                                            onPointerDownCapture={(e) => e.stopPropagation()}
-                                            onMouseDown={(e) => e.stopPropagation()}
-                                            onMouseDownCapture={(e) => e.stopPropagation()}
-                                            className="w-full bg-transparent border-none text-sm font-semibold text-slate-700 focus:outline-none focus:ring-0 placeholder:text-muted-foreground/50 p-0"
-                                            placeholder="Step name..."
-                                        />
                                     </div>
 
                                     {/* Tooltip Content Textarea */}
