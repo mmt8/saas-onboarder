@@ -211,7 +211,7 @@ export default function DashboardLayout({
 
                         <div className="flex items-center gap-2">
                             <Link
-                                href="/dashboard/settings"
+                                href="/dashboard/account"
                                 className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-black/5 active:bg-black/10 transition-all rounded-full uppercase tracking-widest group"
                             >
                                 <User className="w-4 h-4 transition-transform group-hover:scale-110" />

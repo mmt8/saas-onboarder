@@ -90,6 +90,9 @@ interface TourState {
     saveDetectedBranding: (projectId: string, branding: { primaryColor: string; fontFamily: string; borderRadius: string; textColor: 'white' | 'black' }) => Promise<void>;
     pingProject: (id: string | null) => Promise<void>;
     fetchTours: () => Promise<void>;
+    // Widget-specific fetch using RPC (bypasses RLS for anonymous widget access)
+    fetchProjectById: (projectId: string) => Promise<void>;
+    fetchToursForWidget: (projectId: string) => Promise<void>;
     startRecording: (mode: 'manual' | 'auto', title?: string) => void;
     stopRecording: () => void;
     editTour: (tour: Tour) => void;
@@ -399,6 +402,103 @@ export const useTourStore = create<TourState>()(
                     console.error('Error fetching tours:', error);
                 } finally {
                     set({ isLoading: false });
+                }
+            },
+
+            // Widget-specific fetch using RPC (bypasses RLS for anonymous widget access)
+            fetchProjectById: async (projectId: string) => {
+                try {
+                    const { data, error } = await supabase.rpc('get_project_settings', {
+                        p_project_id: projectId
+                    });
+
+                    if (error) {
+                        console.error('Error fetching project via RPC:', error);
+                        return;
+                    }
+
+                    if (data && data.length > 0) {
+                        const p = data[0];
+                        const formattedProject: Project = {
+                            id: p.id,
+                            name: p.name,
+                            domain: p.domain,
+                            showLauncher: p.show_launcher ?? true,
+                            launcherText: p.launcher_text ?? 'Product Tours',
+                            themeSettings: {
+                                fontFamily: p.theme_settings?.fontFamily ?? 'Inter',
+                                darkMode: p.theme_settings?.darkMode ?? false,
+                                primaryColor: p.theme_settings?.primaryColor ?? '#E65221',
+                                borderRadius: p.theme_settings?.borderRadius ?? '12',
+                                paddingV: p.theme_settings?.paddingV ?? '10',
+                                paddingH: p.theme_settings?.paddingH ?? '20',
+                                tooltipStyle: p.theme_settings?.tooltipStyle ?? 'solid',
+                                tooltipColor: p.theme_settings?.tooltipColor ?? '#E65221'
+                            },
+                            createdAt: new Date()
+                        };
+
+                        // Add to projects array if not already present
+                        const { projects } = get();
+                        if (!projects.find(proj => proj.id === projectId)) {
+                            set({ projects: [...projects, formattedProject] });
+                        }
+                        set({ currentProjectId: projectId });
+                    }
+                } catch (error) {
+                    console.error('Error fetching project by ID:', error);
+                }
+            },
+
+            fetchToursForWidget: async (projectId: string) => {
+                try {
+                    // First fetch tours via RPC
+                    const { data: toursData, error: toursError } = await supabase.rpc('get_tours_for_project', {
+                        p_project_id: projectId
+                    });
+
+                    if (toursError) {
+                        console.error('Error fetching tours via RPC:', toursError);
+                        return;
+                    }
+
+                    if (!toursData || toursData.length === 0) {
+                        set({ tours: [] });
+                        return;
+                    }
+
+                    // Fetch steps for each tour
+                    const toursWithSteps = await Promise.all(
+                        toursData.map(async (t: any) => {
+                            const { data: stepsData } = await supabase.rpc('get_steps_for_tour', {
+                                p_tour_id: t.id
+                            });
+
+                            return {
+                                id: t.id,
+                                project_id: projectId,
+                                title: t.title,
+                                description: t.description,
+                                pageUrl: t.page_url,
+                                isActive: t.is_active || false,
+                                playBehavior: t.play_behavior || 'first_time',
+                                createdAt: new Date(),
+                                updatedAt: new Date(),
+                                steps: (stepsData || []).map((s: any) => ({
+                                    id: s.id,
+                                    target: s.target,
+                                    content: s.content,
+                                    order: s.order,
+                                    action: s.action,
+                                    actionValue: s.action_value
+                                }))
+                            };
+                        })
+                    );
+
+                    set({ tours: toursWithSteps });
+                } catch (error) {
+                    console.error('Error fetching tours for widget:', error);
                 }
             },
 
