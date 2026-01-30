@@ -8,6 +8,7 @@ export type Step = {
     target: string; // CSS selector
     content: string;
     order: number;
+    name?: string; // User-friendly label for the step
     action?: 'click' | 'hover' | 'type';
     actionValue?: string;
 };

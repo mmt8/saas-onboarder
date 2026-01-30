@@ -295,9 +295,15 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                             <span className="shrink-0 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0 rounded-full uppercase tracking-wider leading-relaxed">
                                                 {index + 1}
                                             </span>
-                                            <span className="text-xs font-bold text-slate-700 truncate pt-0.5">
-                                                {step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ') || 'Element'}
-                                            </span>
+                                            <input
+                                                type="text"
+                                                value={step.name || step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ').trim() || 'Element'}
+                                                onChange={(e) => updateStep(step.id, { name: e.target.value })}
+                                                onPointerDown={(e) => e.stopPropagation()}
+                                                onMouseDown={(e) => e.stopPropagation()}
+                                                className="text-xs font-bold text-slate-700 truncate pt-0.5 bg-transparent border-none outline-none focus:bg-slate-100 focus:rounded px-1 -ml-1 w-full min-w-0"
+                                                placeholder="Step name..."
+                                            />
                                         </div>
 
                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -350,8 +356,8 @@ export function StepEditor({ isFloating = true, onBack, onSuccess }: StepEditorP
                                             >
                                                 <div className="space-y-1 font-mono text-[10px] bg-slate-900 text-slate-300 p-2 rounded-lg border border-slate-800 shadow-inner">
                                                     <div className="flex gap-2">
-                                                        <span className="text-slate-500 shrink-0">Label:</span>
-                                                        <span className="text-blue-400 truncate">{step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ') || 'Element'}</span>
+                                                        <span className="text-slate-500 shrink-0">Name:</span>
+                                                        <span className="text-blue-400 truncate">{step.name || step.target.split(' ').pop()?.replace(/[.#\[\]]/g, ' ').trim() || 'Element'}</span>
                                                     </div>
                                                     <div className="flex gap-2">
                                                         <span className="text-slate-500 shrink-0">Selector:</span>
