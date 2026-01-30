@@ -210,14 +210,44 @@ export const useTourStore = create<TourState>()(
             fetchProjects: async () => {
                 set({ isLoading: true });
                 try {
-                    const { data, error } = await supabase
-                        .from('projects')
-                        .select('*')
-                        .order('created_at', { ascending: false });
+                    // Use RPC to get only the current user's projects (reliable ownership filtering)
+                    const { data, error } = await supabase.rpc('get_my_projects');
 
-                    if (error) throw error;
+                    if (error) {
+                        // Fallback to direct query if RPC doesn't exist yet
+                        console.warn('get_my_projects RPC not found, falling back to direct query');
+                        const fallback = await supabase
+                            .from('projects')
+                            .select('*')
+                            .order('created_at', { ascending: false });
+                        if (fallback.error) throw fallback.error;
+                        const formattedProjects: Project[] = (fallback.data || []).map((p: any) => ({
+                            id: p.id,
+                            name: p.name,
+                            domain: p.domain,
+                            showLauncher: p.show_launcher ?? true,
+                            launcherText: p.launcher_text ?? 'Product Tours',
+                            themeSettings: {
+                                fontFamily: p.theme_settings?.fontFamily ?? 'Inter',
+                                darkMode: p.theme_settings?.darkMode ?? false,
+                                primaryColor: p.theme_settings?.primaryColor ?? '#E65221',
+                                borderRadius: p.theme_settings?.borderRadius ?? '12',
+                                paddingV: p.theme_settings?.paddingV ?? '10',
+                                paddingH: p.theme_settings?.paddingH ?? '20',
+                                tooltipStyle: p.theme_settings?.tooltipStyle ?? 'solid',
+                                tooltipColor: p.theme_settings?.tooltipColor ?? '#E65221'
+                            },
+                            lastSeenAt: p.last_seen_at ? new Date(p.last_seen_at) : undefined,
+                            createdAt: new Date(p.created_at)
+                        }));
+                        set({ projects: formattedProjects });
+                        if (formattedProjects.length > 0 && !get().currentProjectId) {
+                            set({ currentProjectId: formattedProjects[0].id });
+                        }
+                        return formattedProjects;
+                    }
 
-                    const formattedProjects: Project[] = data.map((p: any) => ({
+                    const formattedProjects: Project[] = (data || []).map((p: any) => ({
                         id: p.id,
                         name: p.name,
                         domain: p.domain,
@@ -781,25 +811,14 @@ export const useTourStore = create<TourState>()(
             deleteProject: async (id: string) => {
                 set({ isLoading: true });
                 try {
-                    const { error, count } = await supabase
-                        .from('projects')
-                        .delete()
-                        .eq('id', id)
-                        .select();
+                    // Use RPC for reliable deletion with ownership validation
+                    const { error } = await supabase.rpc('delete_project_safe', {
+                        p_project_id: id
+                    });
 
-                    if (error) throw error;
-
-                    // RLS may silently block deletes - verify the project was actually deleted
-                    const { data: checkData } = await supabase
-                        .from('projects')
-                        .select('id')
-                        .eq('id', id)
-                        .single();
-
-                    if (checkData) {
-                        // Project still exists - RLS blocked the delete
-                        console.error('Delete blocked by RLS - project still exists');
-                        toast.error('Unable to delete project. You may not have permission.');
+                    if (error) {
+                        console.error('Delete RPC error:', error);
+                        toast.error(error.message || 'Failed to delete project');
                         return;
                     }
 
@@ -809,9 +828,9 @@ export const useTourStore = create<TourState>()(
                     }));
 
                     toast.success('Project deleted successfully');
-                } catch (error) {
+                } catch (error: any) {
                     console.error('Error deleting project:', error);
-                    toast.error('Failed to delete project');
+                    toast.error(error?.message || 'Failed to delete project');
                 } finally {
                     set({ isLoading: false });
                 }
