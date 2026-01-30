@@ -173,7 +173,7 @@ const TourCard = ({ tour, onEdit, onPlay, onDelete, toggleTourActivation, update
     );
 };
 
-export function Widget({ projectId, autoStart = true, showAdminPanel = true }: WidgetProps) {
+export function Widget({ projectId, autoStart = true, showAdminPanel = false }: WidgetProps) {
     const {
         status,
         startRecording,

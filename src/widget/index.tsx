@@ -9,7 +9,7 @@ import styles from '@/app/globals.css?inline';
     const script = document.currentScript || document.querySelector('script[data-project-id]');
     const projectId = script?.getAttribute('data-project-id');
     const autoStart = script?.getAttribute('data-auto-start') !== 'false'; // defaults to true
-    const showAdminPanel = script?.getAttribute('data-admin-panel') !== 'false'; // defaults to true
+    const showAdminPanel = script?.getAttribute('data-admin-panel') === 'true'; // defaults to false (secure by default)
 
     if (!projectId) {
         console.error('Product Tour: No project ID found');

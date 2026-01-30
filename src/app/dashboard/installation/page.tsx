@@ -11,6 +11,7 @@ export default function InstallationPage() {
   id="producttour-embed"
   src="https://naiuhnzdampxdewizhin.supabase.co/storage/v1/object/public/widgets/embed.js"
   data-project-id="${currentProjectId || 'YOUR_PROJECT_ID'}"
+  data-admin-panel="true"
   async
 ></script>`;
 
