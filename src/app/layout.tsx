@@ -6,6 +6,7 @@ import { AdminToolbar } from "@/components/admin/AdminToolbar";
 import { RecordingOverlay } from "@/components/admin/RecordingOverlay";
 import { StepEditor } from "@/components/admin/StepEditor";
 import { AuthProvider } from "@/components/AuthProvider";
+import { CookieConsent } from "@/components/CookieConsent";
 import { cn } from "@/lib/utils";
 
 const gabarito = Gabarito({
@@ -45,6 +46,7 @@ export default function RootLayout({
           <main className="min-h-screen">
             {children}
           </main>
+          <CookieConsent />
         </AuthProvider>
         {/* Product Tour Widget - dogfooding our own product */}
         <script
